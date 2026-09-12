@@ -99,6 +99,8 @@ Cada incremento DEBE dejar una versión desplegable, demostrable y usable. La in
 11. El país registral de la empresa, el idioma de interfaz y la jurisdicción legal son conceptos distintos.
 12. Un locale no soportado cae a español; una jurisdicción no soportada nunca cae a las reglas españolas.
 13. Países, locales, etiquetas y políticas se resuelven mediante catálogos o configuración validada; no mediante condicionales o textos visibles dispersos en código.
+14. El autorregistro empresarial exige un correo cuyo dominio no figure como proveedor público/común en la política vigente; el dominio propio sigue permitido aunque use Google Workspace, Microsoft 365 u otro proveedor como infraestructura.
+15. Admitir un dominio no verifica la identidad, existencia o representación legal de la empresa.
 
 ## 6. Arquitectura objetivo
 
@@ -221,6 +223,8 @@ flowchart TD
 ```
 
 Las flechas van del consumidor al proveedor de un contrato público; no representan acceso directo a tablas ni entidades internas. `notifications` implementa capacidades de entrega solicitadas por los contextos propietarios y no consulta repositorios ajenos.
+
+`organization` posee `CompanyEmailAdmissionPolicy`. La política clasifica únicamente el dominio normalizado después de `@` mediante un catálogo versionado y configurable. No inspecciona si el MX pertenece a Google, Microsoft u otro proveedor, porque un dominio corporativo propio puede utilizar cualquiera de esas infraestructuras.
 
 ## 10. Estructura interna de cada módulo backend
 
@@ -950,6 +954,7 @@ No se permite fusionar si backend o frontend no compilan, si falla el aislamient
 - El dominio no consulta variables de entorno.
 - Flags de funcionalidad en Application; nunca para saltarse una invariante legal.
 - Países habilitados, locales soportados, correspondencias país→locale y locale de fallback se cargan desde configuración tipada con valores por entorno.
+- La política de dominios públicos no admitidos para onboarding empresarial se carga desde configuración tipada y versionada, con comportamiento fail-closed si no está disponible al exponer H03.
 - El fallback de presentación no se reutiliza para resolver jurisdicción, moneda, zona horaria ni política legal.
 - Jurisdicciones con estados `CATALOGUED`, `INTERNAL_TEST`, `PILOT`, `SUPPORTED`, `DEPRECATED`.
 - Solo `SUPPORTED`, o `PILOT` con flag y tenant autorizado, es seleccionable.
@@ -961,6 +966,7 @@ No se permite fusionar si backend o frontend no compilan, si falla el aislamient
 Valor demostrable:
 
 - empresa registrada en `SELF_DECLARED`, con primer usuario y correo verificados;
+- correo del primer administrador admitido por la política empresarial, sin confundir esa admisión con verificación de la empresa;
 - primer usuario operativo;
 - estudiante registrado;
 - correo verificado;
@@ -1060,6 +1066,7 @@ Un incremento está terminado solo si:
 - español e inglés están completos;
 - no existen etiquetas visibles hardcodeadas y la paridad de catálogos i18n está verificada;
 - añadir un país o locale soportado no exige modificar aggregates ni introducir condicionales por código de país;
+- cambiar la política de dominios públicos no exige modificar el aggregate ni textos de UI, y todos sus errores se resuelven por códigos i18n;
 - existen tests de dominio, aplicación, integración y E2E;
 - existe al menos una prueba negativa de autorización;
 - fallos externos son reintentables o dejan estado recuperable;

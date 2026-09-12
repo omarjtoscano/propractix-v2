@@ -1,9 +1,9 @@
 # ADR-002 — Organización hexagonal de paquetes
 
-- Estado: Propuesto — revisión 3
+- Estado: Aceptado — revisión 4
 - Fecha: 2026-09-12
 - Decisores: Arquitectura
-- Reemplaza: revisión 2 del ADR-002
+- Reemplaza: revisión 3 del ADR-002
 
 ## Contexto
 
@@ -42,7 +42,7 @@ No se crearán paquetes vacíos como plantilla.
 - `adapter.out`: persistencia e integraciones.
 - `configuration`: composición de dependencias y aspectos técnicos.
 
-Las interfaces de repositorio residirán en `application.port.out`. No se expondrán repositorios de dominio entre contextos.
+Las interfaces de repositorio residirán en `application.port.out`. No se expondrán repositorios de dominio entre contextos. Cuando un contexto ofrece una capacidad a otro, el contrato pertenece al proveedor y se publica como `application.port.in` o `application.contract`; el consumidor no define una copia equivalente en su propio `port.out`.
 
 ## Regla de dependencias
 
@@ -73,8 +73,10 @@ No son contratos públicos los aggregates, entidades, repositorios, mappers, JPA
 4. `..adapter.in.rest..` no es consumido por application o domain.
 5. `..adapter.out.persistence..` no expone entidades JPA fuera de su adapter.
 6. Los contextos no se importan entre sí salvo paquetes `application.contract` o puertos públicos incluidos en la matriz vigente y aceptada de ADR-001.
-7. `platform` no depende de dominios concretos; implementa interfaces suministradas en configuración.
-8. La aplicación no contiene paquetes raíz globales `controller`, `service`, `repository` o `entity`.
+7. Cada importación cross-context coincide con `consumer`, `owner/provider` y paquete público del registro de ADR-001; ArchUnit falla ante una dirección inversa o un contrato no registrado.
+8. `configuration` es el único lugar que conecta callbacks de un relay técnico genérico con puertos de entrada de un contexto concreto.
+9. `platform` no depende de dominios concretos; implementa interfaces suministradas en configuración.
+10. La aplicación no contiene paquetes raíz globales `controller`, `service`, `repository` o `entity`.
 
 ## Alternativas consideradas
 
@@ -99,6 +101,6 @@ No son contratos públicos los aggregates, entidades, repositorios, mappers, JPA
 ## Conformidad de la implementación
 
 - Una prueba de dominio compila y se ejecuta sin levantar Spring.
-- Las ocho reglas ArchUnit quedan implementadas en I1-H01.
+- Las diez reglas ArchUnit quedan implementadas en I1-H01 a partir del registro vigente de ADR-001.
 - Ningún contrato público contiene JPA entities o DTO REST.
 - Cada transacción modifica aggregates de un solo contexto.

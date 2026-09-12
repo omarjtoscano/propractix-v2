@@ -1,9 +1,9 @@
 # ADR-008 — OpenAPI, errores, correlación e idempotencia
 
-- Estado: Propuesto — revisión 3
+- Estado: Aceptado — revisión 4
 - Fecha: 2026-09-12
 - Decisores: Arquitectura, Backend y Frontend
-- Reemplaza: revisión 2 del ADR-008
+- Reemplaza: revisión 3 del ADR-008
 
 ## Contexto
 
@@ -27,7 +27,7 @@ Las respuestas de error usarán `application/problem+json` con:
 type, title, status, detail, instance, code, correlationId, violations
 ```
 
-`detail` no contendrá excepciones internas ni datos sensibles. `code` será estable y la UI lo traducirá. Taxonomía inicial:
+`detail` no contendrá excepciones internas ni datos sensibles. `code` será estable y la UI lo traducirá. La UI nunca mostrará directamente `title`, `detail` o el texto de `violations` como copy: resolverá `code` y los códigos de cada violación mediante sus catálogos i18n. Taxonomía inicial:
 
 | Código | HTTP | Uso |
 |---|---:|---|
@@ -39,6 +39,9 @@ type, title, status, detail, instance, code, correlationId, violations
 | `concurrent_modification` | 409 | Versión optimista obsoleta. |
 | `idempotency_key_reused` | 409 | Misma clave con fingerprint diferente. |
 | `rate_limited` | 429 | Límite de abuso. |
+| `company_email_domain_not_allowed` | 400 | Violación de campo: el autorregistro empresarial exige un dominio admitido por la política vigente. |
+| `company_email_policy_unavailable` | 503 | H03 cerrado porque su política versionada no está disponible. |
+| `privacy_notice_changed` | 409 | El aviso mostrado ya no coincide con el vigente; debe presentarse de nuevo. |
 | `privacy_policy_unavailable` | 503 | Registro deshabilitado sin aviso vigente aprobado. |
 
 No se expondrá `traceId` como contrato estable. OpenTelemetry podrá generar un trace técnico interno. `correlationId` será el identificador público de soporte: se aceptará uno válido o se generará, se devolverá en `X-Correlation-ID`, aparecerá en errores, logs y eventos y tendrá límites de formato/longitud.
@@ -72,6 +75,20 @@ Semántica:
 
 Un endpoint de registro en producción requiere una versión `APPROVED` y vigente del aviso aplicable. Un filtro anterior al binding del body ejecuta este guard: si no existe, responde `privacy_policy_unavailable` antes de deserializar, persistir, auditar o registrar el body personal y sin crear un registro de idempotencia derivado del body. Fixtures de test/local no pueden promoverse a producción.
 
+H03 y H06 recibirán una referencia estructurada no confiable:
+
+```text
+privacyNoticeReference
+- noticeId
+- version
+```
+
+Después del binding y de las validaciones sintácticas, pero antes de cualquier escritura o claim de idempotencia derivado del body, application solicita a `compliance` el aviso `APPROVED` y vigente para finalidad, jurisdicción e instante del servidor. El registro continúa únicamente si `noticeId` y `version` coinciden exactamente con la resolución autoritativa.
+
+Si el aviso falta, está expirado, pertenece a otra finalidad/jurisdicción o fue sustituido entre render y submit, no se persisten onboarding, evidencia, idempotencia derivada del body ni auditoría con PII. Un aviso inexistente produce `privacy_policy_unavailable`; una referencia manipulada u obsoleta produce `privacy_notice_changed` sin revelar datos adicionales.
+
+Ante `privacy_notice_changed`, el cliente descarta la aceptación anterior, recupera el aviso vigente, lo muestra de nuevo y exige confirmación explícita. Nunca migra o acepta automáticamente una nueva versión. La evidencia persistida procede del resultado autoritativo del servidor definido en ADR-006.
+
 ## Alternativas consideradas
 
 - Contrato generado solo desde controladores: rechazado como fuente única.
@@ -90,7 +107,7 @@ Un endpoint de registro en producción requiere una versión `APPROVED` y vigent
 ## Condiciones documentales de aceptación
 
 - Arquitectura, Backend y Frontend aceptan OpenAPI design-first, Problem Details e idempotencia anónima protegida por HMAC.
-- Canonicalización, respuesta `PROCESSING` y precedencia del guard ML-15 están cerradas.
+- Canonicalización, respuesta `PROCESSING`, precedencia del guard ML-15 y validación autoritativa posterior al binding están cerradas.
 - Los códigos públicos son independientes de cualquier locale y toda presentación queda en i18n.
 
 ## Conformidad de la implementación
@@ -100,3 +117,5 @@ Un endpoint de registro en producción requiere una versión `APPROVED` y vigent
 - Pruebas verifican que ningún secreto se persiste en idempotencia.
 - Todas las respuestas incluyen `X-Correlation-ID` y los errores el mismo valor.
 - Registro productivo queda cerrado sin política de privacidad aprobada.
+- Avisos ausentes, expirados, sustituidos, manipulados o de finalidad incorrecta se rechazan antes de cualquier escritura con PII.
+- La UI traduce códigos estables y no presenta la prosa de Problem Details como texto de interfaz.

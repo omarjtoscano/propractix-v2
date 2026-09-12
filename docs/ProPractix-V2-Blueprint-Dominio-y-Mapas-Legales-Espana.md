@@ -419,9 +419,24 @@ Esta resolución solo afecta presentación. La jurisdicción legal de una oferta
 
 La declaración del Incremento 1 permite elegir una institución del catálogo o indicar que no se encuentra, además de declarar la titulación como texto. No demuestra matrícula, elegibilidad ni aprobación universitaria. En el Incremento 3 se reconfirma y se vincula a una candidatura concreta; las verificaciones institucionales se ejecutan únicamente en las puertas posteriores definidas por D-004.
 
+### D-007 — Correo empresarial admisible para autorregistro
+
+| Campo | Valor |
+|---|---|
+| Estado | `ACCEPTED` |
+| Propietario | `Organization` |
+| Alcance | Autorregistro empresarial de I1-H03 |
+| Verificación jurídica | Ninguna |
+
+El primer administrador deberá usar una dirección cuyo dominio normalizado después de `@` no figure en el catálogo versionado de proveedores públicos o comunes. Por ejemplo, una dirección terminada literalmente en `gmail.com`, `hotmail.com` u `outlook.com` podrá bloquearse según la versión vigente. La comprobación nunca buscará palabras parciales ni el proveedor de infraestructura: `persona@empresa.es` será admisible aunque `empresa.es` utilice Google Workspace o Microsoft 365.
+
+La lista, su versión, ámbito y fecha efectiva procederán de configuración tipada. No habrá arrays, enums, expresiones condicionales por proveedor ni mensajes visibles hardcodeados. Un rechazo utilizará un código estable traducido por i18n. Si la política no está disponible en un entorno que expone H03, el registro falla de forma cerrada.
+
+Que un dominio no esté bloqueado significa únicamente `NOT_LISTED_AS_PUBLIC_PROVIDER`. No acredita existencia de la empresa, propiedad del dominio, relación laboral, representación ni derecho a reclamar un tenant. La empresa continuará `SELF_DECLARED` hasta el proceso independiente de verificación empresarial anterior a `G1_PUBLICATION`.
+
 ## 13. Criterio de revisión de D-001
 
-`D-001`, `D-003`, `D-004`, `D-005` y `D-006` deberán revisarse si cambia la normativa estatal aplicable, si una universidad exige un flujo incompatible con el modelo común, si el MVP incorpora otra modalidad educativa o si la validación jurídica concluye que algún supuesto incluido requiere un bounded context o proceso diferente.
+`D-001`, `D-003`, `D-004`, `D-005`, `D-006` y `D-007` deberán revisarse si cambia la normativa estatal aplicable, si una universidad exige un flujo incompatible con el modelo común, si el MVP incorpora otra modalidad educativa, si cambia la política comercial de admisión empresarial o si la validación jurídica concluye que algún supuesto incluido requiere un bounded context o proceso diferente.
 
 ```text
 LegalPolicyPack: ES-UNIVERSITY-EXTERNAL

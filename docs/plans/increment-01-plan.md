@@ -1,10 +1,10 @@
 # Plan técnico propuesto — Incremento 1
 
-- Estado: Pendiente de revisión final
+- Estado: Aprobado — revisión 4
 - Fecha: 2026-09-12
 - Rama: `increment/01-company-identity-catalog`
 - Resultado: empresa y estudiante con cuentas verificadas, catálogo universitario consultable, declaración académica trazable y aislamiento tenant demostrado.
-- Reemplaza: revisión 2 evaluada en `docs/reviews/segunda-revision-adrs-incremento-01.md`.
+- Reemplaza: revisión 3 evaluada en `docs/reviews/revision-final-adrs-incremento-01.md`.
 
 ## 1. Decisiones de producto incorporadas
 
@@ -21,22 +21,58 @@
 11. El primer miembro empresarial usa `COMPANY_OWNER`.
 12. País empresarial, locale y jurisdicción legal permanecen separados según D-005.
 13. Países, locales, correspondencias y fallback proceden de configuración; toda etiqueta visible procede de i18n.
+14. La referencia del aviso enviada por el cliente no es autoritativa: el servidor resuelve el aviso vigente y exige coincidencia exacta antes de escribir datos personales.
+15. La unicidad fiscal se conserva durante la rotación mediante blind indexes para todas las versiones HMAC activas y un backfill verificable.
+16. `DeliverNotification` pertenece a `notifications`; el handler de `VerificationId` pertenece a `identity`; el wiring vive en `configuration` y no crea la dependencia inversa.
+17. Crear y verificar el correo del administrador deja la empresa `SELF_DECLARED`; la verificación/aprobación empresarial es un proceso separado del Incremento 2 y bloquea `G1_PUBLICATION`.
+18. H03 rechaza dominios de correo público/común mediante `CompanyEmailAdmissionPolicy` versionada; un dominio corporativo propio sigue permitido aunque use Google Workspace o Microsoft 365 como proveedor.
 
 ## 2. Gates de preparación
 
 No se inicia implementación no desechable hasta que los ADR aplicables estén en `Aceptado`.
 
-| Gate | Owners | Bloquea | Resultado requerido |
-|---|---|---|---|
-| `D0_DECISIONS` | Producto + Arquitectura + Seguridad | I1-H01 y ADR aplicables | Contextos, ceremonia de credencial, roles, duplicados, contratos y criterios documentales alineados. |
-| `C0_CATALOG` | Producto + Datos + Legal/licencias | I1-H02 | Fuente, licencia, formato, actualización, publicación, rollback y fixture aprobados. |
-| `P0_PRIVACY_ABUSE` | Producto + Privacidad/Legal + Seguridad + Operaciones | I1-H03 e I1-H06 con datos reales | ML-15, campos/retención, límites de abuso y configuración fail-closed aprobados. |
-| `E0_EMAIL` | Arquitectura + Operaciones + Seguridad | I1-H04 | Adapter, remitente/dominio, templates i18n, TTL, métricas y runbook aprobados. |
+| Gate | Estado | Owners | Bloquea | Resultado requerido |
+|---|---|---|---|---|
+| `D0_DECISIONS` | `CLOSED` | Producto + Arquitectura + Seguridad | I1-H01 | ADR-001 a ADR-008 aceptados; contextos, credencial, roles, duplicados, contratos y criterios alineados. |
+| `F0_CLIENT_BASELINE` | `CLOSED` | Arquitectura + Frontend | I1-H02 | Versiones exactas, generador OpenAPI, router, i18n, testing, lockfile y política de actualización aprobados. |
+| `C0_CATALOG` | `PENDING` | Producto + Datos + Legal/licencias | I1-H02 | Fuente, licencia, formato, actualización, publicación, rollback y fixture aprobados. |
+| `B0_COMPANY_EMAIL_POLICY` | `PENDING` | Producto + Seguridad | I1-H03 | Fuente inicial, versión, normalización, dominios bloqueados, actualización, rollback y pruebas aprobados; revisar la lista de V1 si se aporta su código. |
+| `P0_PRIVACY` | `PENDING` | Producto + Privacidad/Legal + Seguridad | I1-H03 e I1-H06 con datos reales | ML-15, finalidad, campos, evidencia, base jurídica, derechos y retención aprobados. |
+| `S0_PUBLIC_ENDPOINTS` | `PENDING` | Seguridad + Operaciones | Exposición pública de I1-H02 a I1-H06 | Límites por operación, claves pseudonimizadas, TTL, fail-closed, métricas, alertas y pruebas `429`/`Retry-After`. |
+| `E0_EMAIL` | `PENDING` | Arquitectura + Operaciones + Seguridad + Privacidad/Legal | I1-H04 con correo real | Adapter, remitente/dominio, templates i18n, TTL, métricas, runbook, rol contractual, región, subencargados, retención/borrado, redacción e incident response aprobados. |
 
-Los gates son decisiones/evidencias y no historias de implementación. `C0`, `P0` y `E0` pueden prepararse durante I1-H01 sin introducir funcionalidad anticipada.
+Los gates son decisiones/evidencias y no historias de implementación. `C0`, `B0`, `P0`, `S0` y `E0` pueden prepararse durante I1-H01 sin introducir funcionalidad anticipada. H01 está `READY`; cerrar D0 o aceptar los ADR no habilita datos reales, correo real ni endpoints públicos mientras sus gates permanezcan pendientes.
+
+### Baseline F0 aprobada
+
+| Capacidad | Versión/decisión |
+|---|---|
+| React / React DOM | 19.3.0 |
+| TypeScript | 7.0.2 |
+| Vite / plugin React | 8.3.0 / 6.1.1 |
+| Router | React Router DOM 7.18.3 |
+| i18n | i18next 26.4.2 / react-i18next 17.0.13 |
+| Estado/formularios | TanStack React Query 5.102.8, Zustand 5.0.15, React Hook Form 7.88.0 y Zod 4.6.2 |
+| Cliente OpenAPI | `@hey-api/openapi-ts` 0.99.0, Fetch generado |
+| Tests | Vitest 5.0.0, Testing Library React 16.3.3, user-event 14.6.7 y Playwright 1.63.0 |
+
+`package-lock.json` es obligatorio y CI usa `npm ci`. Los cambios mayores, el router, el generador o una nueva librería estructural requieren actualizar un ADR; menores/parches requieren pull request, pruebas y verificación del cliente generado.
+
+### Contenido obligatorio de S0
+
+Antes de exponer una operación pública, Seguridad y Operaciones registran por endpoint:
+
+- límite, ventana y clave de configuración versionada;
+- combinación de IP pseudonimizada, cuenta u otro sujeto permitido;
+- versiones HMAC activas, TTL y procedimiento de rotación;
+- comportamiento fail-closed y excepción operativa explícita, si existiera;
+- `429 rate_limited`, `Retry-After` y copy resuelto por i18n;
+- métricas, umbrales, alertas y runbook sin PII;
+- pruebas de límite, recuperación, concurrencia y caída del adapter.
 
 Antes de exponer el primer registro con datos reales deben estar resueltos:
 
+- política versionada de dominios empresariales admitidos y comportamiento fail-closed;
 - finalidad y datos mínimos;
 - responsable y contacto de privacidad;
 - base jurídica validada;
@@ -91,11 +127,12 @@ Las flechas van del consumidor al proveedor de un contrato público o capacidad;
 | Identity | `identity_password_credential` | Hash versionado de contraseña. |
 | Identity | `identity_email_verification` | Verificación, expiración y consumo atómico. |
 | Identity | `identity_refresh_session` | Familias refresh y tenant activo opcional. |
-| Organization | `organization_company` | Empresa/tenant, país, locale, fingerprint fiscal y estado de verificación. |
+| Organization | `organization_company` | Empresa/tenant, país, locale y estado de verificación. |
+| Organization | `organization_company_tax_fingerprint` | Blind indexes por empresa y versión HMAC activa para evitar duplicados durante rotaciones. |
 | Organization | `organization_membership` | Usuario, tenant, rol, estado y versión. |
-| Organization | `organization_company_onboarding` | Process manager y evidencia mínima del aviso mostrado. |
+| Organization | `organization_company_onboarding` | Process manager y referencia autoritativa del aviso resuelta por servidor. |
 | Student | `student_profile` | Identidad funcional del estudiante asociada a `UserId`. |
-| Student | `student_onboarding` | Process manager y evidencia mínima del aviso mostrado. |
+| Student | `student_onboarding` | Process manager y referencia autoritativa del aviso resuelta por servidor. |
 | Student | `student_academic_declaration` | Institución seleccionada/opcional y titulación declarada. |
 | Academic Institution | `academicinstitution_institution` | Universidad catalogada y fuente. |
 | Academic Institution | `academicinstitution_catalog_import` | Versión, fuente, hash y resultado de importación. |
@@ -132,11 +169,27 @@ Si el correo ya pertenece a una cuenta, la respuesta continúa siendo genérica 
 
 ## 7. Historias en orden
 
+### Matriz historia → ADR y gates de entrada
+
+| Historia | ADR aplicables | Gates/predecesoras antes de empezar |
+|---|---|---|
+| I1-H01 | ADR-001, ADR-002, ADR-006, ADR-007, ADR-008 | `D0_DECISIONS` cerrado. ADR-004 se difiere hasta la primera historia que use IDs, reloj o concurrencia. |
+| I1-H02 | ADR-001, ADR-002, ADR-004, ADR-005, ADR-006, ADR-007, ADR-008 | H01 + `C0_CATALOG` + `F0_CLIENT_BASELINE` + `S0_PUBLIC_ENDPOINTS`. |
+| I1-H03 | ADR-001 a ADR-008 | H01 + `B0_COMPANY_EMAIL_POLICY` + `P0_PRIVACY` + `S0_PUBLIC_ENDPOINTS`. |
+| I1-H04 | ADR-001 a ADR-008 | H03 + `E0_EMAIL` + `S0_PUBLIC_ENDPOINTS`. |
+| I1-H05 | ADR-001 a ADR-008 | H04 + `S0_PUBLIC_ENDPOINTS`. |
+| I1-H06 | ADR-001 a ADR-008 | H04 + H05 + `P0_PRIVACY` + `S0_PUBLIC_ENDPOINTS`. |
+| I1-H07 | ADR-001 a ADR-008 | H02 + H06. |
+
+La matriz identifica adopción documental. La conformidad de cada ADR se demuestra en las pruebas y evidencias de la historia; aceptar un ADR no da por ejecutadas esas pruebas.
+
 ### I1-H01 — Fundación ejecutable mínima
 
 **Actor y valor:** equipo de desarrollo; puede construir, probar y desplegar una base reproducible.
 
 **Contextos:** ninguno de negocio; configuración y guardrails.
+
+**Precondición:** `D0_DECISIONS` cerrado y ADR-001, ADR-002, ADR-006, ADR-007 y ADR-008 aceptados. H01 no crea todavía las primitivas de ADR-004; se incorporan en H02, donde tienen un consumidor real.
 
 **Resultado observable:** checkout limpio compila con JDK 21, ejecuta migraciones en PostgreSQL 16, expone health/readiness mínimos y falla CI ante una dependencia arquitectónica prohibida.
 
@@ -164,6 +217,8 @@ Si el correo ya pertenece a una cuenta, la respuesta continúa siendo genérica 
 
 **Contexto propietario:** `academicinstitution`. Owners del dato: Producto + Datos + Legal/licencias mediante `C0_CATALOG`.
 
+**Precondición:** H01 terminada y `C0_CATALOG`, `F0_CLIENT_BASELINE` y `S0_PUBLIC_ENDPOINTS` cerrados.
+
 **Estado inicial/final:** importación gobernada publicada → resultados públicos paginados; el catálogo no crea afiliación ni elegibilidad.
 
 **Contrato:**
@@ -184,7 +239,7 @@ Si el correo ya pertenece a una cuenta, la respuesta continúa siendo genérica 
 
 **Criterios:** dado un artefacto válido y C0 aprobado, al publicarlo todas las consultas observan una sola versión; dado un artefacto inválido, la versión anterior permanece disponible; una institución no encontrada puede declararse como texto posteriormente.
 
-**Pruebas:** dominio/importación, rollback de publicación fallida, persistencia, paginación, OpenAPI, UI ES/EN, accesibilidad, paridad i18n y consulta sin crear usuarios.
+**Pruebas:** dominio/importación, rollback de publicación fallida, persistencia, paginación, OpenAPI, UI ES/EN, accesibilidad, paridad i18n, consulta sin crear usuarios y `429` con `Retry-After` según S0.
 
 ### I1-H03 — Registrar empresa y primer administrador
 
@@ -192,39 +247,45 @@ Si el correo ya pertenece a una cuenta, la respuesta continúa siendo genérica 
 
 **Propietario del proceso:** `organization.CompanyOnboarding`; un handler durable invoca el puerto idempotente de `identity` fuera de la transacción de `organization`, y los resultados regresan mediante eventos.
 
-**Precondición:** `P0_PRIVACY_ABUSE` aprobado en el entorno con datos reales; rate limiting e idempotencia operativos.
+**Precondición:** H01 terminada; `B0_COMPANY_EMAIL_POLICY`, `P0_PRIVACY` y `S0_PUBLIC_ENDPOINTS` cerrados antes de usar datos reales o exponer el endpoint; rate limiting e idempotencia operativos.
 
-**Estado final:** onboarding `EMAIL_PENDING` o estado recuperable; API siempre devuelve `202` genérico sin confirmar existencia del correo.
+**Estado final:** onboarding `EMAIL_PENDING` o estado recuperable. Una solicitud que supera guards y validaciones devuelve `202` genérico sin confirmar existencia del correo o de la empresa; las políticas indisponibles, el aviso obsoleto y las violaciones de entrada conservan sus códigos estables.
 
 **Contrato/UI:**
 
 - `POST /api/v1/company-onboardings` con `Idempotency-Key`;
-- request exacto: `legalName`, `tradeName?`, `registeredCountry`, `taxIdentifierType`, `taxIdentifier`, `timeZone`, `preferredLocale?`, `administratorName`, `administratorEmail` y `privacyNoticeVersion`;
+- request exacto: `legalName`, `tradeName?`, `registeredCountry`, `taxIdentifierType`, `taxIdentifier`, `timeZone`, `preferredLocale?`, `administratorName`, `administratorEmail` y `privacyNoticeReference { noticeId, version }`;
 - no admite contraseña, tenant, estado ni rol;
 - formulario empresa separado, aviso versionado, términos diferenciados y todas las etiquetas desde i18n;
 - pantalla “revisa tu correo”, sin polling público enumerador.
 
 **País e idioma:** `registeredCountry` se valida contra el catálogo configurado. Puede conservar un país cuya jurisdicción legal aún no esté soportada; esto no habilita ofertas o prácticas. El tipo/validador fiscal se resuelve por registro de estrategias, no por condicionales en `Company`. `preferredLocale` debe estar soportado o se resuelve mediante país→locale y fallback configurado, inicialmente `es`.
 
+**Correo empresarial:** `administratorEmail` se normaliza y su dominio exacto se evalúa con la versión activa de `CompanyEmailAdmissionPolicy`. Los dominios públicos/comunes configurados se rechazan con `company_email_domain_not_allowed`; una política ausente o inválida produce `company_email_policy_unavailable` y cierra H03. No se inspecciona el proveedor MX: un dominio propio alojado en Google Workspace, Microsoft 365 u otro servicio sigue permitido. La lista no vive en Java, TypeScript o JSX y todos los mensajes se resuelven mediante i18n.
+
 **Invariantes:** tenant generado por servidor; empresa inicia `SELF_DECLARED`; cuenta `PENDING_EMAIL` sin credencial; rol inicial fijo `COMPANY_OWNER`; no se aceptan IDs/roles del cliente; cuenta existente requiere `ONBOARDING_CONTINUATION` y autenticación/reautenticación.
 
-**Duplicado empresarial:** país, tipo fiscal y fingerprint HMAC normalizado impiden otro tenant automático. El API conserva `202`; no revela coincidencia ni realiza claim. La continuación exige miembro autenticado o caso administrativo con evidencia independiente.
+**Duplicado empresarial:** país, tipo fiscal y fingerprints HMAC normalizados para todas las versiones activas impiden otro tenant automático. El API conserva `202`; no revela coincidencia ni realiza claim. La continuación exige miembro autenticado o caso administrativo con evidencia independiente. Una rotación mantiene lectura/escritura de versiones activas, backfill verificable y unicidad durante altas concurrentes.
+
+**Aviso autoritativo:** después del binding y antes de idempotencia o escritura con PII, `organization` resuelve en `compliance` el aviso vigente para onboarding empresarial. La referencia enviada debe coincidir exactamente. Si fue sustituida o manipulada responde `409 privacy_notice_changed`; la UI presenta el aviso nuevo y solicita confirmación explícita. Solo se persiste la referencia devuelta por el servidor.
 
 **Eventos:** `CompanyOnboardingSubmitted`, `AdministratorProvisioningRequested`, resultado de provisioning y `EmailVerificationRequested`.
 
 **Estados y fallos:** `SUBMITTED → IDENTITY_PENDING → EMAIL_PENDING → READY`; errores recuperables conservan el estado anterior y backoff; error terminal pasa a `FAILED`; una verificación no completada dentro del TTL configurado inicial `P7D` pasa a `EXPIRED`. Mientras la retención ML-15 conserve el onboarding, un reenvío al mismo correo puede crear una verificación nueva y devolverlo a `EMAIL_PENDING`; cambiar correo o reclamar una empresa coincidente exige recuperación autenticada o caso administrativo.
 
-**Migraciones:** onboarding, company, user sin credencial, privacidad aplicable, outbox, idempotencia, rate limiting y auditoría necesarias. La PII mínima del process manager se cifra y se elimina o redacta según el valor aprobado en ML-15.
+**Migraciones:** onboarding, company, `organization_company_tax_fingerprint`, user sin credencial, privacidad aplicable, outbox, idempotencia, rate limiting y auditoría necesarias. La PII mínima del process manager se cifra y se elimina o redacta según el valor aprobado en ML-15.
 
-**Criterios:** dado un request válido y no duplicado, responde `202` y llega a `EMAIL_PENDING`; dado un retry con la misma clave/fingerprint, devuelve la misma operación; ante cuenta o empresa coincidente, la respuesta no cambia y no se crea ni enlaza otro tenant.
+**Criterios:** dado un request válido, dominio de correo admitido, aviso autoritativo coincidente y empresa no duplicada, responde `202` y llega a `EMAIL_PENDING`; dado un retry con la misma clave/fingerprint, devuelve la misma operación; ante cuenta o empresa coincidente, la respuesta no cambia y no se crea ni enlaza otro tenant; un dominio bloqueado o política indisponible no crea onboarding; un aviso ausente, expirado, sustituido, manipulado o de finalidad equivocada no crea idempotencia derivada del body ni persiste PII.
 
-**Pruebas:** invariantes, país/locale soportado y fallback, jurisdicción no soportada sin fallback legal, transacciones separadas, reintento, eventos duplicados, idempotencia concurrente, rate limit, enumeración, duplicado fiscal, rollback local, body tenant ignorado/rechazado y ausencia de contraseña/request en persistencia.
+**Pruebas:** invariantes, país/locale soportado y fallback, jurisdicción no soportada sin fallback legal, correo Gmail/Outlook/Hotmail u otro dominio de fixture bloqueado, normalización/case, coincidencia exacta, dominio corporativo con hosting externo permitido, política ausente fail-closed, códigos/i18n, transacciones separadas, reintento, eventos duplicados, idempotencia concurrente, `429`/`Retry-After`, enumeración, duplicado fiscal antes/durante/después de rotación HMAC, dos altas concurrentes, todos los casos del aviso autoritativo, rollback local, body tenant ignorado/rechazado y ausencia de contraseña/request en persistencia.
 
 ### I1-H04 — Verificar correo y crear credencial empresarial
 
 **Actor y valor:** administrador pendiente; demuestra control del correo y puede completar el acceso.
 
 **Contextos:** `identity`, `notifications` y reacción de `organization`.
+
+**Precondición:** H03 terminada y `E0_EMAIL` y `S0_PUBLIC_ENDPOINTS` cerrados antes de exponer verificación/reenvío o enviar correo real.
 
 **Estado inicial/final:** cuenta `PENDING_EMAIL` → `ACTIVE`; onboarding `EMAIL_PENDING` → `READY`; membership activa; empresa continúa `SELF_DECLARED`.
 
@@ -243,15 +304,19 @@ Si el correo ya pertenece a una cuenta, la respuesta continúa siendo genérica 
 
 **Migraciones:** verificación y credencial si no fueron creadas en H03; ninguna tabla propia de `notifications` en I1.
 
-**Criterios:** dado un token válido y contraseña aceptable, se consume una vez, se crea el hash y la cuenta queda `ACTIVE`; un segundo consumo o un token invalidado nunca cambia credenciales; la empresa permanece `SELF_DECLARED`.
+**Errores:** respuesta no enumeradora para token/reenvío, validación de contraseña, propósito inválido, expiración y `429 rate_limited` con `Retry-After`.
 
-**Pruebas:** token válido, firma inválida, propósito/audiencia incorrectos, contraseña inválida, expirado, doble consumo concurrente, reenvío, datos transitorios no registrados, caída del relay y recuperación sin duplicar efectos de dominio.
+**Criterios:** dado un token válido y contraseña aceptable, se consume una vez, se crea el hash y la cuenta queda `ACTIVE`; un segundo consumo o un token invalidado nunca cambia credenciales; la empresa permanece `SELF_DECLARED`; verificación y reenvío respetan los límites aprobados en S0.
+
+**Pruebas:** token válido, firma inválida, propósito/audiencia incorrectos, contraseña inválida, expirado, doble consumo concurrente, reenvío, `429`/`Retry-After` por operación, datos transitorios no registrados, caída del relay y recuperación sin duplicar efectos de dominio.
 
 ### I1-H05 — Sesión y acceso a mi empresa
 
 **Actor y valor:** administrador verificado; inicia sesión y administra únicamente su empresa.
 
 **Contextos:** `identity` y `organization` mediante contratos públicos.
+
+**Precondición:** H04 terminada y `S0_PUBLIC_ENDPOINTS` cerrado antes de exponer login, refresh o selección de tenant.
 
 **Estado final:** sesión refresh activa, access token en memoria y tenant autorizado seleccionado.
 
@@ -279,7 +344,7 @@ Si el correo ya pertenece a una cuenta, la respuesta continúa siendo genérica 
 
 **Criterios:** una cuenta con varias memberships solo obtiene un token tenant para una membership activa; revocarla impide selección, refresh y acceso a “mi empresa”; cambiar locale no cambia país ni jurisdicción.
 
-**Pruebas:** login, claims, cookies, CORS, CSRF, Origin ausente/inválido, `active-tenant` sin bearer, refresh con tenant no autorizado, rotación concurrente, reuse detection, revocación de membresía, selección múltiple, fallback i18n y lectura/escritura negativa entre empresas A/B.
+**Pruebas:** login, claims, cookies, CORS, CSRF, Origin ausente/inválido, `active-tenant` sin bearer, refresh con tenant no autorizado, rotación concurrente, reuse detection, revocación de membresía, selección múltiple, `429`/`Retry-After` en login y demás operaciones públicas definidas por S0, fallback i18n y lectura/escritura negativa entre empresas A/B.
 
 ### I1-H06 — Registrar y verificar estudiante
 
@@ -292,13 +357,15 @@ Si el correo ya pertenece a una cuenta, la respuesta continúa siendo genérica 
 **Contrato/UI:**
 
 - `POST /api/v1/student-onboardings` con idempotencia;
-- request exacto: `name`, `email`, `preferredLocale?` y `privacyNoticeVersion`; no admite contraseña, tenant o rol;
+- request exacto: `name`, `email`, `preferredLocale?` y `privacyNoticeReference { noticeId, version }`; no admite contraseña, tenant o rol;
 - responde `202` genérico y reutiliza creación inicial de credencial/reenvío sin mezclar formularios;
 - formulario y confirmación de estudiante con textos i18n.
 
-**Precondición:** ML-15 aprobado en producción y rate limiting activo.
+**Precondición:** H04 y H05 terminadas; `P0_PRIVACY` y `S0_PUBLIC_ENDPOINTS` cerrados antes de usar datos reales o exponer el endpoint.
 
 **Invariantes:** correo único global; cuenta nueva usa `INITIAL_CREDENTIAL_SETUP`; cuenta existente usa `ONBOARDING_CONTINUATION` y exige autenticación/reautenticación; no se crea duplicado ni se enlaza silenciosamente; email institucional es indicio, no elegibilidad.
+
+**Aviso autoritativo:** `student` resuelve el aviso vigente para onboarding estudiantil después del binding y antes de idempotencia o escritura. Ausencia, expiración, sustitución, manipulación o finalidad equivocada se resuelven igual que H03; solo se persiste la referencia devuelta por el servidor.
 
 **Fallos:** backoff para provisioning/entrega; error terminal `FAILED`; verificación no completada dentro del TTL configurado `P7D` produce `EXPIRED`; mientras exista por retención, reenviar al mismo correo puede devolverlo a `EMAIL_PENDING`; todo resultado público evita enumeración.
 
@@ -306,9 +373,9 @@ Si el correo ya pertenece a una cuenta, la respuesta continúa siendo genérica 
 
 **Migraciones:** student profile/onboarding y campos estrictamente necesarios.
 
-**Criterios:** un estudiante nuevo completa verificación y credencial sin crear membership; una cuenta existente solo vincula el perfil después de autenticación; retries no duplican perfil ni cuenta.
+**Criterios:** un estudiante nuevo con aviso autoritativo coincidente completa verificación y credencial sin crear membership; una cuenta existente solo vincula el perfil después de autenticación; retries no duplican perfil ni cuenta; un aviso inválido no crea idempotencia derivada del body ni persiste PII.
 
-**Pruebas:** cuenta nueva/existente, reautenticación, estados/expiración, no enumeración, idempotencia, rate limit, verificación, ausencia de tenant/membership, acceso de otro usuario, i18n y minimización de datos.
+**Pruebas:** cuenta nueva/existente, reautenticación, estados/expiración, no enumeración, idempotencia, todos los casos del aviso autoritativo, `429`/`Retry-After`, verificación, ausencia de tenant/membership, acceso de otro usuario, i18n y minimización de datos.
 
 ### I1-H07 — Declaración académica
 
@@ -393,17 +460,19 @@ git status --short
 ## 10. Gates externos aún pendientes
 
 - `C0_CATALOG`: fuente definitiva, licencia y fixture antes de I1-H02.
-- `P0_PRIVACY_ABUSE`: datos/retención ML-15 y valores de rate limiting antes de I1-H03/I1-H06 con datos reales.
-- `E0_EMAIL`: proveedor, remitente, templates i18n y configuración operativa antes de I1-H04.
+- `B0_COMPANY_EMAIL_POLICY`: fuente inicial, versión, dominios públicos bloqueados, normalización, actualización, rollback y contraste de la lista de V1 antes de I1-H03.
+- `P0_PRIVACY`: finalidad, datos, base jurídica, evidencia, derechos y retención ML-15 antes de I1-H03/I1-H06 con datos reales.
+- `S0_PUBLIC_ENDPOINTS`: límites, pseudonimización, TTL, fail-closed, métricas, alertas y pruebas antes de exponer cualquier endpoint público de I1-H02 a I1-H06.
+- `E0_EMAIL`: proveedor, remitente, templates i18n, rol contractual, región/subencargados, retención/borrado, redacción, incident response y configuración operativa antes de I1-H04 con correo real.
 - Verificación empresarial: se diseñará antes de `G1_PUBLICATION` en el Incremento 2.
 - Catálogo canónico de titulaciones: fuera del Incremento 1.
 
-## 11. Condición para aprobar este plan
+## 11. Autorización de ejecución
 
-Una revisión final debe confirmar que:
+La resolución de la revisión final confirma que BF-01 a BF-04 están corregidos, ADR-001 a ADR-008 están aceptados y `D0_DECISIONS` está cerrado. Por tanto:
 
-1. SR-B01 a SR-B06 están resueltos sin introducir ciclos;
-2. ADR-001 a ADR-008 no se contradicen y separan aceptación documental de conformidad futura;
-3. H01 está Ready tras aceptar sus ADR y H02–H07 tienen gates explícitos antes de empezar;
-4. cada tabla, contrato, país/locale y texto visible tiene propietario o mecanismo de configuración;
-5. aprobar el plan no aprueba automáticamente ML-15, licencias, rate limits o proveedor de correo.
+- I1-H01 queda `READY` y es la única historia autorizada para comenzar;
+- I1-H02 a I1-H06 permanecen bloqueadas hasta cerrar los gates indicados en la matriz;
+- I1-H07 permanece bloqueada por sus predecesoras;
+- aceptar el plan no aprueba ML-15, licencias, valores de rate limiting, proveedor de correo ni verificación empresarial;
+- ninguna historia puede omitir sus pruebas de conformidad por el hecho de que su ADR esté aceptado.

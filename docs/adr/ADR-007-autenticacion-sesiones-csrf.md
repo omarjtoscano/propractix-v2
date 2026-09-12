@@ -1,9 +1,9 @@
 # ADR-007 — Autenticación, sesiones, CSRF y verificación de correo
 
-- Estado: Propuesto — revisión 3
+- Estado: Aceptado — revisión 4
 - Fecha: 2026-09-12
 - Decisores: Seguridad, Producto y Arquitectura
-- Reemplaza: revisión 2 del ADR-007
+- Reemplaza: revisión 3 del ADR-007
 
 ## Contexto y amenazas
 
@@ -83,6 +83,8 @@ Registro, login, reenvío y verificación no estarán disponibles públicamente 
 
 Seguridad y Operaciones mantendrán los valores exactos por operación en configuración tipada y versionada. Cada historia deberá fijarlos y probar `429`/`Retry-After` antes de exponer el endpoint; no se introducirán límites ni textos visibles dentro del dominio.
 
+El gate `S0_PUBLIC_ENDPOINTS` del plan materializa esta decisión. Bloquea la exposición de cualquier endpoint público del Incremento 1 —incluido el catálogo si conserva rate limiting— hasta documentar límites por operación, claves pseudonimizadas, TTL, comportamiento fail-closed, métricas, alertas y pruebas. Aceptar este ADR no cierra automáticamente S0.
+
 ## Alternativas consideradas
 
 - Tokens en `localStorage`/`sessionStorage`: rechazados por XSS.
@@ -104,6 +106,7 @@ Seguridad y Operaciones mantendrán los valores exactos por operación en config
 - La taxonomía usa `COMPANY_OWNER` y separa cuenta activa de empresa verificada.
 - Los endpoints que usan cookie y los que usan bearer están delimitados sin ambigüedad.
 - Seguridad y Operaciones son owners del rate limiting y deben aprobar valores antes de exponer cada endpoint.
+- El plan identifica S0 como gate separado de privacidad y lo aplica a cada historia que expone endpoints públicos.
 
 ## Conformidad de la implementación
 

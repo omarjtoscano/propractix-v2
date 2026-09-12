@@ -1,9 +1,9 @@
 # ADR-006 — Separación dominio/JPA y propiedad de tablas
 
-- Estado: Propuesto — revisión 3
+- Estado: Aceptado — revisión 4
 - Fecha: 2026-09-12
 - Decisores: Arquitectura y Datos
-- Reemplaza: revisión 2 del ADR-006
+- Reemplaza: revisión 3 del ADR-006
 
 ## Contexto
 
@@ -23,11 +23,12 @@ Se utilizará PostgreSQL 16 y un esquema de aplicación único durante el MVP. L
 | `identity_password_credential` | `identity` | User-owned | Solo `identity`; contenido nunca sale en contratos. |
 | `identity_email_verification` | `identity` | User-owned | Solo `identity`; consumo atómico. |
 | `identity_refresh_session` | `identity` | Usuario y tenant activo opcional | Solo `identity`. |
-| `organization_company` | `organization` | Tenant-owned | Solo `organization`; país, locale y fingerprint fiscal según D-005/ADR-003. |
+| `organization_company` | `organization` | Tenant-owned | Solo `organization`; país, locale y estado según D-005/ADR-003. |
+| `organization_company_tax_fingerprint` | `organization` | Global anti-duplicado, acceso restringido | Solo el caso de uso de identidad empresarial de `organization`; una fila por empresa y versión HMAC activa. |
 | `organization_membership` | `organization` | Tenant-owned | Solo `organization`. |
-| `organization_company_onboarding` | `organization` | Registro/tenant futuro | Solo `organization`; conserva referencia y evidencia mínima del aviso mostrado. |
+| `organization_company_onboarding` | `organization` | Registro/tenant futuro | Solo `organization`; conserva la referencia autoritativa del aviso resuelta por el servidor. |
 | `student_profile` | `student` | Student-owned | Solo adapter de `student`. |
-| `student_onboarding` | `student` | User/registro | Solo `student`; conserva referencia y evidencia mínima del aviso mostrado. |
+| `student_onboarding` | `student` | User/registro | Solo `student`; conserva la referencia autoritativa del aviso resuelta por el servidor. |
 | `student_academic_declaration` | `student` | Student-owned | Solo `student`; institución por ID escalar opcional. |
 | `academicinstitution_institution` | `academicinstitution` | Global catalogado | Solo importador/administración del contexto. |
 | `academicinstitution_catalog_import` | `academicinstitution` | Global técnico-funcional | Solo `academicinstitution`. |
@@ -40,11 +41,13 @@ Se utilizará PostgreSQL 16 y un esquema de aplicación único durante el MVP. L
 
 La matriz se ampliará en la migración de cada historia, nunca de forma implícita.
 
-`compliance` publica mediante contrato de lectura qué aviso está `APPROVED` y vigente para una finalidad. El contexto que recopila los datos guarda en su propio onboarding el ID/versión del aviso, fecha de presentación y evidencia estrictamente necesaria. No escribe una aceptación central ni delega en `compliance` la transacción de registro.
+`compliance` publica mediante contrato de lectura qué aviso está `APPROVED` y vigente para una finalidad, jurisdicción e instante. La referencia enviada por el cliente es un dato no confiable: el contexto que recopila los datos vuelve a resolver el aviso, exige coincidencia exacta y guarda en su propio onboarding el ID/versión obtenido del resultado autoritativo del servidor, la fecha de presentación y la evidencia estrictamente necesaria. No persiste como verdad la referencia del request, no escribe una aceptación central ni delega en `compliance` la transacción de registro.
 
 Durante el Incremento 1, `notifications` no tendrá tabla propia: correo, enlace y token serán transitorios; los intentos y códigos técnicos no sensibles permanecen en la outbox. Cualquier almacenamiento posterior de notificaciones o intentos exige ampliar esta matriz antes de crear la migración.
 
-`organization_company` impondrá unicidad sobre país registral, tipo fiscal y fingerprint HMAC del identificador normalizado. El valor necesario para operación se protegerá según ML-15 y registrará versión de clave; ni la coincidencia ni la validación sintáctica equivalen a verificación legal. La clave HMAC y cualquier clave de cifrado serán externas al repositorio.
+`organization_company_tax_fingerprint` contendrá `company_id`, país registral, tipo fiscal, `key_version` y fingerprint HMAC del identificador normalizado. Impondrá unicidad sobre `(registered_country, tax_identifier_type, key_version, fingerprint)` e impedirá que una misma versión apunte a dos empresas. La creación empresarial inserta todas las versiones HMAC activas en la misma transacción; cualquier conflicto produce el resultado no enumerador de ADR-003.
+
+La clave HMAC de búsqueda y la clave de cifrado serán distintas y externas al repositorio. Una rotación añade la versión nueva, mantiene la anterior activa, ejecuta un backfill idempotente, verifica cobertura y solo después retira la versión antigua. Ni la coincidencia ni la validación sintáctica equivalen a verificación legal. El valor recuperable estrictamente necesario se protege y conserva según ML-15.
 
 ## Relaciones y tenant
 
@@ -90,7 +93,7 @@ Separar schemas, usuarios o activar RLS se evaluará cuando el riesgo o escala l
 ## Condiciones documentales de aceptación
 
 - Arquitectura y Datos aceptan modelo dominio/JPA separado, esquema único y riesgo residual.
-- Cada tabla actualmente prevista tiene owner, scope y política de escritura explícitos.
+- Cada tabla actualmente prevista, incluida la estructura multiversión de fingerprints, tiene owner, scope y política de escritura explícitos.
 - D-005 y D-006 están alineadas con la matriz y ML-15 es una puerta anterior a datos reales.
 
 ## Conformidad de la implementación
@@ -98,4 +101,6 @@ Separar schemas, usuarios o activar RLS se evaluará cuando el riesgo o escala l
 - Cada tabla nueva amplía la matriz de propiedad o una equivalente versionada.
 - No existen JPA entities fuera de adapters de persistencia.
 - Toda tabla tenant-owned tiene constraints e índices tenant-aware comprobados.
+- La migración de fingerprints y sus pruebas conservan unicidad antes, durante y después de una rotación HMAC.
+- La evidencia de privacidad persistida coincide con la resolución autoritativa del servidor, no con un valor confiado al cliente.
 - Migraciones funcionan desde una base vacía y no mezclan importaciones de producción no gobernadas.

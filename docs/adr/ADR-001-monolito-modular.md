@@ -1,9 +1,9 @@
 # ADR-001 — Monolito modular y estrategia de módulos
 
-- Estado: Propuesto — revisión 3
+- Estado: Aceptado — revisión 4
 - Fecha: 2026-09-12
 - Decisores: Producto y Arquitectura
-- Reemplaza: revisión 2 del ADR-001
+- Reemplaza: revisión 3 del ADR-001
 
 ## Contexto
 
@@ -79,20 +79,23 @@ No existe una membership empresarial implícita y la convergencia con una cuenta
 
 ## Contratos y dependencias entre módulos
 
-| Origen | Destino | Contrato permitido en Incremento 1 |
-|---|---|---|
-| `organization` | `identity` | Solicitud durable de preparación del administrador, sin contraseña ni hash de credencial. |
-| `identity` | `organization` | Evento de cuenta provisionada o correo verificado. |
-| `student` | `identity` | Solicitud durable de provisioning o enlace seguro de una cuenta. |
-| `identity` | `student` | Evento de cuenta provisionada o correo verificado. |
-| `organization` | `compliance` | Consulta síncrona del aviso ML-15 aprobado para onboarding empresarial. |
-| `student` | `compliance` | Consulta síncrona del aviso ML-15 aprobado para onboarding estudiantil. |
-| `student` | `academicinstitution` | Consulta síncrona del catálogo institucional publicado. |
-| `identity` | `notifications` | Entrega transitoria de destinatario, plantilla y enlace desde un handler propiedad de `identity`. |
-| `academicinstitution` | cliente/API | Consulta pública del catálogo. |
-| contextos de negocio | `platform` | Solo puertos implementados mediante configuración/adapters. |
+La siguiente tabla es el registro autorizado de contratos cross-context del Incremento 1. El consumidor importa únicamente el paquete público del proveedor; nunca sus servicios concretos, adapters, repositorios o modelo interno.
 
-Los cambios de estado entre contextos ocurrirán después del commit. Las consultas a `compliance` y `academicinstitution` no abren una transacción distribuida ni permiten escribir en el proveedor. La entrega de correo es unidireccional: `identity` resuelve transitoriamente el destinatario y el JWS y llama al puerto de `notifications`; `notifications` no consulta `identity`. No se usarán dependencias cíclicas, transacciones distribuidas ni acceso directo a repositorios o tablas ajenas.
+| Consumidor | Owner/proveedor | Contrato público | Paquete público | Operación permitida |
+|---|---|---|---|---|
+| `organization` | `identity` | `PrepareAdministratorAccount` | `identity.application.port.in` | Provisioning idempotente por `OnboardingId`, sin contraseña, correo ni nombre en el mensaje durable. |
+| `organization` | `identity` | `AdministratorProvisionedV1`, `AccountEmailVerifiedV1` | `identity.application.contract.event.v1` | Consumir resultados versionados después del commit. |
+| `student` | `identity` | `PrepareStudentAccount` | `identity.application.port.in` | Provisioning o continuación idempotente, sin credenciales en el mensaje durable. |
+| `student` | `identity` | `StudentAccountProvisionedV1`, `AccountEmailVerifiedV1` | `identity.application.contract.event.v1` | Consumir resultados versionados después del commit. |
+| `organization` | `compliance` | `ResolveApplicablePrivacyNotice` | `compliance.application.port.in` | Resolver el aviso ML-15 vigente por finalidad, jurisdicción e instante. |
+| `student` | `compliance` | `ResolveApplicablePrivacyNotice` | `compliance.application.port.in` | Resolver el aviso ML-15 vigente por finalidad, jurisdicción e instante. |
+| `student` | `academicinstitution` | `SearchPublishedInstitutions` | `academicinstitution.application.port.in` | Consultar únicamente la versión publicada del catálogo. |
+| `identity` | `notifications` | `DeliverNotification` | `notifications.application.port.in` | Entregar destinatario, `templateKey`, locale, enlace y `correlationId` solo en memoria. |
+| `configuration` | `identity` | `HandleEmailVerificationDeliveryRequested` | `identity.application.port.in` | Conectar el relay genérico usando solo `VerificationId` y metadatos técnicos. |
+
+La API pública de catálogo se expone mediante el adapter HTTP de `academicinstitution`; no es un contrato Java entre bounded contexts. Los contextos de negocio definen sus propios puertos de salida técnicos y `configuration` los conecta con adapters de `platform`, sin que `platform` importe dominios concretos.
+
+Los cambios de estado entre contextos ocurrirán después del commit. Las consultas a `compliance` y `academicinstitution` no abren una transacción distribuida ni permiten escribir en el proveedor. La entrega de correo es unidireccional: `identity` resuelve transitoriamente el destinatario y el JWS y llama al puerto de entrada de `notifications`; `notifications` no consulta `identity`. La configuración registra el handler de `identity` en el relay genérico, por lo que `platform.outbox` tampoco depende de `identity`. No se usarán dependencias cíclicas, transacciones distribuidas ni acceso directo a repositorios o tablas ajenas.
 
 ## Guardrails verificables
 
@@ -117,9 +120,16 @@ Spring Modulith no será obligatorio durante el inicio. Requerirá un ADR poster
 | PostgreSQL | 16 (`postgres:16-alpine` en local) |
 | Node.js | 24 LTS |
 | npm | 11.9.0 |
-| React/Vite y librerías cliente | Se fijarán antes de crear `client` en I1-H02; no se añaden por anticipado. |
+| React / React DOM | 19.3.0 |
+| TypeScript | 7.0.2 |
+| Vite / plugin React | 8.3.0 / 6.1.1 |
+| React Router DOM | 7.18.3 |
+| i18next / react-i18next | 26.4.2 / 17.0.13 |
+| Estado/formularios | TanStack React Query 5.102.8, Zustand 5.0.15, React Hook Form 7.88.0 y Zod 4.6.2 |
+| Cliente OpenAPI | `@hey-api/openapi-ts` 0.99.0 con cliente Fetch generado |
+| Tests cliente | Vitest 5.0.0, Testing Library React 16.3.3, user-event 14.6.7 y Playwright 1.63.0 |
 
-Una actualización mayor o una nueva librería estructural exige ADR o actualización explícita de uno existente.
+Estas versiones constituyen `F0_CLIENT_BASELINE`. El `package-lock.json` fijará el árbol instalado y CI utilizará `npm ci`. Una actualización mayor, una nueva librería estructural o un cambio de generador OpenAPI exige ADR o actualización explícita de uno existente; parches y menores se incorporan mediante pull request con pruebas, revisión del cliente generado y evidencia de compatibilidad.
 
 ## Alternativas consideradas
 
@@ -138,13 +148,14 @@ Una actualización mayor o una nueva librería estructural exige ADR o actualiza
 ## Condiciones documentales de aceptación
 
 - D-006 y las fuentes superiores contienen el contexto `student` y el mismo calendario de declaración académica.
-- La matriz anterior cubre todos los cruces requeridos por el Incremento 1 sin ciclos.
+- La matriz anterior identifica contrato, owner/proveedor, consumidor y paquete público para todos los cruces requeridos por el Incremento 1 sin ciclos.
 - Producto y Arquitectura aceptan el monolito modular, el onboarding eventual y el riesgo operativo descrito.
-- La baseline está fijada y cualquier pendiente de frontend permanece como gate explícito anterior a I1-H02.
+- `F0_CLIENT_BASELINE` está fijada y aprobada antes de I1-H02.
 
 ## Conformidad de la implementación
 
 - Las reglas ArchUnit anteriores están automatizadas en I1-H01.
+- ArchUnit consume el registro de contratos anterior y verifica que solo se importan los paquetes públicos autorizados.
 - El onboarding no escribe `identity` y `organization` en una misma transacción.
 - Todo componente y tabla técnica tiene propietario documentado.
 - Las versiones efectivamente usadas coinciden con la matriz.

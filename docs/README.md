@@ -14,9 +14,11 @@
 10. [Segunda revisión de ADR y plan](reviews/segunda-revision-adrs-incremento-01.md).
 11. [Resolución de la segunda revisión](reviews/resolucion-segunda-revision-adrs-incremento-01.md).
 12. [Prompt para la revisión final](prompts/review-adrs-increment-01.md).
+13. [Revisión final de ADR y plan](reviews/revision-final-adrs-incremento-01.md).
+14. [Resolución de la revisión final](reviews/resolucion-revision-final-adrs-incremento-01.md).
 
 ## Estado de decisión
 
-Los ADR con estado `Propuesto` son material de revisión. Codex no debe iniciar historias funcionales hasta que se cambien explícitamente a `Aceptado`.
+ADR-001 a ADR-008 tienen estado `Aceptado — revisión 4`. El plan del Incremento 1 está aprobado y autoriza únicamente I1-H01. Las historias posteriores siguen bloqueadas por sus gates y predecesoras.
 
 Las conclusiones jurídicas del blueprint continúan sujetas a contraste profesional. Un ADR técnico no convierte una interpretación jurídica en una regla aprobada.

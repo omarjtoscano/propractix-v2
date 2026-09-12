@@ -1,9 +1,9 @@
 # ADR-003 — Multi-tenancy, identidad y tenant activo
 
-- Estado: Propuesto — revisión 3
+- Estado: Aceptado — revisión 4
 - Fecha: 2026-09-12
 - Decisores: Producto, Seguridad y Arquitectura
-- Reemplaza: revisión 2 del ADR-003
+- Reemplaza: revisión 3 del ADR-003
 
 ## Contexto
 
@@ -45,6 +45,35 @@ La jurisdicción de una operación regulada se resuelve por separado. Un país e
 La identidad empresarial candidata se compara por país registral, tipo de identificador fiscal y fingerprint HMAC del valor normalizado. Esa coincidencia impide crear automáticamente otro tenant, pero no verifica jurídicamente a la empresa ni autoriza a reclamarla.
 
 La respuesta pública permanece genérica. El solicitante deberá autenticarse como miembro autorizado o abrir un caso administrativo con evidencia independiente. Nunca se enlaza una empresa, cuenta o membership por coincidencia de nombre, dominio, correo o identificador fiscal.
+
+### Blind index fiscal y rotación de claves
+
+La clave de cifrado del identificador fiscal y las claves HMAC usadas como blind index serán distintas, externas al repositorio y rotables de forma independiente. `organization` conservará una fila de fingerprint por empresa y por versión HMAC activa; la unicidad se aplicará sobre `(registered_country, tax_identifier_type, key_version, fingerprint)`.
+
+La configuración mantendrá un conjunto ordenado de versiones HMAC activas. Cada alta:
+
+1. normaliza el identificador mediante la estrategia registrada para país y tipo;
+2. calcula y consulta el fingerprint con todas las versiones activas sin exponer el resultado fuera de `organization`;
+3. si puede crear la empresa, inserta atómicamente todas las filas activas junto con ella;
+4. convierte cualquier conflicto concurrente en la misma respuesta pública `202`, sin lectura cross-tenant ni enumeración.
+
+La rotación se ejecutará como ceremonia operativa verificable:
+
+1. registrar la nueva clave como activa para lectura y escritura sin retirar la anterior;
+2. hacer backfill idempotente de la nueva versión para todas las empresas;
+3. mientras dure el backfill, consultar e insertar todas las versiones activas;
+4. comprobar cobertura, ausencia de duplicados y comportamiento concurrente;
+5. promover la nueva versión y retirar la anterior solo cuando todas las filas estén cubiertas y haya terminado su ventana operativa.
+
+No se admitirá una nueva versión para altas si la aplicación no puede calcular también las demás versiones activas. Las pruebas cubrirán un duplicado anterior a la rotación, durante el backfill, después de promover la clave y dos altas concurrentes del mismo identificador.
+
+### Admisión del correo empresarial
+
+H03 exige que el dominio normalizado después de `@` no esté clasificado como proveedor público/común por la versión activa de `CompanyEmailAdmissionPolicy`, propiedad de `organization`. El catálogo será configuración tipada y versionada con identificador, fecha efectiva y estado; no se incluirán listas de dominios en código, enums o frontend.
+
+La comparación será exacta sobre el dominio normalizado y nunca por substring. No se inspecciona el proveedor MX: una dirección bajo un dominio propio es admisible aunque el correo esté alojado por Google Workspace, Microsoft 365 u otra plataforma. Un dominio permitido produce únicamente `NOT_LISTED_AS_PUBLIC_PROVIDER` y no verifica la empresa ni la autoridad del solicitante.
+
+El servidor aplica la política de forma autoritativa antes de crear el onboarding. Un dominio bloqueado devuelve una violación estable `company_email_domain_not_allowed`; una política ausente o inválida en un entorno que expone H03 falla de forma cerrada con `company_email_policy_unavailable`. Ambos mensajes visibles se resuelven mediante i18n. No existe excepción automática; una futura recuperación administrativa requerirá decisión y trazabilidad propias.
 
 ## Membresías y tenant activo
 
@@ -111,6 +140,8 @@ No se confiará exclusivamente en `ThreadLocal`, filtros Hibernate o un tenant e
 - Producto, Seguridad y Arquitectura aceptan cuenta global, perfiles múltiples, `TenantId == CompanyId` y rol `COMPANY_OWNER`.
 - D-005 y D-006 están alineadas con las fuentes superiores.
 - La ceremonia de cuenta existente y la política de empresa duplicada no permiten enlace ni enumeración automática.
+- La rotación HMAC conserva la unicidad fiscal mediante blind indexes para todas las versiones activas y un backfill verificable.
+- D-007 y `CompanyEmailAdmissionPolicy` impiden correos de dominios públicos comunes sin hardcodear proveedores ni confundir admisión con verificación empresarial.
 
 ## Conformidad de la implementación
 
@@ -118,3 +149,5 @@ No se confiará exclusivamente en `ThreadLocal`, filtros Hibernate o un tenant e
 - `CurrentActor` y selección de tenant están definidos en el contrato de seguridad.
 - Las pruebas anteriores se asignan a historias concretas del plan.
 - Las respuestas no permiten enumerar recursos ajenos.
+- Las pruebas de rotación y alta concurrente demuestran que una nueva versión HMAC no permite crear otro tenant para el mismo identificador.
+- Las pruebas de email cubren normalización, coincidencia exacta, dominio bloqueado, dominio propio alojado por un proveedor común, política ausente e i18n.

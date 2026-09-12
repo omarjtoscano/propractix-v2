@@ -1,9 +1,9 @@
 # ADR-004 — Identificadores, tiempo, zonas horarias y concurrencia
 
-- Estado: Propuesto — revisión 3
+- Estado: Aceptado — revisión 4
 - Fecha: 2026-09-12
 - Decisores: Arquitectura
-- Reemplaza: revisión 2 del ADR-004
+- Reemplaza: revisión 3 del ADR-004
 
 ## Contexto
 

@@ -1,9 +1,9 @@
 # ADR-005 — Eventos internos, outbox y onboarding durable
 
-- Estado: Propuesto — revisión 3
+- Estado: Aceptado — revisión 4
 - Fecha: 2026-09-12
 - Decisores: Arquitectura, Seguridad y Operaciones
-- Reemplaza: revisión 2 del ADR-005
+- Reemplaza: revisión 3 del ADR-005
 
 ## Contexto
 
@@ -71,7 +71,18 @@ El esquema final de cada evento se publicará versionado bajo `docs/events`; Ope
 
 La outbox guardará solo `VerificationId`, finalidad y metadatos mínimos. No guardará el token final.
 
-Al reclamar la entrega, el relay invocará un handler propiedad de `identity`. Ese handler comprobará que la verificación sigue pendiente, recuperará el correo desde `identity`, generará un token JWS firmado y de vida corta y llamará a `NotificationDeliveryPort` con destinatario, `templateKey`, locale y enlace únicamente en memoria. `notifications` implementará el puerto y no consultará repositorios de `identity`.
+Al reclamar la entrega, el relay invocará un handler propiedad de `identity`. Ese handler comprobará que la verificación sigue pendiente, recuperará el correo desde `identity`, generará un token JWS firmado y de vida corta y llamará a `DeliverNotification` con destinatario, `templateKey`, locale y enlace únicamente en memoria. `notifications` implementará el caso de uso y no consultará repositorios de `identity`.
+
+### Contratos físicos de entrega
+
+| Contrato | Owner | Paquete público | Consumidor | Contenido |
+|---|---|---|---|---|
+| `HandleEmailVerificationDeliveryRequested` | `identity` | `identity.application.port.in` | Wiring en `configuration` desde el relay genérico | `VerificationId`, `correlationId` y metadatos técnicos no personales. |
+| `DeliverNotification` | `notifications` | `notifications.application.port.in` | `identity` | Comando transitorio con destinatario, `templateKey`, locale, enlace y `correlationId`. |
+
+`DeliverNotification` devuelve únicamente un resultado técnico tipado —aceptada, fallo reintentable o fallo terminal— y nunca devuelve destinatario, enlace u otra PII. Ni su comando ni su resultado se serializan en la outbox, idempotencia, auditoría o logs.
+
+`configuration` registra el handler de `identity` para el tipo de evento correspondiente. El relay de `platform.outbox` conoce solo una interfaz técnica genérica y el payload durable mínimo; no importa paquetes de `identity`. `identity` importa el puerto de entrada público de `notifications`, y `notifications` no importa ningún paquete de `identity`. Esta dirección forma parte de las reglas ArchUnit de ADR-001/002.
 
 El JWS incluirá únicamente:
 
@@ -106,7 +117,7 @@ Si el evento se intenta entregar después de la expiración, termina con estado 
 
 - Arquitectura, Seguridad y Operaciones aceptan outbox PostgreSQL, entrega al menos una vez y ausencia de broker.
 - La ceremonia no transporta contraseñas, hashes de credencial ni bearer tokens en eventos.
-- Los contratos de provisioning y entrega son unidireccionales, no cíclicos y tienen propietario.
+- Los contratos de provisioning y entrega son unidireccionales, no cíclicos y declaran owner, consumidor y paquete público en ADR-001 y en este ADR.
 - ML-15 determina campos cifrados y retención antes de recibir datos reales en producción.
 
 ## Conformidad de la implementación
@@ -115,4 +126,5 @@ Si el evento se intenta entregar después de la expiración, termina con estado 
 - Duplicar un evento no duplica el efecto.
 - Dos workers no adquieren el mismo mensaje simultáneamente.
 - Ninguna fila de outbox contiene un token utilizable o PII innecesaria.
+- Ningún comando transitorio de entrega se persiste o registra y `platform`/`notifications` no importan `identity`.
 - El token de verificación expira y solo puede consumirse una vez.

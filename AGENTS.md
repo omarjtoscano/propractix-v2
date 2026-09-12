@@ -14,6 +14,8 @@ Si dos documentos se contradicen, detente y solicita una decisión. Un ADR acept
 ## Alcance vigente
 
 - Trabaja únicamente en el Incremento 1 y en una historia autorizada cada vez.
+- ADR-001 a ADR-008 y el plan están aceptados en revisión 4; la única historia actualmente `READY` y autorizada es I1-H01.
+- No inicies I1-H02 ni historias posteriores hasta que sus gates y predecesoras figuren cerrados en el plan.
 - No implementes ofertas, candidaturas, prevalidación, formalización, prácticas ni documentos todavía.
 - La empresa es el tenant principal.
 - `student` posee perfil, onboarding y declaración académica; `identity` no absorbe esos conceptos.
@@ -36,6 +38,8 @@ Si dos documentos se contradicen, detente y solicita una decisión. Un ADR acept
 ## Configuración e internacionalización
 
 - Países habilitados, locales soportados, correspondencias país→locale y locale de fallback proceden de configuración tipada y validada.
+- Los dominios de correo público no admitidos para el alta empresarial proceden de una política versionada; nunca de listas o condicionales incrustados en Java/TypeScript.
+- La regla evalúa el dominio normalizado después de `@`, no el proveedor de hosting: un dominio corporativo propio alojado en Google Workspace o Microsoft 365 es admisible.
 - Toda etiqueta, acción, estado, ayuda, validación o error visible usa una clave i18n; no incrustes textos de presentación en Java, TypeScript o JSX.
 - API, dominio y persistencia conservan códigos estables independientes del idioma.
 - Los textos legales se versionan separadamente de los catálogos generales de traducción.
