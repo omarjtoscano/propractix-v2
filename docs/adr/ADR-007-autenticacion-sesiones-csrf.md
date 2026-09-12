@@ -1,9 +1,9 @@
 # ADR-007 — Autenticación, sesiones, CSRF y verificación de correo
 
-- Estado: Propuesto — revisión 2
+- Estado: Propuesto — revisión 3
 - Fecha: 2026-09-12
 - Decisores: Seguridad, Producto y Arquitectura
-- Reemplaza: propuesta inicial del ADR-007
+- Reemplaza: revisión 2 del ADR-007
 
 ## Contexto y amenazas
 
@@ -23,6 +23,10 @@ Verificar el correo activa la cuenta del administrador y permite configuración 
 
 ## Credenciales
 
+- I1-H03 no recibe contraseña. `identity` crea la cuenta pendiente sin credencial.
+- El enlace `INITIAL_CREDENTIAL_SETUP` abre la pantalla de verificación y el cliente envía token y contraseña nueva directamente a `POST /api/v1/email-verifications/complete`.
+- `identity` valida y consume el token, persiste únicamente el hash y activa la cuenta dentro de su transacción. La contraseña en claro no sale del request ni llega a outbox, eventos, onboarding, logs o idempotencia.
+- Una cuenta existente utiliza `ONBOARDING_CONTINUATION`, exige autenticación o reautenticación y nunca vuelve a pedir o sustituir su contraseña como efecto del onboarding.
 - Contraseñas con BCrypt, coste inicial 12.
 - I1-H01 ejecutará benchmark en el entorno objetivo y documentará latencia; el coste se ajustará si incumple el presupuesto operativo.
 - Cada credencial registra algoritmo y parámetros para permitir rehash progresivo.
@@ -40,7 +44,7 @@ Verificar el correo activa la cuenta del administrador y permite configuración 
 - `issuer` y `audience` serán valores exactos por entorno y se validarán siempre.
 - El cliente conserva el access token solo en memoria.
 
-Una membresía revocada invalida sus familias refresh. Operaciones sensibles consultan la membresía vigente. Se acepta temporalmente que un access token ordinario pueda conservar permisos hasta 10 minutos.
+Una membresía revocada invalida sus familias refresh. Durante el Incremento 1, toda operación tenant-owned consulta la membership vigente; ninguna escritura empresarial depende únicamente de claims potencialmente obsoletos.
 
 ## Refresh token
 
@@ -65,6 +69,8 @@ En producción, una petición que use la refresh cookie sin `Origin` válido ser
 
 CORS utilizará orígenes explícitos y nunca `*` con credenciales.
 
+`POST /api/v1/auth/active-tenant` exigirá bearer access token y no leerá ni modificará la refresh cookie; valida la membership y devuelve un access token nuevo. `POST /api/v1/auth/refresh` puede recibir un `tenantId` preferido no secreto, pero al usar cookie queda sujeto a CSRF y Origin y siempre vuelve a validar la membership. El ID solicitado nunca es autoridad por sí mismo.
+
 El despliegue web del MVP mantendrá frontend y API bajo el mismo sitio registrable y TLS, aunque puedan usar subdominios diferentes. Una topología realmente cross-site exige revisar `SameSite`, CSRF y CORS mediante actualización de este ADR antes de desplegarse.
 
 ## Verificación de correo
@@ -73,9 +79,9 @@ Se adopta el token JWS de propósito único definido en ADR-005, firmado con cla
 
 ## Protección contra abuso
 
-Registro, login, reenvío y verificación no estarán disponibles públicamente hasta tener rate limiting. La política combinará IP protegida/pseudonimizada, identificador de cuenta cuando exista y límites por operación. Se implementará detrás de un puerto para poder sustituir el adapter sin cambiar casos de uso.
+Registro, login, reenvío y verificación no estarán disponibles públicamente hasta tener rate limiting. La política combinará IP protegida/pseudonimizada, identificador de cuenta cuando exista y límites por operación. Se implementará detrás de un puerto para poder sustituir el adapter sin cambiar casos de uso. `platform.ratelimit` será el propietario técnico y persistirá únicamente fingerprints HMAC, ventana y contadores con TTL.
 
-Los valores exactos se fijarán y probarán en la historia que exponga el endpoint; no se introducirán límites ficticios en el dominio.
+Seguridad y Operaciones mantendrán los valores exactos por operación en configuración tipada y versionada. Cada historia deberá fijarlos y probar `429`/`Retry-After` antes de exponer el endpoint; no se introducirán límites ni textos visibles dentro del dominio.
 
 ## Alternativas consideradas
 
@@ -92,7 +98,14 @@ Los valores exactos se fijarán y probarán en la historia que exponga el endpoi
 - La verificación empresarial se implementará como capacidad separada antes de `G1_PUBLICATION`.
 - Cambiar algoritmo o duración exige revisión de seguridad y actualización del ADR.
 
-## Criterios de aceptación del ADR
+## Condiciones documentales de aceptación
+
+- Producto, Seguridad y Arquitectura aceptan la creación passwordless inicial, RS256, access de 10 minutos y refresh de 30 días.
+- La taxonomía usa `COMPANY_OWNER` y separa cuenta activa de empresa verificada.
+- Los endpoints que usan cookie y los que usan bearer están delimitados sin ambigüedad.
+- Seguridad y Operaciones son owners del rate limiting y deben aprobar valores antes de exponer cada endpoint.
+
+## Conformidad de la implementación
 
 - Claims, claves, cookies, CSRF, Origin y CORS tienen pruebas positivas y negativas.
 - Refresh rotatorio resiste doble consumo y reutilización.

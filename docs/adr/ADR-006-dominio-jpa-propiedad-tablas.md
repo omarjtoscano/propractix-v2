@@ -1,9 +1,9 @@
 # ADR-006 — Separación dominio/JPA y propiedad de tablas
 
-- Estado: Propuesto — revisión 2
+- Estado: Propuesto — revisión 3
 - Fecha: 2026-09-12
 - Decisores: Arquitectura y Datos
-- Reemplaza: propuesta inicial del ADR-006
+- Reemplaza: revisión 2 del ADR-006
 
 ## Contexto
 
@@ -23,7 +23,7 @@ Se utilizará PostgreSQL 16 y un esquema de aplicación único durante el MVP. L
 | `identity_password_credential` | `identity` | User-owned | Solo `identity`; contenido nunca sale en contratos. |
 | `identity_email_verification` | `identity` | User-owned | Solo `identity`; consumo atómico. |
 | `identity_refresh_session` | `identity` | Usuario y tenant activo opcional | Solo `identity`. |
-| `organization_company` | `organization` | Tenant-owned | Solo `organization`. |
+| `organization_company` | `organization` | Tenant-owned | Solo `organization`; país, locale y fingerprint fiscal según D-005/ADR-003. |
 | `organization_membership` | `organization` | Tenant-owned | Solo `organization`. |
 | `organization_company_onboarding` | `organization` | Registro/tenant futuro | Solo `organization`; conserva referencia y evidencia mínima del aviso mostrado. |
 | `student_profile` | `student` | Student-owned | Solo adapter de `student`. |
@@ -36,10 +36,15 @@ Se utilizará PostgreSQL 16 y un esquema de aplicación único durante el MVP. L
 | `platform_event_consumption` | `platform.outbox` | Técnico | Consumidores idempotentes. |
 | `platform_idempotency_record` | `platform.idempotency` | Actor/operación | Adapter HTTP de idempotencia. |
 | `platform_security_audit` | `platform.audit` | Tenant/usuario opcional | Writer append-only; lectura administrativa. |
+| `platform_rate_limit_bucket` | `platform.ratelimit` | Operación/sujeto pseudonimizado | Solo adapter de rate limiting; TTL y sin IP/email en claro. |
 
 La matriz se ampliará en la migración de cada historia, nunca de forma implícita.
 
 `compliance` publica mediante contrato de lectura qué aviso está `APPROVED` y vigente para una finalidad. El contexto que recopila los datos guarda en su propio onboarding el ID/versión del aviso, fecha de presentación y evidencia estrictamente necesaria. No escribe una aceptación central ni delega en `compliance` la transacción de registro.
+
+Durante el Incremento 1, `notifications` no tendrá tabla propia: correo, enlace y token serán transitorios; los intentos y códigos técnicos no sensibles permanecen en la outbox. Cualquier almacenamiento posterior de notificaciones o intentos exige ampliar esta matriz antes de crear la migración.
+
+`organization_company` impondrá unicidad sobre país registral, tipo fiscal y fingerprint HMAC del identificador normalizado. El valor necesario para operación se protegerá según ML-15 y registrará versión de clave; ni la coincidencia ni la validación sintáctica equivalen a verificación legal. La clave HMAC y cualquier clave de cifrado serán externas al repositorio.
 
 ## Relaciones y tenant
 
@@ -82,7 +87,13 @@ Separar schemas, usuarios o activar RLS se evaluará cuando el riesgo o escala l
 - La propiedad y sensibilidad de cada tabla son auditables.
 - Importar catálogo exige un proceso gobernado separado del versionado del esquema.
 
-## Criterios de aceptación del ADR
+## Condiciones documentales de aceptación
+
+- Arquitectura y Datos aceptan modelo dominio/JPA separado, esquema único y riesgo residual.
+- Cada tabla actualmente prevista tiene owner, scope y política de escritura explícitos.
+- D-005 y D-006 están alineadas con la matriz y ML-15 es una puerta anterior a datos reales.
+
+## Conformidad de la implementación
 
 - Cada tabla nueva amplía la matriz de propiedad o una equivalente versionada.
 - No existen JPA entities fuera de adapters de persistencia.

@@ -1,9 +1,9 @@
 # ADR-004 — Identificadores, tiempo, zonas horarias y concurrencia
 
-- Estado: Propuesto — revisión 2
+- Estado: Propuesto — revisión 3
 - Fecha: 2026-09-12
 - Decisores: Arquitectura
-- Reemplaza: propuesta inicial del ADR-004
+- Reemplaza: revisión 2 del ADR-004
 
 ## Contexto
 
@@ -27,6 +27,8 @@ UUID v7 queda aplazado porque Java 21 no lo ofrece de forma estándar y no se a�
 - Zona: identificador IANA persistido como texto validado, por ejemplo `Europe/Madrid`.
 - No se usará `LocalDateTime` para timestamps globales.
 - Application recibirá un puerto `Clock`; los adapters suministrarán el reloj real y los tests uno fijo.
+
+`Clock` será autoritativo para decisiones de dominio y application. En predicados SQL atómicos de expiración, leasing y compare-and-set, `CURRENT_TIMESTAMP` de PostgreSQL será autoritativo dentro de esa operación. Los tests de integración cubrirán el borde temporal y verificarán que una diferencia de reloj no amplíe de forma apreciable la validez de un secreto o lease.
 
 La zona predeterminada se captura desde la organización o la selección del usuario al crear el dato relevante. No se consulta dinámicamente una configuración nacional para reinterpretar datos históricos.
 
@@ -61,7 +63,12 @@ Cada mecanismo tendrá prueba concurrente sobre PostgreSQL mediante Testcontaine
 - Los conflictos tienen un contrato uniforme.
 - Las carreras de seguridad necesitan SQL condicional y pruebas específicas, aunque el aggregate también tenga versión.
 
-## Criterios de aceptación del ADR
+## Condiciones documentales de aceptación
+
+- Arquitectura acepta UUID v4, las representaciones temporales y la autoridad dual controlada de `Clock`/PostgreSQL.
+- Las alternativas y el coste de SQL atómico específico están documentados y aceptados.
+
+## Conformidad de la implementación
 
 - Las migraciones usan `uuid`, `timestamptz`, `date` y `bigint` según esta decisión.
 - No aparecen timestamps globales como `LocalDateTime`.

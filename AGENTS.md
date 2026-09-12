@@ -16,8 +16,10 @@ Si dos documentos se contradicen, detente y solicita una decisión. Un ADR acept
 - Trabaja únicamente en el Incremento 1 y en una historia autorizada cada vez.
 - No implementes ofertas, candidaturas, prevalidación, formalización, prácticas ni documentos todavía.
 - La empresa es el tenant principal.
+- `student` posee perfil, onboarding y declaración académica; `identity` no absorbe esos conceptos.
 - La universidad es una referencia externa y no requiere cuenta ni workspace.
 - España es la primera jurisdicción del MVP según D-001.
+- País empresarial, locale de interfaz y jurisdicción legal son conceptos distintos; un fallback de idioma nunca aplica reglas españolas a otro país.
 - No inventes reglas legales. `UNKNOWN` e `INDETERMINATE` bloquean puertas críticas.
 
 ## Arquitectura obligatoria
@@ -28,7 +30,16 @@ Si dos documentos se contradicen, detente y solicita una decisión. Un ADR acept
 - El dominio es Java puro: sin Spring, JPA, HTTP ni acceso a variables de entorno.
 - Los casos de uso se exponen mediante puertos de entrada; persistencia, reloj, correo e integraciones son puertos de salida.
 - Ningún contexto accede a tablas, repositorios o entidades de persistencia de otro contexto.
+- No introduzcas condicionales de dominio por país; resuelve reglas mediante políticas jurisdiccionales versionadas.
 - No uses Lombok, Spring Data REST, H2, microservicios, Kafka ni CQRS completo salvo un ADR nuevo previamente aprobado.
+
+## Configuración e internacionalización
+
+- Países habilitados, locales soportados, correspondencias país→locale y locale de fallback proceden de configuración tipada y validada.
+- Toda etiqueta, acción, estado, ayuda, validación o error visible usa una clave i18n; no incrustes textos de presentación en Java, TypeScript o JSX.
+- API, dominio y persistencia conservan códigos estables independientes del idioma.
+- Los textos legales se versionan separadamente de los catálogos generales de traducción.
+- Las invariantes técnicas permanecen tipadas en código; no se convierten en configuración libre para aparentar flexibilidad.
 
 ## Seguridad y tenancy
 

@@ -1,9 +1,9 @@
 # ADR-002 — Organización hexagonal de paquetes
 
-- Estado: Propuesto — revisión 2
+- Estado: Propuesto — revisión 3
 - Fecha: 2026-09-12
 - Decisores: Arquitectura
-- Reemplaza: propuesta inicial del ADR-002
+- Reemplaza: revisión 2 del ADR-002
 
 ## Contexto
 
@@ -63,7 +63,7 @@ Se consideran públicos únicamente:
 - tipos mínimos de `application.contract`;
 - eventos de integración versionados publicados después del commit.
 
-No son contratos públicos los aggregates, entidades, repositorios, mappers, JPA entities, servicios concretos o DTO REST. Para comandos que modifican otro contexto se preferirá un proceso durable y eventos. Las consultas síncronas se permitirán solo mediante un puerto público sin compartir modelo interno.
+No son contratos públicos los aggregates, entidades, repositorios, mappers, JPA entities, servicios concretos o DTO REST. Para comandos que modifican otro contexto se preferirá un proceso durable y eventos. Las consultas síncronas se permitirán solo mediante un puerto público sin compartir modelo interno, no abrirán una transacción distribuida y nunca permitirán al consumidor escribir datos propiedad del proveedor.
 
 ## Reglas ArchUnit
 
@@ -72,7 +72,7 @@ No son contratos públicos los aggregates, entidades, repositorios, mappers, JPA
 3. Solo `..application.service..` puede depender de `spring-tx` y únicamente de `@Transactional`.
 4. `..adapter.in.rest..` no es consumido por application o domain.
 5. `..adapter.out.persistence..` no expone entidades JPA fuera de su adapter.
-6. Los contextos no se importan entre sí salvo paquetes `application.contract` o puertos públicos listados en ADR-001.
+6. Los contextos no se importan entre sí salvo paquetes `application.contract` o puertos públicos incluidos en la matriz vigente y aceptada de ADR-001.
 7. `platform` no depende de dominios concretos; implementa interfaces suministradas en configuración.
 8. La aplicación no contiene paquetes raíz globales `controller`, `service`, `repository` o `entity`.
 
@@ -90,7 +90,13 @@ No son contratos públicos los aggregates, entidades, repositorios, mappers, JPA
 - ArchUnit impedirá erosión estructural antes de cada merge.
 - La capa application conserva una dependencia mínima en `spring-tx`, aceptada como riesgo controlado.
 
-## Criterios de aceptación del ADR
+## Condiciones documentales de aceptación
+
+- Arquitectura acepta la dirección de dependencias y la excepción limitada de `spring-tx`.
+- Las alternativas y el coste de mappers explícitos están aceptados.
+- La matriz vigente de ADR-001 define los únicos contratos cross-context del incremento.
+
+## Conformidad de la implementación
 
 - Una prueba de dominio compila y se ejecuta sin levantar Spring.
 - Las ocho reglas ArchUnit quedan implementadas en I1-H01.

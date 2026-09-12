@@ -1,6 +1,6 @@
 # ProPractix V2 — Blueprint de dominio y mapas legales para España
 
-**Versión:** 1.2  
+**Versión:** 1.3
 **Fecha:** 12 de septiembre de 2026  
 **Enfoque:** Domain-Driven Design (DDD), arquitectura hexagonal y monolito modular  
 **Estado:** alcance de producto y arquitectura aprobado; reglas jurídicas pendientes de validación profesional
@@ -14,6 +14,8 @@ Las implicaciones legales se diseñan desde el inicio, pero se implementan progr
 ProPractix será un producto orientado principalmente a empresas. Las empresas serán los tenants y usuarios operativos principales; las universidades no necesitarán registrarse ni adoptar la plataforma para que una práctica pueda formalizarse. Participarán como instituciones externas mediante documentos, contactos oficiales, enlaces seguros o, de forma opcional y posterior, un workspace institucional.
 
 El primer piloto se limitará a universidades españolas identificadas en el catálogo interno y con información institucional suficiente para evaluar la práctica, empresas privadas, estudiantes mayores de edad y matriculados y prácticas presenciales o híbridas autorizables por la universidad. Un convenio podrá existir previamente o tramitarse durante la formalización, pero deberá estar firmado y vigente antes de superar `G3_FORMALIZATION` o iniciar la práctica. Quedan fuera del piloto las administraciones públicas, la formación sanitaria asistencial, las empresas o universidades extranjeras y cualquier práctica sin una institución educativa responsable.
+
+El perfil de una empresa podrá conservar un país registral distinto de España para no hardcodear el modelo organizativo. Ese dato puede ayudar a elegir el locale inicial de la interfaz, pero no habilita operaciones legales en dicho país. La jurisdicción de una oferta o práctica se clasifica por separado y, si no existe un `PolicyPack` soportado, el proceso queda `OUT_OF_SCOPE`; nunca se aplican reglas españolas como fallback jurídico.
 
 La clasificación jurídica debe ocurrir antes de crear el expediente definitivo. Una práctica universitaria, una estancia de FP y un contrato formativo son conceptos de dominio diferentes y nunca deben compartir reglas por conveniencia técnica.
 
@@ -205,7 +207,7 @@ Solo `ELIGIBLE`, o `ELIGIBLE_WITH_CONDITIONS` una vez resueltas sus condiciones,
 
 ## 5. Traducción a DDD
 
-Bounded Contexts: `Jurisdiction`, `Organization`, `AcademicInstitutionCatalog`, `Recruitment`, `Internship`, `Learning`, `Compliance`, `Documents`, `Identity` y `Notifications`. `Organization` administra principalmente empresas, miembros y aislamiento tenant; `AcademicInstitutionCatalog` representa universidades externas, contactos verificados y perfiles institucionales sin exigir cuentas ni tenancy.
+Bounded Contexts: `Jurisdiction`, `Organization`, `Student`, `AcademicInstitutionCatalog`, `Recruitment`, `Internship`, `Learning`, `Compliance`, `Documents`, `Identity` y `Notifications`. `Organization` administra empresas, miembros, país registral, locale empresarial y aislamiento tenant; `Student` posee el perfil y las declaraciones académicas personales; `Identity` conserva exclusivamente cuentas, credenciales y sesiones. `AcademicInstitutionCatalog` representa universidades externas, contactos verificados y perfiles institucionales sin exigir cuentas ni tenancy.
 
 Aggregates principales:
 
@@ -214,6 +216,8 @@ LegalPolicyPack(jurisdiction, modality, version, validity, sources, rules, appro
 ComplianceCase(internshipId, policyVersion, requirements, evidence, decisions, unknowns)
 Internship(classification, participants, tutors, dates, schedule, project, compliance, status)
 LegalRequirement(code, applicability, severity, evidenceTypes, blockingGate, source)
+StudentProfile(userId, status, localePreference)
+AcademicDeclaration(studentId, institutionId?, institutionText?, degreeText, version, verificationStatus)
 AcademicInstitution(officialName, identifier, territory, domains, status)
 InstitutionPolicyPack(institutionId, modalities, documents, signers, workflow, version)
 AcademicEligibilityCase(studentId, institutionId, proposedTerms, evidence, decision, status)
@@ -268,9 +272,9 @@ Los incrementos 0–8 corresponden exclusivamente al alcance aprobado en `D-001`
 | Incremento | Valor usable | Mapas mínimos |
 |---|---|---|
 | 0 — Foundation | Monolito modular, DDD, hexagonal, i18n, jurisdicción y gobierno. | `ML-00–02` |
-| 1 — Identity & Organizations | Registro de empresa y usuarios, catálogo institucional y aislamiento tenant. | `ML-03`, `ML-15` |
+| 1 — Identity, Student & Organizations | Registro de empresa y estudiante, catálogo institucional, declaración académica personal no verificada y aislamiento tenant. | `ML-03`, `ML-15` |
 | 2 — Job Offer | Crear y publicar oferta con condiciones transparentes. | `ML-08`, `ML-09`, `ML-16` |
-| 3 — Application | Candidatura, declaración académica y verificación de correo institucional sin notificar todavía a la universidad. | `ML-04`, `ML-15`, `ML-18`, `ML-19` |
+| 3 — Application | Candidatura y reconfirmación de la declaración académica para ese proceso; el correo institucional sigue siendo un indicio y no se notifica todavía a la universidad. | `ML-04`, `ML-15`, `ML-18`, `ML-19` |
 | 4 — Selection & Prevalidation | Screening, entrevistas, paso a finalista y prevalidación académica con selección condicionada. | `ML-04`, `ML-15`, `ML-16`, `ML-26` |
 | 5 — Formalization | Convenio, proyecto, cláusulas y firmas. | `ML-05`, `06`, `09`, `10`, `25`, `27` |
 | 6 — Activation | Checklist legal y transición a `ACTIVE`. | `ML-07`, `11`, `12`, `13`, `14` |
@@ -389,9 +393,35 @@ La universidad podrá interactuar mediante `EXTERNAL_PROCESS`, `SECURE_INVITATIO
 
 No se notificará a la universidad cada candidatura ni se compartirán pruebas, puntuaciones o notas internas. Al llegar a finalista, el estudiante confirmará sus datos y será informado de la comunicación necesaria. ProPractix remitirá únicamente los datos requeridos para determinar si la práctica propuesta puede formalizarse. La base jurídica, transparencia, minimización y conservación de esta comunicación deberán quedar aprobadas en `ML-15`.
 
+### D-005 — País empresarial, locale y jurisdicción separados
+
+| Campo | Valor |
+|---|---|
+| Estado | `ACCEPTED` |
+| País empresarial | Información propia de `Company` |
+| Fallback de interfaz | Locale configurado inicialmente como español (`es`) |
+| Fallback jurídico | Ninguno |
+
+`Company.registeredCountry` conserva el país configurado para la empresa. En el primer acceso, la interfaz intenta usar el locale empresarial configurado y, si no existe, la correspondencia administrada para dicho país. Una preferencia explícita posterior del usuario prevalece. Países, locales soportados, correspondencias país→locale y fallback se obtienen de configuración tipada; el valor inicial del fallback es español. Ninguna etiqueta visible se deriva de una enum o texto incrustado en código.
+
+Esta resolución solo afecta presentación. La jurisdicción legal de una oferta o práctica se clasifica independientemente mediante `Jurisdiction`. Una empresa francesa podría conservar `FR` y usar `fr` cuando el producto lo soporte, pero mientras no exista un `PolicyPack` francés publicado sus operaciones reguladas quedarán `OUT_OF_SCOPE` o bloqueadas. No se aplicará `ES-UNIVERSITY-EXTERNAL` por defecto a una empresa, oferta o práctica extranjera.
+
+### D-006 — Contexto Student y declaración académica por etapas
+
+| Campo | Valor |
+|---|---|
+| Estado | `ACCEPTED` |
+| Propietario del perfil | `Student` |
+| Incremento 1 | Declaración personal, editable y no verificada |
+| Incremento 3 | Reconfirmación vinculada a la candidatura |
+
+`Student` será un bounded context independiente y poseerá `StudentProfile`, `StudentOnboarding` y `AcademicDeclaration`. `Identity` seguirá limitado a cuenta, credenciales, verificación y sesiones. Una cuenta global podrá tener perfil estudiantil y membresías empresariales sin mezclar su propiedad.
+
+La declaración del Incremento 1 permite elegir una institución del catálogo o indicar que no se encuentra, además de declarar la titulación como texto. No demuestra matrícula, elegibilidad ni aprobación universitaria. En el Incremento 3 se reconfirma y se vincula a una candidatura concreta; las verificaciones institucionales se ejecutan únicamente en las puertas posteriores definidas por D-004.
+
 ## 13. Criterio de revisión de D-001
 
-`D-001`, `D-003` y `D-004` deberán revisarse si cambia la normativa estatal aplicable, si una universidad exige un flujo incompatible con el modelo común, si el MVP incorpora otra modalidad educativa o si la validación jurídica concluye que algún supuesto incluido requiere un bounded context o proceso diferente.
+`D-001`, `D-003`, `D-004`, `D-005` y `D-006` deberán revisarse si cambia la normativa estatal aplicable, si una universidad exige un flujo incompatible con el modelo común, si el MVP incorpora otra modalidad educativa o si la validación jurídica concluye que algún supuesto incluido requiere un bounded context o proceso diferente.
 
 ```text
 LegalPolicyPack: ES-UNIVERSITY-EXTERNAL

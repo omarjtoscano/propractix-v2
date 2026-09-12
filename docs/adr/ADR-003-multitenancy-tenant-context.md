@@ -1,9 +1,9 @@
 # ADR-003 — Multi-tenancy, identidad y tenant activo
 
-- Estado: Propuesto — revisión 2
+- Estado: Propuesto — revisión 3
 - Fecha: 2026-09-12
 - Decisores: Producto, Seguridad y Arquitectura
-- Reemplaza: propuesta inicial del ADR-003
+- Reemplaza: revisión 2 del ADR-003
 
 ## Contexto
 
@@ -13,10 +13,18 @@ La empresa es el tenant principal. Una persona puede colaborar con más de una e
 
 - `UserAccount` será global y su correo normalizado será único globalmente.
 - Una cuenta podrá estar asociada a un `StudentProfile`, propiedad del contexto `student`, y a cero o más membresías empresariales.
-- Los formularios de empresa y estudiante seguirán separados, aunque converjan en una cuenta existente mediante un flujo seguro que se diseñará en la historia correspondiente.
+- Los formularios de empresa y estudiante seguirán separados y convergerán en una cuenta existente únicamente mediante la ceremonia definida a continuación.
 - Una universidad no será tenant ni tendrá cuenta obligatoria durante el MVP.
 
 `StudentProfile` tendrá un `StudentId` propio y una referencia uno-a-uno a `UserId`. La asociación se crea únicamente mediante un onboarding autenticado o verificado; una coincidencia de correo nunca basta.
+
+### Convergencia de cuenta
+
+- Si el correo no existe, `identity` crea una cuenta `PENDING_EMAIL` sin credencial y emite una verificación de propósito `INITIAL_CREDENTIAL_SETUP`.
+- El usuario establece la contraseña al completar esa verificación directamente contra `identity`; la contraseña no atraviesa `organization`, `student`, outbox ni eventos.
+- Si la cuenta existe y el actor ya está autenticado, debe reautenticarse antes de vincular un nuevo onboarding.
+- Si la cuenta existe y el actor no está autenticado, recibe un enlace de propósito `ONBOARDING_CONTINUATION`; después debe autenticarse. La respuesta pública sigue siendo genérica.
+- No se crean perfiles, memberships ni empresas por coincidencia silenciosa de correo.
 
 ## Identificador tenant
 
@@ -24,9 +32,23 @@ Durante el MVP, el identificador del aggregate `Company` será el `TenantId`. No
 
 Si en el futuro otra clase de organización se convierte en tenant, un ADR de migración introducirá el concepto generalizado; no se anticipará ahora.
 
+## País, locale y jurisdicción
+
+`Company` conserva `registeredCountry` y un `preferredLocale` opcional. Los valores se validan contra catálogos configurados, no mediante condicionales por país. El locale inicial se resuelve según D-005 y puede caer al locale de interfaz configurado, inicialmente `es`.
+
+Los tipos y validadores sintácticos de identificador fiscal se registran mediante un resolver/adapter por código de país. Añadir otro país no modifica `Company` ni introduce ramas `if/switch` en el aggregate. Que un formato sea válido no demuestra existencia o representación legal.
+
+La jurisdicción de una operación regulada se resuelve por separado. Un país empresarial sin `LegalPolicyPack` soportado nunca hereda las reglas españolas y no supera la puerta de alcance.
+
+## Empresa ya existente
+
+La identidad empresarial candidata se compara por país registral, tipo de identificador fiscal y fingerprint HMAC del valor normalizado. Esa coincidencia impide crear automáticamente otro tenant, pero no verifica jurídicamente a la empresa ni autoriza a reclamarla.
+
+La respuesta pública permanece genérica. El solicitante deberá autenticarse como miembro autorizado o abrir un caso administrativo con evidencia independiente. Nunca se enlaza una empresa, cuenta o membership por coincidencia de nombre, dominio, correo o identificador fiscal.
+
 ## Membresías y tenant activo
 
-Una `Membership` relacionará `UserId`, `TenantId`, rol, estado y versión. Una persona podrá tener varias membresías activas.
+Una `Membership` relacionará `UserId`, `TenantId`, rol, estado y versión. Una persona podrá tener varias membresías activas. El primer miembro de una empresa usa el rol canónico `COMPANY_OWNER`.
 
 Después del login:
 
@@ -42,9 +64,9 @@ El adaptador de seguridad formará `CurrentActor` con `UserId`, tenant activo op
 El access token puede incluir tenant activo, membresía y roles para autorizar operaciones ordinarias. Su vida será de 10 minutos según ADR-007.
 
 - Cambiar o revocar una membresía revoca las familias refresh relacionadas.
-- Las operaciones sensibles volverán a consultar la membresía vigente.
+- Durante el Incremento 1, toda operación tenant-owned vuelve a consultar la membership vigente en aplicación y filtra por tenant en persistencia.
 - Una discrepancia de versión de autorización obliga a renovar sesión.
-- Se acepta como riesgo residual que un access token ordinario conserve permisos hasta 10 minutos; se revisará si aparecen operaciones de mayor impacto.
+- La ventana residual del access token no autoriza ninguna lectura o escritura tenant-owned de I1. Puede mantenerse únicamente para recursos globales que no dependan de una membership.
 
 ## Clasificación de recursos
 
@@ -84,7 +106,13 @@ No se confiará exclusivamente en `ThreadLocal`, filtros Hibernate o un tenant e
 - Cuenta sin tenant no usa endpoints empresariales.
 - Administrador interno sin caso de uso explícito no atraviesa el aislamiento.
 
-## Criterios de aceptación del ADR
+## Condiciones documentales de aceptación
+
+- Producto, Seguridad y Arquitectura aceptan cuenta global, perfiles múltiples, `TenantId == CompanyId` y rol `COMPANY_OWNER`.
+- D-005 y D-006 están alineadas con las fuentes superiores.
+- La ceremonia de cuenta existente y la política de empresa duplicada no permiten enlace ni enumeración automática.
+
+## Conformidad de la implementación
 
 - Existe un solo identificador persistido para empresa/tenant.
 - `CurrentActor` y selección de tenant están definidos en el contrato de seguridad.

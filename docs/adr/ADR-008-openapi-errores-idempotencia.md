@@ -1,9 +1,9 @@
 # ADR-008 — OpenAPI, errores, correlación e idempotencia
 
-- Estado: Propuesto — revisión 2
+- Estado: Propuesto — revisión 3
 - Fecha: 2026-09-12
 - Decisores: Arquitectura, Backend y Frontend
-- Reemplaza: propuesta inicial del ADR-008
+- Reemplaza: revisión 2 del ADR-008
 
 ## Contexto
 
@@ -17,6 +17,7 @@ V2 necesita un contrato único entre backend y frontend, errores procesables y p
 - El cliente TypeScript se generará desde OpenAPI.
 - Cada historia funcional modifica conjuntamente contrato, API, cliente, UI, i18n y tests.
 - CI comprobará validez del contrato, cambios incompatibles y que el cliente generado no presenta diff.
+- OpenAPI, dominio y eventos exponen códigos estables, no etiquetas de interfaz. Toda etiqueta, validación, acción, estado o error visible se resuelve mediante una clave i18n; CI detecta literales visibles y comprueba paridad de locales.
 
 ## Errores
 
@@ -51,8 +52,9 @@ Registro y otras creaciones sensibles exigirán `Idempotency-Key`:
 - unicidad atómica por `operation + key`;
 - estados `PROCESSING`, `SUCCEEDED`, `FAILED_REPLAYABLE` y expirado;
 - TTL inicial de 24 horas;
-- fingerprint HMAC-SHA-256 de la petición canónica completa con clave externa;
-- el fingerprint puede cubrir contraseña sin permitir ataques offline, porque nunca se guarda hash simple ni petición original;
+- fingerprint HMAC-SHA-256 de operación, versión de contrato, método, plantilla de ruta y comando validado serializado de forma determinista con propiedades ordenadas y UTF-8;
+- se excluyen orden original del JSON, headers no semánticos, correlation ID y datos de transporte;
+- las operaciones de creación inicial de credencial no utilizan almacenamiento de idempotencia basado en la contraseña: el registro de verificación de un solo uso evita la repetición;
 - la fila no almacena contraseña, token, cookie, body original ni headers sensibles;
 - la respuesta reproducible se limita a status, headers permitidos e identificador opaco de operación; para registro se usa un `202` genérico.
 
@@ -61,14 +63,14 @@ Semántica:
 1. Primera petición reclama la clave atómicamente como `PROCESSING`.
 2. Misma clave/fingerprint terminal reproduce la respuesta segura.
 3. Misma clave con fingerprint distinto devuelve `409 idempotency_key_reused`.
-4. Solicitud concurrente observa `PROCESSING` y recibe resultado/polling definido por el endpoint, sin ejecutar de nuevo.
+4. En onboarding sin polling público, una solicitud concurrente que observa `PROCESSING` recibe el mismo `202` genérico y el mismo identificador opaco de operación, sin ejecutar de nuevo.
 5. Un fallo antes de comenzar la operación puede marcarse replayable; un estado incierto no se repite a ciegas.
 
 `platform.idempotency` será propietario de la tabla. Los datos admitidos, acceso y limpieza se rigen también por ADR-006 y ML-15.
 
 ## Privacidad del registro
 
-Un endpoint de registro en producción requiere una versión `APPROVED` y vigente del aviso aplicable. Si no existe, responde `privacy_policy_unavailable` sin aceptar datos personales. Fixtures de test/local no pueden promoverse a producción.
+Un endpoint de registro en producción requiere una versión `APPROVED` y vigente del aviso aplicable. Un filtro anterior al binding del body ejecuta este guard: si no existe, responde `privacy_policy_unavailable` antes de deserializar, persistir, auditar o registrar el body personal y sin crear un registro de idempotencia derivado del body. Fixtures de test/local no pueden promoverse a producción.
 
 ## Alternativas consideradas
 
@@ -85,7 +87,13 @@ Un endpoint de registro en producción requiere una versión `APPROVED` y vigent
 - Los errores cross-tenant no revelan existencia.
 - `correlationId` es uniforme; tracing permanece detalle interno.
 
-## Criterios de aceptación del ADR
+## Condiciones documentales de aceptación
+
+- Arquitectura, Backend y Frontend aceptan OpenAPI design-first, Problem Details e idempotencia anónima protegida por HMAC.
+- Canonicalización, respuesta `PROCESSING` y precedencia del guard ML-15 están cerradas.
+- Los códigos públicos son independientes de cualquier locale y toda presentación queda en i18n.
+
+## Conformidad de la implementación
 
 - CI detecta OpenAPI inválido, cliente desactualizado o cambio incompatible no autorizado.
 - Pruebas concurrentes demuestran una sola ejecución por clave.

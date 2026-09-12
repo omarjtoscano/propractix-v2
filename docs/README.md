@@ -11,7 +11,9 @@
 7. [Revisión del bootstrap](reviews/bootstrap-validation.md).
 8. [Primera revisión de ADR y plan](reviews/revision-adrs-incremento-01.md).
 9. [Resolución de la primera revisión](reviews/resolucion-revision-adrs-incremento-01.md).
-10. [Prompt para la segunda revisión](prompts/review-adrs-increment-01.md).
+10. [Segunda revisión de ADR y plan](reviews/segunda-revision-adrs-incremento-01.md).
+11. [Resolución de la segunda revisión](reviews/resolucion-segunda-revision-adrs-incremento-01.md).
+12. [Prompt para la revisión final](prompts/review-adrs-increment-01.md).
 
 ## Estado de decisión
 

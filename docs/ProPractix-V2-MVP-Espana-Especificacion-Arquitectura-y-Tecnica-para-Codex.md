@@ -57,6 +57,7 @@ Cada incremento DEBE dejar una versión desplegable, demostrable y usable. La in
 
 - Empresas privadas establecidas o actuando en España.
 - Empresas como tenants y clientes principales.
+- País registral de la empresa y locale de interfaz modelados por separado.
 - Usuarios de empresa con roles limitados.
 - Estudiantes mayores de edad y matriculados.
 - Prácticas universitarias curriculares y extracurriculares.
@@ -75,7 +76,7 @@ Cada incremento DEBE dejar una versión desplegable, demostrable y usable. La in
 - Administraciones públicas.
 - Formación sanitaria asistencial.
 - Movilidad internacional.
-- Empresas o universidades extranjeras.
+- Operación de ofertas o prácticas para empresas o universidades extranjeras.
 - Colombia y demás jurisdicciones.
 - Microservicios.
 - Motor jurídico universal.
@@ -95,6 +96,9 @@ Cada incremento DEBE dejar una versión desplegable, demostrable y usable. La in
 8. El correo institucional es una evidencia de afiliación aparente, no prueba suficiente de elegibilidad.
 9. El estudiante no sustituye a la universidad en la firma del convenio marco.
 10. `UNKNOWN` o `INDETERMINATE` bloquean cualquier puerta crítica.
+11. El país registral de la empresa, el idioma de interfaz y la jurisdicción legal son conceptos distintos.
+12. Un locale no soportado cae a español; una jurisdicción no soportada nunca cae a las reglas españolas.
+13. Países, locales, etiquetas y políticas se resuelven mediante catálogos o configuración validada; no mediante condicionales o textos visibles dispersos en código.
 
 ## 6. Arquitectura objetivo
 
@@ -183,6 +187,7 @@ El `package.json` raíz PUEDE ofrecer comandos de orquestación, pero cualquier 
 | Contexto | Responsabilidad | Datos propios |
 |---|---|---|
 | `identity` | Identidad, credenciales, sesiones y autenticación. | Usuarios, credenciales, refresh tokens. |
+| `student` | Perfil del estudiante, onboarding y declaraciones académicas personales. | StudentProfile, StudentOnboarding, AcademicDeclaration. |
 | `organization` | Empresas, miembros, sedes, roles empresariales y tenant. | Company, memberships, locations. |
 | `academicinstitution` | Catálogo externo de universidades, dominios, contactos y perfiles. | AcademicInstitution, InstitutionContact, InstitutionPolicyPack. |
 | `jurisdiction` | Policy packs por país, modalidad, versión y vigencia. | LegalPolicyPack, fuentes y publicaciones. |
@@ -201,19 +206,21 @@ El `package.json` raíz PUEDE ofrecer comandos de orquestación, pero cualquier 
 
 ```mermaid
 flowchart TD
-    ID["Identity"] --> ORG["Organization"]
-    ORG --> REC["Recruitment"]
-    INST["Academic Institution"] --> FORM["Formalization"]
-    REC --> FORM
-    FORM --> INT["Internship"]
-    JUR["Jurisdiction"] --> COMP["Compliance"]
-    INT --> COMP
-    INT --> LEARN["Learning"]
-    DOC["Documents"] --> FORM
-    COMP --> NOTIF["Notifications"]
+    ORG["Organization"] --> ID["Identity"]
+    STU["Student"] --> ID
+    STU --> INST["Academic Institution"]
+    REC["Recruitment"] --> ORG
+    REC --> STU
+    FORM["Formalization"] --> REC
+    FORM --> INST
+    INT["Internship"] --> FORM
+    INT --> COMP["Compliance"]
+    COMP --> JUR["Jurisdiction"]
+    LEARN["Learning"] --> INT
+    FORM --> DOC["Documents"]
 ```
 
-Las flechas expresan consumo de contratos públicos, no acceso directo a tablas ni entidades internas.
+Las flechas van del consumidor al proveedor de un contrato público; no representan acceso directo a tablas ni entidades internas. `notifications` implementa capacidades de entrega solicitadas por los contextos propietarios y no consulta repositorios ajenos.
 
 ## 10. Estructura interna de cada módulo backend
 
@@ -263,6 +270,8 @@ Un concepto de negocio compartido DEBE tener un contexto propietario y publicars
 |---|---|---|---|
 | `Company` | organization | Company | Identidad legal mínima, estado y membresías coherentes. |
 | `UserAccount` | identity | Global/actor | Email normalizado, sesión y credenciales seguras. |
+| `StudentProfile` | student | User/student-owned | Un perfil por usuario; ningún tenant empresarial implícito. |
+| `AcademicDeclaration` | student | Student-owned | Declaración editable, versionada y no probatoria; referencia institucional opcional. |
 | `AcademicInstitution` | academicinstitution | Global catalog | Identificador y dominios institucionales no ambiguos. |
 | `LegalPolicyPack` | jurisdiction | Global | Versión, vigencia, esquema y aprobación antes de publicar. |
 | `InstitutionPolicyPack` | academicinstitution | Global/institution | Reglas institucionales versionadas y no retroactivas. |
@@ -390,6 +399,7 @@ RegisterCompany
 VerifyCompany
 InviteCompanyMember
 RegisterStudent
+RecordAcademicDeclaration
 VerifyInstitutionalEmail
 CreateJobOffer
 PublishJobOffer
@@ -419,6 +429,8 @@ ArchiveInternship
 ```text
 CompanyRegistered
 CompanyVerified
+StudentProfileActivated
+AcademicDeclarationRecorded
 JobOfferPublished
 ApplicationSubmitted
 CandidateBecameFinalist
@@ -518,7 +530,7 @@ Un enlace de universidad DEBE ser:
 - Protección de los endpoints de cookie mediante comprobación de origen/CSRF según el diseño adoptado.
 - CORS con allowlist explícita.
 - Contraseñas con un algoritmo adaptativo aprobado y parámetros versionados.
-- Verificación de email y recuperación de contraseña con tokens hasheados, expirables y de un solo uso.
+- Verificación de email mediante JWS de propósito único vinculado a un registro atómico, sin persistir el token; recuperación de contraseña mediante secreto hasheado, expirable y de un solo uso.
 - No persistir credenciales ni access tokens en `localStorage`.
 - No versionar estados autenticados E2E ni secretos.
 
@@ -542,6 +554,8 @@ Un enlace de universidad DEBE ser:
 ```text
 /api/v1/companies
 /api/v1/company-members
+/api/v1/student-onboardings
+/api/v1/students/me/academic-declaration
 /api/v1/academic-institutions
 /api/v1/job-offers
 /api/v1/applications
@@ -751,6 +765,7 @@ Las features reflejan capacidades, no tipos técnicos globales:
 src/app
 src/features/auth
 src/features/company
+src/features/student
 src/features/job-offers
 src/features/applications
 src/features/selection
@@ -785,6 +800,12 @@ src/shared/i18n
 - CI compara paridad de claves.
 - Textos legales/documentales tienen versión separada de las traducciones generales.
 - Datos introducidos por usuarios no se consideran automáticamente traducibles.
+- Java, TypeScript y OpenAPI exponen códigos estables; ninguna enum o estado aporta directamente una etiqueta visible.
+- Etiquetas, mensajes de validación, estados, acciones, ayudas y errores presentados al usuario se resuelven desde catálogos i18n.
+- En el primer acceso empresarial, el locale se resuelve desde el locale configurado para la empresa o desde la correspondencia de su país registral.
+- Una preferencia posterior del usuario prevalece sobre el locale empresarial.
+- Solo se seleccionan locales soportados; el fallback de interfaz es `es`.
+- El fallback de idioma nunca selecciona un `LegalPolicyPack` ni modifica la jurisdicción aplicable.
 
 ## 25. Privacidad y auditoría
 
@@ -928,6 +949,8 @@ No se permite fusionar si backend o frontend no compilan, si falla el aislamient
 - Perfiles: `local`, `test`, `staging`, `production` con diferencias mínimas.
 - El dominio no consulta variables de entorno.
 - Flags de funcionalidad en Application; nunca para saltarse una invariante legal.
+- Países habilitados, locales soportados, correspondencias país→locale y locale de fallback se cargan desde configuración tipada con valores por entorno.
+- El fallback de presentación no se reutiliza para resolver jurisdicción, moneda, zona horaria ni política legal.
 - Jurisdicciones con estados `CATALOGUED`, `INTERNAL_TEST`, `PILOT`, `SUPPORTED`, `DEPRECATED`.
 - Solo `SUPPORTED`, o `PILOT` con flag y tenant autorizado, es seleccionable.
 
@@ -937,11 +960,11 @@ No se permite fusionar si backend o frontend no compilan, si falla el aislamient
 
 Valor demostrable:
 
-- empresa registrada y verificada;
+- empresa registrada en `SELF_DECLARED`, con primer usuario y correo verificados;
 - primer usuario operativo;
 - estudiante registrado;
 - correo verificado;
-- universidad y titulación declaradas;
+- universidad y titulación declaradas de forma personal, editable y no verificada;
 - catálogo institucional consultable;
 - aislamiento tenant probado.
 
@@ -956,7 +979,7 @@ Incluye la fundación mínima: repositorio, CI, seguridad, i18n, migraciones, ob
 
 ### Incremento 3 — Candidatura
 
-- perfil estudiantil mínimo;
+- reconfirmación de la declaración académica para la candidatura, sin convertirla en prueba de elegibilidad;
 - candidatura única;
 - privacidad versionada;
 - inbox empresarial;
@@ -1035,6 +1058,8 @@ Un incremento está terminado solo si:
 - migraciones funcionan en base vacía y actualización soportada;
 - OpenAPI y cliente generado están sincronizados;
 - español e inglés están completos;
+- no existen etiquetas visibles hardcodeadas y la paridad de catálogos i18n está verificada;
+- añadir un país o locale soportado no exige modificar aggregates ni introducir condicionales por código de país;
 - existen tests de dominio, aplicación, integración y E2E;
 - existe al menos una prueba negativa de autorización;
 - fallos externos son reintentables o dejan estado recuperable;
@@ -1131,4 +1156,3 @@ La primera orden no debería ser “construye ProPractix V2”. Debe ser:
 > Implementa el Incremento 1 definido en esta especificación. Antes de modificar código, propone los ADR-001 a ADR-008, el context map inicial, el esquema mínimo de datos y el recorrido E2E empresa–estudiante–catálogo. No implementes ofertas, candidaturas, prevalidación ni formalización. El resultado debe ser desplegable, permitir registrar y verificar una empresa y un estudiante, consultar el catálogo institucional y demostrar aislamiento multi-tenant.
 
 Esta orden mantiene el alcance verificable y evita que Codex convierta el blueprint completo en una implementación monolítica sin hitos de producto.
-
