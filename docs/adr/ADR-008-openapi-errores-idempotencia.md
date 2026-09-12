@@ -1,65 +1,94 @@
-# ADR-008 — OpenAPI, errores e idempotencia
+# ADR-008 — OpenAPI, errores, correlación e idempotencia
 
-- Estado: Propuesto
+- Estado: Propuesto — revisión 2
 - Fecha: 2026-09-12
 - Decisores: Arquitectura, Backend y Frontend
+- Reemplaza: propuesta inicial del ADR-008
 
 ## Contexto
 
-V1 mantenía manualmente el contrato entre frontend y backend. V2 necesita una API predecible, errores procesables y protección frente a repeticiones producidas por red, doble clic o reintentos.
+V2 necesita un contrato único entre backend y frontend, errores procesables y protección contra reintentos. El registro ocurre antes de disponer de actor autenticado y no puede persistir credenciales o respuestas sensibles para resolver idempotencia.
 
-## Decisión
+## OpenAPI
 
-La API pública del MVP vivirá bajo `/api/v1`. El contrato OpenAPI versionado en `docs/api/openapi.yaml` será la fuente de verdad y se modificará junto con la historia correspondiente.
+- La API del MVP vivirá bajo `/api/v1`.
+- `docs/api/openapi.yaml` será la fuente de verdad design-first.
+- No se generarán dominio ni implementación de servidor desde el contrato.
+- El cliente TypeScript se generará desde OpenAPI.
+- Cada historia funcional modifica conjuntamente contrato, API, cliente, UI, i18n y tests.
+- CI comprobará validez del contrato, cambios incompatibles y que el cliente generado no presenta diff.
 
-No se generará el servidor completo desde OpenAPI. Los adaptadores REST se implementarán explícitamente y una prueba de contrato comprobará que no divergen. El cliente TypeScript sí se generará desde el contrato cuando exista `client`.
+## Errores
 
-Los errores utilizarán `application/problem+json` y el modelo Problem Details, con al menos:
+Las respuestas de error usarán `application/problem+json` con:
 
 ```text
-type, title, status, detail, instance, code, traceId, violations
+type, title, status, detail, instance, code, correlationId, violations
 ```
 
-`detail` no expondrá excepciones internas ni datos sensibles. `code` será estable y traducible por el cliente.
+`detail` no contendrá excepciones internas ni datos sensibles. `code` será estable y la UI lo traducirá. Taxonomía inicial:
 
-Los endpoints de creación que puedan repetirse, incluido el registro público, exigirán `Idempotency-Key`. Se almacenará de forma acotada:
+| Código | HTTP | Uso |
+|---|---:|---|
+| `validation_error` | 400 | Entrada inválida con violations. |
+| `authentication_failed` | 401 | Credenciales/token inválido sin enumeración. |
+| `forbidden` | 403 | Actor autenticado sin capacidad, cuando revelar el recurso sea seguro. |
+| `resource_not_found` | 404 | Inexistencia o acceso cross-tenant no revelable. |
+| `conflict` | 409 | Invariante o unicidad de negocio. |
+| `concurrent_modification` | 409 | Versión optimista obsoleta. |
+| `idempotency_key_reused` | 409 | Misma clave con fingerprint diferente. |
+| `rate_limited` | 429 | Límite de abuso. |
+| `privacy_policy_unavailable` | 503 | Registro deshabilitado sin aviso vigente aprobado. |
 
-- operación y ámbito del actor o registro;
-- hash de la petición normalizada;
-- estado y respuesta reproducible;
-- expiración inicial de 24 horas.
+No se expondrá `traceId` como contrato estable. OpenTelemetry podrá generar un trace técnico interno. `correlationId` será el identificador público de soporte: se aceptará uno válido o se generará, se devolverá en `X-Correlation-ID`, aparecerá en errores, logs y eventos y tendrá límites de formato/longitud.
 
-Repetir clave y contenido devolverá el resultado anterior. Reutilizar la clave con otro contenido devolverá `409 Conflict`.
+## Idempotencia anónima
 
-La API utilizará UUID como identificador externo, fechas ISO 8601, paginación por cursor cuando sea necesaria y correlation ID propagado a logs y eventos.
+Registro y otras creaciones sensibles exigirán `Idempotency-Key`:
+
+- valor aleatorio con al menos 128 bits; se acepta UUID v4;
+- longitud y caracteres limitados;
+- unicidad atómica por `operation + key`;
+- estados `PROCESSING`, `SUCCEEDED`, `FAILED_REPLAYABLE` y expirado;
+- TTL inicial de 24 horas;
+- fingerprint HMAC-SHA-256 de la petición canónica completa con clave externa;
+- el fingerprint puede cubrir contraseña sin permitir ataques offline, porque nunca se guarda hash simple ni petición original;
+- la fila no almacena contraseña, token, cookie, body original ni headers sensibles;
+- la respuesta reproducible se limita a status, headers permitidos e identificador opaco de operación; para registro se usa un `202` genérico.
+
+Semántica:
+
+1. Primera petición reclama la clave atómicamente como `PROCESSING`.
+2. Misma clave/fingerprint terminal reproduce la respuesta segura.
+3. Misma clave con fingerprint distinto devuelve `409 idempotency_key_reused`.
+4. Solicitud concurrente observa `PROCESSING` y recibe resultado/polling definido por el endpoint, sin ejecutar de nuevo.
+5. Un fallo antes de comenzar la operación puede marcarse replayable; un estado incierto no se repite a ciegas.
+
+`platform.idempotency` será propietario de la tabla. Los datos admitidos, acceso y limpieza se rigen también por ADR-006 y ML-15.
+
+## Privacidad del registro
+
+Un endpoint de registro en producción requiere una versión `APPROVED` y vigente del aviso aplicable. Si no existe, responde `privacy_policy_unavailable` sin aceptar datos personales. Fixtures de test/local no pueden promoverse a producción.
 
 ## Alternativas consideradas
 
-### Contrato generado únicamente desde controladores
-
-Rechazado como fuente única porque permite diseñar el API después de implementar y dificulta una revisión previa con frontend.
-
-### Generar servidor y modelos de dominio desde OpenAPI
-
-Rechazado porque mezclaría modelos de transporte con dominio y dificultaría la arquitectura hexagonal.
-
-### Errores ad hoc por endpoint
-
-Rechazados porque obligan al cliente a interpretar formatos distintos.
-
-### Idempotencia confiada al cliente
-
-Rechazada; los reintentos de red requieren garantía del servidor.
+- Contrato generado solo desde controladores: rechazado como fuente única.
+- Generar servidor/dominio desde OpenAPI: rechazado por mezclar transporte y dominio.
+- Errores ad hoc: rechazados.
+- Hash simple de una petición con contraseña: rechazado por riesgo de ataque offline.
+- Idempotencia confiada al cliente: rechazada.
 
 ## Consecuencias
 
-- Cada historia con API actualizará contrato, pruebas y cliente generado.
-- Se necesitará almacenamiento y limpieza de claves idempotentes.
-- El diseño de errores será uniforme desde el primer incremento.
-- Un cambio incompatible requerirá una nueva versión o estrategia de transición.
+- Cada historia funcional es vertical y mantiene cliente/servidor sincronizados.
+- Se necesita almacenamiento y limpieza de registros de idempotencia.
+- Los errores cross-tenant no revelan existencia.
+- `correlationId` es uniforme; tracing permanece detalle interno.
 
-## Criterios de aprobación
+## Criterios de aceptación del ADR
 
-- Aceptar OpenAPI design-first sin generar el servidor.
-- Aceptar Problem Details como formato único.
-- Aceptar `Idempotency-Key` obligatorio en registros y creaciones sensibles.
+- CI detecta OpenAPI inválido, cliente desactualizado o cambio incompatible no autorizado.
+- Pruebas concurrentes demuestran una sola ejecución por clave.
+- Pruebas verifican que ningún secreto se persiste en idempotencia.
+- Todas las respuestas incluyen `X-Correlation-ID` y los errores el mismo valor.
+- Registro productivo queda cerrado sin política de privacidad aprobada.

@@ -9,7 +9,9 @@
 5. [Plan técnico del Incremento 1](plans/increment-01-plan.md).
 6. ADR-001 a ADR-008 en [`adr`](adr/).
 7. [Revisión del bootstrap](reviews/bootstrap-validation.md).
-8. [Prompt para revisar los ADR y el plan](prompts/review-adrs-increment-01.md).
+8. [Primera revisión de ADR y plan](reviews/revision-adrs-incremento-01.md).
+9. [Resolución de la primera revisión](reviews/resolucion-revision-adrs-incremento-01.md).
+10. [Prompt para la segunda revisión](prompts/review-adrs-increment-01.md).
 
 ## Estado de decisión
 

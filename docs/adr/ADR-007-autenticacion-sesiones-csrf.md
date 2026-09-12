@@ -1,56 +1,101 @@
-# ADR-007 — Access token, refresh cookie y protección CSRF/origin
+# ADR-007 — Autenticación, sesiones, CSRF y verificación de correo
 
-- Estado: Propuesto
+- Estado: Propuesto — revisión 2
 - Fecha: 2026-09-12
 - Decisores: Seguridad, Producto y Arquitectura
+- Reemplaza: propuesta inicial del ADR-007
 
-## Contexto
+## Contexto y amenazas
 
-El Incremento 1 necesita cuentas de empresa y estudiante, verificación de correo y sesiones web. V1 almacenaba refresh tokens sin hash ni rotación suficiente. V2 no debe exponer tokens persistentes al JavaScript del navegador.
+El Incremento 1 expone registro, verificación, login y refresh. Debe mitigar robo y reutilización de tokens, credential stuffing, enumeración de cuentas, fijación de tenant, CSRF, XSS, replay, carreras concurrentes y permisos obsoletos.
 
-## Decisión
+La verificación de correo acredita control de una dirección, no existencia ni representación legal de una empresa.
 
-- Las contraseñas se almacenarán con BCrypt y un coste inicial 12, ajustable mediante configuración y pruebas de rendimiento.
-- El access token será un JWT firmado de vida corta, inicialmente 10 minutos.
-- El access token se devolverá en la respuesta y el cliente lo conservará solo en memoria; no se guardará en `localStorage` ni `sessionStorage`.
-- El refresh token será opaco, aleatorio, de alta entropía y se entregará en una cookie `HttpOnly`, `Secure` en entornos no locales, `SameSite=Lax` y restringida a `/api/v1/auth`.
-- En base de datos se almacenará únicamente un hash SHA-256 del refresh token, junto con familia, expiración, rotación, revocación y datos mínimos de auditoría.
-- Cada refresh rotará el token. La reutilización de un token anterior revocará toda su familia.
-- La duración inicial máxima de una familia será 30 días.
-- Refresh y logout exigirán protección CSRF de doble envío y validación estricta de `Origin` contra una allowlist.
-- CORS se configurará con orígenes explícitos; nunca `*` con credenciales.
-- Los tokens de verificación de correo serán aleatorios, de un solo uso, con expiración y almacenados mediante hash.
-- Login, registro, reenvío y recuperación tendrán límites de intentos y respuestas que no permitan enumerar cuentas.
+## Estados separados
 
-Las claves de firma y secretos procederán de configuración externa validada al arranque. No se incluirán en Git.
+```text
+UserAccount: PENDING_EMAIL -> ACTIVE -> SUSPENDED -> CLOSED
+Company: SELF_DECLARED -> PENDING_VERIFICATION -> VERIFIED | REJECTED
+Company: VERIFIED -> SUSPENDED
+```
+
+Verificar el correo activa la cuenta del administrador y permite configuración segura. La empresa permanece `SELF_DECLARED`. La verificación empresarial será independiente y se exigirá antes de publicar ofertas, no antes de acceder al onboarding.
+
+## Credenciales
+
+- Contraseñas con BCrypt, coste inicial 12.
+- I1-H01 ejecutará benchmark en el entorno objetivo y documentará latencia; el coste se ajustará si incumple el presupuesto operativo.
+- Cada credencial registra algoritmo y parámetros para permitir rehash progresivo.
+- Cambio o recuperación de contraseña revoca todas las familias refresh.
+- Respuestas de login, registro y recuperación no enumeran cuentas.
+
+## Access token
+
+- JWT firmado con RS256 y `kid`.
+- Claves privadas fuera del repositorio; servicio mantiene clave activa y claves públicas anteriores durante la ventana de rotación.
+- Vida inicial: 10 minutos.
+- Claims obligatorios: `iss`, `aud`, `sub`, `iat`, `nbf`, `exp`, `jti` y versión de autorización.
+- Claims empresariales opcionales: tenant activo, `membership_id` y roles mínimos.
+- No incluye correo, nombre ni otros datos personales.
+- `issuer` y `audience` serán valores exactos por entorno y se validarán siempre.
+- El cliente conserva el access token solo en memoria.
+
+Una membresía revocada invalida sus familias refresh. Operaciones sensibles consultan la membresía vigente. Se acepta temporalmente que un access token ordinario pueda conservar permisos hasta 10 minutos.
+
+## Refresh token
+
+- Opaco y aleatorio, con al menos 256 bits de entropía.
+- Vida máxima inicial de familia: 30 días.
+- En staging/producción: cookie `__Secure-propractix_refresh`, `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/api/v1/auth` y sin `Domain`.
+- En local HTTP: cookie `propractix_refresh` sin prefijo reservado y sin `Secure`; esta configuración debe fallar al arrancar fuera del perfil local.
+- La base guarda solo SHA-256 del token de alta entropía, familia, secuencia, expiración, revocación y auditoría mínima.
+- Cada uso rota el token mediante compare-and-set atómico.
+- Reutilizar un token anterior revoca la familia completa.
+- Carreras concurrentes y replay se prueban sobre PostgreSQL.
+
+## CSRF, Origin y CORS
+
+Refresh y logout usarán doble envío:
+
+- cookie legible `__Secure-propractix_csrf` en staging/producción, con `Secure`, `SameSite=Lax`, `Path=/api/v1/auth` y sin `Domain`; en local se usa `propractix_csrf` sin prefijo reservado;
+- header `X-XSRF-TOKEN` con coincidencia constante;
+- validación exacta de `Origin` contra allowlist.
+
+En producción, una petición que use la refresh cookie sin `Origin` válido será rechazada. Clientes no navegador que se autoricen en el futuro tendrán un flujo separado sin cookies.
+
+CORS utilizará orígenes explícitos y nunca `*` con credenciales.
+
+El despliegue web del MVP mantendrá frontend y API bajo el mismo sitio registrable y TLS, aunque puedan usar subdominios diferentes. Una topología realmente cross-site exige revisar `SameSite`, CSRF y CORS mediante actualización de este ADR antes de desplegarse.
+
+## Verificación de correo
+
+Se adopta el token JWS de propósito único definido en ADR-005, firmado con clave separada de los access tokens. El registro de verificación se consume atómicamente, tiene expiración y admite reenvío mediante un nuevo registro o invalidación controlada del anterior.
+
+## Protección contra abuso
+
+Registro, login, reenvío y verificación no estarán disponibles públicamente hasta tener rate limiting. La política combinará IP protegida/pseudonimizada, identificador de cuenta cuando exista y límites por operación. Se implementará detrás de un puerto para poder sustituir el adapter sin cambiar casos de uso.
+
+Los valores exactos se fijarán y probarán en la historia que exponga el endpoint; no se introducirán límites ficticios en el dominio.
 
 ## Alternativas consideradas
 
-### JWT y refresh token en almacenamiento del navegador
-
-Rechazada por exposición ante XSS.
-
-### Refresh token persistido en texto claro
-
-Rechazada porque una filtración de base de datos permitiría reutilizar sesiones activas.
-
-### Sesión HTTP tradicional en servidor
-
-Viable, pero no elegida para conservar una API stateless con clientes futuros. Podrá revisarse si la complejidad del refresh supera el beneficio.
-
-### Refresh token como JWT
-
-Rechazado. Un token opaco facilita revocación, rotación y detección de reutilización.
+- Tokens en `localStorage`/`sessionStorage`: rechazados por XSS.
+- Refresh JWT: rechazado por menor control de rotación y revocación.
+- Refresh en texto claro: rechazado.
+- Sesión HTTP tradicional: viable, pero no elegida para el API actual; exige ADR si se reconsidera.
+- Verificación de correo equivalente a empresa verificada: rechazada.
 
 ## Consecuencias
 
-- El cliente deberá renovar tokens y mantener el access token en memoria.
-- La gestión de sesiones requerirá tablas, limpieza y auditoría.
-- Los tiempos exactos y parámetros criptográficos se configurarán y probarán.
-- Cualquier cambio de estrategia necesitará revisión de seguridad y ADR nuevo.
+- El cliente necesita renovación en memoria, CSRF y selección de tenant.
+- Seguridad requiere claves rotables, limpieza de sesiones, rate limiting y auditoría.
+- La verificación empresarial se implementará como capacidad separada antes de `G1_PUBLICATION`.
+- Cambiar algoritmo o duración exige revisión de seguridad y actualización del ADR.
 
-## Criterios de aprobación
+## Criterios de aceptación del ADR
 
-- Aprobar las duraciones iniciales de 10 minutos y 30 días.
-- Aprobar access token en memoria y refresh cookie rotatoria.
-- Aprobar BCrypt coste 12 para la primera medición.
+- Claims, claves, cookies, CSRF, Origin y CORS tienen pruebas positivas y negativas.
+- Refresh rotatorio resiste doble consumo y reutilización.
+- Registro/login no enumeran cuentas y están limitados antes de exponerse.
+- Cuenta activa y estado empresarial se prueban por separado.
+- No se persiste ni registra ningún token utilizable.

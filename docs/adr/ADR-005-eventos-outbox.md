@@ -1,51 +1,107 @@
-# ADR-005 — Eventos internos y outbox transaccional
+# ADR-005 — Eventos internos, outbox y onboarding durable
 
-- Estado: Propuesto
+- Estado: Propuesto — revisión 2
 - Fecha: 2026-09-12
-- Decisores: Arquitectura y Operaciones
+- Decisores: Arquitectura, Seguridad y Operaciones
+- Reemplaza: propuesta inicial del ADR-005
 
 ## Contexto
 
-El registro y la verificación generan efectos secundarios como correo y auditoría. Si se ejecutan dentro de la petición sin persistencia durable, una caída puede dejar el negocio confirmado y la comunicación perdida.
+El onboarding empresarial y la verificación de correo producen cambios en varios contextos y efectos externos que no pueden perderse. La entrega debe sobrevivir a fallos sin guardar tokens de verificación en claro ni convertir la outbox en un almacén indefinido de datos personales.
 
 ## Decisión
 
-Los aggregates podrán registrar eventos de dominio Java puros. La capa de aplicación los transformará en eventos de aplicación y, cuando produzcan efectos asíncronos o crucen contextos, los almacenará en una outbox dentro de la misma transacción que el cambio de negocio.
+Los aggregates podrán registrar eventos de dominio Java puros. La capa de aplicación los transformará en eventos de integración cuando deban cruzar contextos o producir efectos externos. Esos eventos se guardarán en PostgreSQL dentro de la misma transacción que el cambio del contexto productor.
 
-La entrega tendrá semántica al menos una vez:
+La entrega tendrá semántica al menos una vez. Todo consumidor será idempotente.
 
-- cada evento tendrá `eventId`, tipo, versión, aggregate, tenant cuando aplique, `occurredAt`, payload y correlation ID;
-- un publicador local recuperará eventos pendientes y registrará intentos;
-- los consumidores serán idempotentes;
-- los fallos quedarán reintentables y observables;
-- no se eliminará evidencia de entrega; se aplicará la política de retención que se defina.
+## Propiedad
 
-Durante el Incremento 1 no se introducirá Kafka, RabbitMQ ni otro broker. PostgreSQL será el almacenamiento durable de outbox. El correo de verificación será el primer efecto externo que use esta ruta.
+`platform.outbox` será propietario de `platform_outbox_event` y del relay técnico. Los contextos productores definirán un puerto de salida para registrar el mensaje; la configuración proporcionará el adapter. Ningún dominio dependerá de `platform`.
 
-Los handlers puramente internos que deban participar en una misma invariante no se modelarán como integración eventual; el caso de uso coordinará explícitamente esa operación.
+Los eventos contendrán como máximo:
+
+```text
+event_id
+event_type
+event_version
+producer_context
+aggregate_type
+aggregate_id
+aggregate_version
+tenant_id opcional
+occurred_at
+correlation_id
+payload mínimo
+delivery_status
+attempt_count
+available_at
+lease_until
+last_error_code
+```
+
+No contendrán contraseñas, tokens bearer, cookies, documentos, cuerpos HTTP ni PII innecesaria.
+
+## Relay y recuperación
+
+- Claim mediante `FOR UPDATE SKIP LOCKED` y lease con expiración.
+- Ordering solo por aggregate mediante `aggregate_version`; no se promete orden global.
+- Backoff exponencial con jitter y máximo configurable.
+- Al superar intentos, estado `DEAD_LETTER`; no descarte silencioso.
+- Métricas para pendientes, edad, reintentos y dead letters.
+- Reproceso administrativo explícito, autorizado y auditado.
+- Payload redactado o eliminado tras estado terminal según la política de retención; se conservan metadatos mínimos de entrega.
+
+Los consumidores persistentes mantendrán deduplicación por `consumer + event_id` cuando repetir el efecto no sea naturalmente idempotente.
+
+## Onboarding empresarial
+
+`organization` conserva el estado de `CompanyOnboarding` y publica solicitudes durables. `identity` reacciona en su propia transacción y devuelve eventos de resultado. Los pasos son reintentables:
+
+1. `CompanyOnboardingSubmitted`.
+2. `AdministratorProvisioningRequested`.
+3. `AdministratorProvisioned` o `AdministratorProvisioningFailed`.
+4. `EmailVerificationRequested`.
+5. `AccountEmailVerified`.
+6. `CompanyOnboardingReady`.
+
+El nombre final de los eventos deberá quedar en OpenAPI/event contract de la historia. Un fallo produce `IDENTITY_PENDING`, `EMAIL_PENDING` o `FAILED`, con reintento o expiración; no rollback distribuido.
+
+## Enlace de verificación
+
+La outbox guardará solo `VerificationId`, finalidad y metadatos mínimos. No guardará el token final.
+
+Al entregar el correo, `notifications` solicitará a `identity` un token JWS firmado y de vida corta que incluya únicamente:
+
+- `jti`: identificador aleatorio de verificación;
+- `purpose`: `EMAIL_VERIFICATION`;
+- `aud`: audiencia exclusiva de verificación;
+- `iat` y `exp`;
+- `kid` para rotación de clave.
+
+El token no incluirá correo, nombre ni tenant. Se firmará con una clave distinta de la utilizada para access tokens. `identity` conservará el registro de verificación, su expiración y consumo, pero no el token. El endpoint validará firma, propósito y audiencia, y consumirá el registro de forma atómica.
+
+Si el evento se intenta entregar después de la expiración, termina con estado no entregable y el usuario deberá solicitar un nuevo enlace.
 
 ## Alternativas consideradas
 
-### Enviar correo antes de confirmar la transacción
-
-Rechazada porque puede enviar una comunicación sobre datos que finalmente no se guardan.
-
-### Evento en memoria después del commit
-
-Rechazado para efectos que no se puedan perder; una caída entre commit y publicación perdería el evento.
-
-### Broker desde el inicio
-
-Rechazado por complejidad operativa sin necesidad de escalado demostrada.
+- Correo antes del commit: rechazado por mensajes sobre cambios no confirmados.
+- Evento solo en memoria: rechazado por pérdida entre commit y publicación.
+- Token en claro en outbox: rechazado.
+- Token cifrado persistido: viable, pero más complejo que generar un JWS con registro de uso único.
+- Broker externo: rechazado durante el MVP.
 
 ## Consecuencias
 
-- Se añadirán tabla, job, métricas y pruebas de outbox.
-- Un consumidor debe tolerar duplicados.
-- La consistencia entre contextos podrá ser eventual y visible en el modelo de estado.
-- Los esquemas de eventos se versionarán y no transportarán entidades internas completas.
+- El flujo es eventualmente consistente y la UI debe mostrar estados intermedios.
+- PostgreSQL soporta outbox e inbox sin infraestructura adicional.
+- El relay necesita leasing, reintentos, métricas y operación de dead letters.
+- La política de retención y redacción debe aprobarse antes de producción.
 
-## Criterios de aprobación
+## Criterios de aceptación del ADR
 
-- Confirmar PostgreSQL outbox sin broker durante el MVP.
-- Confirmar entrega al menos una vez e idempotencia obligatoria.
+- Una prueba demuestra recuperación tras commit sin entrega.
+- Duplicar un evento no duplica el efecto.
+- Dos workers no adquieren el mismo mensaje simultáneamente.
+- Ninguna fila de outbox contiene un token utilizable o PII innecesaria.
+- El token de verificación expira y solo puede consumirse una vez.

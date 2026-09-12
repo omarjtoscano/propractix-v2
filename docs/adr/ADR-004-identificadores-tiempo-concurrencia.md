@@ -1,49 +1,68 @@
 # ADR-004 — Identificadores, tiempo, zonas horarias y concurrencia
 
-- Estado: Propuesto
+- Estado: Propuesto — revisión 2
 - Fecha: 2026-09-12
 - Decisores: Arquitectura
+- Reemplaza: propuesta inicial del ADR-004
 
 ## Contexto
 
-Las prácticas combinan instantes técnicos, fechas académicas, horarios locales y procesos concurrentes. El modelo debe evitar IDs secuenciales expuestos, ambigüedad temporal y actualizaciones perdidas.
+Las prácticas combinan instantes técnicos, fechas académicas y horarios locales. Registro, verificación, refresh, idempotencia y outbox además presentan carreras que no se resuelven únicamente con `@Version`.
 
 ## Decisión
 
-- Los identificadores públicos y de aggregates serán UUID v4 generados en la aplicación.
-- Cada tipo relevante utilizará un value object (`UserId`, `TenantId`, `AcademicInstitutionId`) en el dominio.
-- Los instantes técnicos se representarán con `Instant` y se persistirán en UTC.
-- Las fechas académicas sin hora se representarán con `LocalDate`.
-- Los horarios que dependan de ubicación combinarán fecha/hora local con una zona IANA explícita (`ZoneId`).
-- No se usará `LocalDateTime` para timestamps globales.
-- El dominio recibirá un puerto `Clock` o un instante desde la aplicación; no invocará directamente el reloj del sistema.
-- Los aggregates mutables tendrán versión de concurrencia optimista. El adapter JPA utilizará `@Version` y la API devolverá conflicto cuando exista una modificación concurrente.
+### Identificadores
 
-La zona horaria predeterminada podrá proceder de la organización o jurisdicción, pero quedará registrada en los datos relevantes; no se codificará `Europe/Madrid` dentro del dominio.
+- Aggregates y recursos públicos usarán UUID v4 generados en la aplicación.
+- El dominio empleará value objects (`UserId`, `TenantId`, `VerificationId`) y no UUID desnudos en sus APIs principales.
+- PostgreSQL los persistirá como tipo `uuid`, no `varchar`.
+
+UUID v7 queda aplazado porque Java 21 no lo ofrece de forma estándar y no se añadirá una dependencia solo por localidad de índice durante el MVP.
+
+### Tiempo
+
+- Instantes técnicos: `Instant`, persistidos como `timestamptz` y normalizados a UTC.
+- Fechas sin hora: `LocalDate`, persistidas como `date`.
+- Horas locales: `LocalTime` más una zona IANA explícita cuando la interpretación dependa de ubicación.
+- Zona: identificador IANA persistido como texto validado, por ejemplo `Europe/Madrid`.
+- No se usará `LocalDateTime` para timestamps globales.
+- Application recibirá un puerto `Clock`; los adapters suministrarán el reloj real y los tests uno fijo.
+
+La zona predeterminada se captura desde la organización o la selección del usuario al crear el dato relevante. No se consulta dinámicamente una configuración nacional para reinterpretar datos históricos.
+
+### Concurrencia optimista
+
+Aggregates mutables tendrán una versión `bigint`. El adapter JPA utilizará `@Version`. Una escritura con versión obsoleta devolverá `409 Conflict` con código `concurrent_modification` y `correlationId`.
+
+### Operaciones atómicas especiales
+
+No dependerán solo de `@Version`:
+
+| Caso | Mecanismo mínimo |
+|---|---|
+| Consumo de verificación | `UPDATE ... WHERE consumed_at IS NULL AND expires_at > now()` y comprobación de filas. |
+| Rotación refresh | Compare-and-set sobre token vigente, constraint de familia y transacción. |
+| Idempotencia | Inserción/claim atómico por operación y clave; estados `PROCESSING`/terminal. |
+| Outbox | Leasing con `FOR UPDATE SKIP LOCKED`, expiración del lease y contador de intentos. |
+
+Cada mecanismo tendrá prueba concurrente sobre PostgreSQL mediante Testcontainers.
 
 ## Alternativas consideradas
 
-### IDs numéricos autoincrementales
-
-Rechazados para recursos públicos porque revelan secuencia y dificultan generación previa a persistencia.
-
-### UUID v7
-
-Aplazado. Mejora localidad de índices, pero Java 21 no lo proporciona de forma estándar y no se justifica introducir una dependencia solo para el MVP.
-
-### Bloqueo pesimista general
-
-Rechazado por coste y contención. Se reservará para un caso probado y documentado.
+- IDs autoincrementales públicos: rechazados por enumeración y acoplamiento a persistencia.
+- UUID v7: aplazado.
+- Bloqueo pesimista general: rechazado; se utilizará solo en operaciones concretas justificadas.
+- Reloj del sistema dentro del dominio: rechazado por falta de determinismo.
 
 ## Consecuencias
 
-- Los adaptadores deben mapear value objects y UUID.
-- Los tests pueden fijar el tiempo de forma determinista.
-- Los conflictos se exponen mediante un error de API estable y comprobable.
-- Las fechas legales futuras deberán distinguir con precisión entre fecha, instante y zona.
+- Los adapters mapearán value objects a tipos PostgreSQL nativos.
+- Los tests pueden reproducir expiraciones y cambios de zona.
+- Los conflictos tienen un contrato uniforme.
+- Las carreras de seguridad necesitan SQL condicional y pruebas específicas, aunque el aggregate también tenga versión.
 
-## Criterios de aprobación
+## Criterios de aceptación del ADR
 
-- Aceptar UUID v4 durante el MVP.
-- Aceptar UTC más zona IANA explícita.
-- Aceptar concurrencia optimista en aggregates mutables.
+- Las migraciones usan `uuid`, `timestamptz`, `date` y `bigint` según esta decisión.
+- No aparecen timestamps globales como `LocalDateTime`.
+- Las cuatro operaciones atómicas tienen prueba concurrente antes de exponer su endpoint o job.
