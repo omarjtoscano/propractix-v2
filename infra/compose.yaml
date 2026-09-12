@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: propractix
+      POSTGRES_PASSWORD: ${PROPRACTIX_DB_PASSWORD:-propractix_local}
+      POSTGRES_USER: propractix
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U propractix -d propractix"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - propractix_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  propractix_postgres_data:

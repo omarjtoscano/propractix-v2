@@ -1,0 +1,20 @@
+{
+  "name": "propractix-v2",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local orchestration for ProPractix V2",
+  "packageManager": "npm@11.9.0",
+  "engines": {
+    "node": ">=24 <25",
+    "npm": ">=11 <12"
+  },
+  "scripts": {
+    "infra:up": "docker compose -f infra/compose.yaml up -d",
+    "infra:down": "docker compose -f infra/compose.yaml down",
+    "infra:logs": "docker compose -f infra/compose.yaml logs -f",
+    "server:run": "cd server && ./mvnw spring-boot:run",
+    "server:test": "cd server && ./mvnw test",
+    "server:verify": "cd server && ./mvnw verify",
+    "check": "npm run server:verify"
+  }
+}

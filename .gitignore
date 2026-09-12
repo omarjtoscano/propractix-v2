@@ -1,0 +1,23 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+client/dist/
+coverage/
+
+# Java and Maven
+server/target/
+*.class
+
+# IDE and OS
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Local runtime data
+.local/
+data/
