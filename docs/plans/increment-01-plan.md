@@ -1,10 +1,10 @@
 # Plan técnico propuesto — Incremento 1
 
-- Estado: Aprobado — revisión 5
-- Fecha: 2026-09-12
+- Estado: Aprobado — revisión 6
+- Fecha: 2026-09-13
 - Rama: `increment/01-company-identity-catalog`
 - Resultado: empresa y estudiante con cuentas verificadas, catálogo universitario consultable, declaración académica trazable y aislamiento tenant demostrado.
-- Reemplaza: revisión 4 aprobada en `docs/reviews/resolucion-revision-final-adrs-incremento-01.md`.
+- Reemplaza: revisión 5 aprobada en `docs/reviews/resolucion-correo-cloud-revision-5.md`.
 
 ## 1. Decisiones de producto incorporadas
 
@@ -27,7 +27,8 @@
 17. Crear y verificar el correo del administrador deja la empresa `SELF_DECLARED`; la verificación/aprobación empresarial es un proceso separado del Incremento 2 y bloquea `G1_PUBLICATION`.
 18. H03 rechaza dominios de correo público/común mediante `CompanyEmailAdmissionPolicy` versionada; un dominio corporativo propio sigue permitido aunque use Google Workspace o Microsoft 365 como proveedor.
 19. La comprobación de ruta de correo es la validación técnica principal después de la política; `NO_MAIL_ROUTE` y un fallo DNS/infraestructura `INDETERMINATE` no rechazan la solicitud, la mantienen pendiente de verificación y activan reintentos.
-20. Cada incremento aprobado se despliega en un único entorno AWS `staging`; H01 prepara y valida la baseline cloud portable definida por ADR-009.
+20. Cada incremento aprobado se despliega en un único entorno AWS `staging`; H01–H05 se aceptan primero en local y el primer despliegue cloud útil verifica el recorrido navegable de H05 según ADR-009.
+21. La aceptación local de una historia y su promoción cloud son hitos distintos; `CL0_CLOUD_STAGING` no bloquea cerrar H01 ni avanzar a una sucesora cuyos demás gates estén cerrados.
 
 ## 2. Gates de preparación
 
@@ -35,16 +36,16 @@ No se inicia implementación no desechable hasta que los ADR aplicables estén e
 
 | Gate | Estado | Owners | Bloquea | Resultado requerido |
 |---|---|---|---|---|
-| `D0_DECISIONS` | `CLOSED` | Producto + Arquitectura + Seguridad | I1-H01 | ADR-001 a ADR-009 aceptados; contextos, credencial, roles, duplicados, contratos, correo y despliegue alineados. |
+| `D0_DECISIONS` | `CLOSED` | Producto + Arquitectura + Seguridad | I1-H01 | ADR-001 a ADR-009 y ADR-011 aceptados; ADR-010 reservado; contextos, credencial, roles, duplicados, contratos, correo y despliegue alineados. |
 | `F0_CLIENT_BASELINE` | `CLOSED` | Arquitectura + Frontend | I1-H02 | Versiones exactas, generador OpenAPI, router, i18n, testing, lockfile y política de actualización aprobados. |
 | `C0_CATALOG` | `PENDING` | Producto + Datos + Legal/licencias | I1-H02 | Fuente, licencia, formato, actualización, publicación, rollback y fixture aprobados. |
 | `B0_COMPANY_EMAIL_POLICY` | `PENDING` | Producto + Seguridad | I1-H03 | Revisión V1 completada; falta aprobar/publicar la versión inicial, revisar cobertura, ejercitar actualización/rollback y probar política, MX, `INDETERMINATE` y no enumeración. |
 | `P0_PRIVACY` | `PENDING` | Producto + Privacidad/Legal + Seguridad | I1-H03 e I1-H06 con datos reales | ML-15, finalidad, campos, evidencia, base jurídica, derechos y retención aprobados. |
 | `S0_PUBLIC_ENDPOINTS` | `PENDING` | Seguridad + Operaciones | Exposición pública de I1-H02 a I1-H06 | Límites por operación, claves pseudonimizadas, TTL, fail-closed, métricas, alertas y pruebas `429`/`Retry-After`. |
 | `E0_EMAIL` | `PENDING` | Arquitectura + Operaciones + Seguridad + Privacidad/Legal | I1-H04 con correo real | Adapter, remitente/dominio, templates i18n, TTL, métricas, runbook, rol contractual, región, subencargados, retención/borrado, redacción e incident response aprobados. |
-| `CL0_CLOUD_STAGING` | `PENDING` | Producto + Arquitectura + Operaciones + Seguridad | Cierre desplegado de I1-H01 y releases posteriores | Cuenta/modalidad AWS, MFA, región, presupuesto/alertas, OIDC, secretos, URL/TLS, backup/restore, despliegue/rollback y vencimiento de créditos aprobados. |
+| `CL0_CLOUD_STAGING` | `PENDING` | Producto + Arquitectura + Operaciones + Seguridad | Primer despliegue AWS de H05 y releases posteriores | Alcanzar `READY_FOR_APPLICATION` con cuenta, coste, OpenTofu, OIDC, SSM, ECR, secretos y pruebas sintéticas; cerrar solo después de desplegar/verificar H05, rollback y backup/restore. |
 
-Los gates son decisiones/evidencias y no historias de implementación. `C0`, `B0`, `P0`, `S0`, `E0` y `CL0` pueden prepararse durante I1-H01 sin introducir funcionalidad anticipada. H01 está `READY` y puede construir la automatización portable; no puede declararse desplegada ni cerrar su aceptación cloud hasta cerrar `CL0_CLOUD_STAGING`. Cerrar D0 o aceptar los ADR no habilita datos reales, correo real ni endpoints públicos mientras sus gates permanezcan pendientes.
+Los gates son decisiones/evidencias y no historias de implementación. `C0`, `B0`, `P0`, `S0`, `E0` y `CL0` pueden prepararse sin introducir funcionalidad anticipada. H01 está `READY` y se cierra por su aceptación local; no necesita desplegarse en AWS. La preparación cloud puede avanzar como workstream separado y pasa a `READY_FOR_APPLICATION` sin bloquear H03–H05. `CL0` solo se cierra tras desplegar y verificar H05. Cerrar D0 o aceptar los ADR no habilita datos reales, correo real ni endpoints públicos mientras sus gates permanezcan pendientes.
 
 ### Baseline F0 aprobada
 
@@ -177,7 +178,7 @@ Si el correo ya pertenece a una cuenta, la respuesta continúa siendo genérica 
 
 | Historia | ADR aplicables | Gates/predecesoras antes de empezar |
 |---|---|---|
-| I1-H01 | ADR-001, ADR-002, ADR-006, ADR-007, ADR-008, ADR-009 | `D0_DECISIONS` cerrado. ADR-004 se difiere hasta la primera historia que use IDs, reloj o concurrencia. `CL0_CLOUD_STAGING` no bloquea el inicio, pero sí declarar H01 desplegada/cerrada. |
+| I1-H01 | ADR-001, ADR-002, ADR-006, ADR-007, ADR-008, ADR-009 | `D0_DECISIONS` cerrado. ADR-004 se difiere hasta la primera historia que use IDs, reloj o concurrencia. `CL0_CLOUD_STAGING` no bloquea el inicio ni el cierre local. |
 | I1-H02 | ADR-001, ADR-002, ADR-004, ADR-005, ADR-006, ADR-007, ADR-008, ADR-009 | H01 + `C0_CATALOG` + `F0_CLIENT_BASELINE` + `S0_PUBLIC_ENDPOINTS`. |
 | I1-H03 | ADR-001 a ADR-009 | H01 + `B0_COMPANY_EMAIL_POLICY` + `P0_PRIVACY` + `S0_PUBLIC_ENDPOINTS`. |
 | I1-H04 | ADR-001 a ADR-009 | H03 + `E0_EMAIL` + `S0_PUBLIC_ENDPOINTS`. |
@@ -189,13 +190,13 @@ La matriz identifica adopción documental. La conformidad de cada ADR se demuest
 
 ### I1-H01 — Fundación ejecutable mínima
 
-**Actor y valor:** equipo de desarrollo; puede construir, probar y desplegar una base reproducible.
+**Actor y valor:** equipo de desarrollo; puede construir y probar localmente una base reproducible y empaquetable.
 
 **Contextos:** ninguno de negocio; configuración y guardrails.
 
-**Precondición:** `D0_DECISIONS` cerrado y ADR-001, ADR-002, ADR-006, ADR-007, ADR-008 y ADR-009 aceptados. H01 no crea todavía las primitivas de ADR-004; se incorporan en H02, donde tienen un consumidor real. El trabajo local/CI puede empezar con `CL0_CLOUD_STAGING` pendiente, pero el despliegue real y el cierre cloud no.
+**Precondición:** `D0_DECISIONS` cerrado y ADR-001, ADR-002, ADR-006, ADR-007, ADR-008 y ADR-009 aceptados. H01 no crea todavía las primitivas de ADR-004; se incorporan en H02, donde tienen un consumidor real. `CL0_CLOUD_STAGING` puede permanecer pendiente durante toda H01.
 
-**Resultado observable:** checkout limpio compila con JDK 21, ejecuta migraciones en PostgreSQL 16, expone health/readiness mínimos, falla CI ante una dependencia arquitectónica prohibida y produce una release OCI desplegable y verificable en el `staging` de ADR-009.
+**Resultado observable:** checkout limpio compila con JDK 21, ejecuta migraciones en PostgreSQL 16 local, expone health/readiness mínimos, falla CI ante una dependencia arquitectónica prohibida y produce imágenes OCI y Compose portables, verificables sin AWS.
 
 **Incluye:**
 
@@ -207,15 +208,15 @@ La matriz identifica adopción documental. La conformidad de cada ADR se demuest
 - logging JSON y `correlationId` básico;
 - workflow CI backend, análisis de secretos y `git diff --check`;
 - imágenes OCI multi-arquitectura o compatibles con la arquitectura aprobada, etiquetadas por SHA y fijadas por digest en un manifiesto de release;
-- Docker Compose de `staging`, Caddy/HTTPS, PostgreSQL privado, límites de recursos y configuración externa;
-- workflow de despliegue con GitHub Environment, OIDC AWS, migración, readiness, smoke test y rollback;
-- backup lógico cifrado y procedimiento de restauración, ejecutables cuando `CL0_CLOUD_STAGING` esté cerrado;
+- Docker Compose portable con Caddy, PostgreSQL no publicado, límites de recursos y configuración externa;
+- contrato/manifiesto de despliegue preparado para GitHub Environment, OIDC, migración, readiness, smoke y rollback, cuya integración AWS pertenece al plan de `CL0`;
+- backup lógico y procedimiento de restauración probados localmente con datos sintéticos; la copia S3 se valida en `CL0`;
 - benchmark BCrypt documentado;
 - esqueleto del contrato OpenAPI y pipeline de validación sin endpoints funcionales.
 
 **Fuera:** tablas de negocio, registro, auth y frontend funcional.
 
-**Pruebas/aceptación:** Maven Wrapper, contexto Spring, migración vacía, PostgreSQL Testcontainers, health/readiness sin secretos, violación ArchUnit de prueba controlada, `docker compose config`, build de imágenes, ausencia de secretos, manifiesto inmutable y dry-run del workflow. Con `CL0` cerrado: despliegue, smoke test, rollback y restauración de backup en `staging`.
+**Pruebas/aceptación:** Maven Wrapper, contexto Spring, migración vacía, PostgreSQL Testcontainers, health/readiness sin secretos, violación ArchUnit de prueba controlada, `docker compose config`, build de imágenes ARM64, ausencia de secretos, manifiesto inmutable, backup/restore local y validación estática/dry-run del contrato de workflow. Ninguna prueba AWS forma parte del cierre local de H01.
 
 **Migración:** solo baseline técnico si es imprescindible; no crear tablas futuras.
 
@@ -477,17 +478,18 @@ git status --short
 - `P0_PRIVACY`: finalidad, datos, base jurídica, evidencia, derechos y retención ML-15 antes de I1-H03/I1-H06 con datos reales.
 - `S0_PUBLIC_ENDPOINTS`: límites, pseudonimización, TTL, fail-closed, métricas, alertas y pruebas antes de exponer cualquier endpoint público de I1-H02 a I1-H06.
 - `E0_EMAIL`: proveedor, remitente, templates i18n, rol contractual, región/subencargados, retención/borrado, redacción, incident response y configuración operativa antes de I1-H04 con correo real.
-- `CL0_CLOUD_STAGING`: cuenta/modalidad AWS, MFA, región, presupuesto/alertas, OIDC, secretos, URL/TLS, backup/restore, despliegue/rollback y vencimiento de créditos antes de declarar H01 desplegada.
+- `CL0_CLOUD_STAGING`: permanece `PENDING`; debe alcanzar `READY_FOR_APPLICATION` con los controles de `cl0-cloud-staging-checklist.md` y solo pasa a `CLOSED` tras desplegar y verificar H05. No bloquea el cierre local de H01–H05.
 - Verificación empresarial: se diseñará antes de `G1_PUBLICATION` en el Incremento 2.
 - Catálogo canónico de titulaciones: fuera del Incremento 1.
 
 ## 11. Autorización de ejecución
 
-La revisión 5 conserva resueltos BF-01 a BF-04, acepta ADR-001 a ADR-009 y mantiene `D0_DECISIONS` cerrado. Por tanto:
+La revisión 6 conserva resueltos BF-01 a BF-04, acepta ADR-009 revisión 2 y ADR-011 revisión 1, y mantiene `D0_DECISIONS` cerrado. Por tanto:
 
 - I1-H01 queda `READY` y es la única historia autorizada para comenzar;
 - I1-H02 a I1-H06 permanecen bloqueadas hasta cerrar los gates indicados en la matriz;
 - I1-H07 permanece bloqueada por sus predecesoras;
-- H01 puede implementar los artefactos cloud portables, pero no puede declararse desplegada/cerrada hasta resolver `CL0_CLOUD_STAGING` con el propietario de la cuenta;
+- H01 puede cerrarse tras su aceptación local sin AWS; después, cada historia solo avanza al cerrar sus propios gates y predecesoras;
+- la preparación de `CL0` es un workstream separado y ninguna mutación AWS se ejecuta sin autorización explícita;
 - aceptar el plan no aprueba ML-15, licencias, valores de rate limiting, proveedor de correo ni verificación empresarial;
 - ninguna historia puede omitir sus pruebas de conformidad por el hecho de que su ADR esté aceptado.

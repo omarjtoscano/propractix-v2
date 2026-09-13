@@ -1,148 +1,177 @@
 # ADR-009 — Despliegue cloud incremental en AWS
 
-- Estado: Aceptado — revisión 1
-- Fecha: 2026-09-12
+- Estado: Aceptado — revisión 2
+- Fecha: 2026-09-13
 - Decisores: Producto, Arquitectura, Operaciones y Seguridad
+- Reemplaza: revisión 1 aprobada el 2026-09-12
 
 ## Contexto
 
-Cada incremento de ProPractix V2 debe terminar en una versión desplegable, demostrable y usable. El equipo necesita validar desde el Incremento 1 la configuración real, las migraciones, los contenedores, la observabilidad y el rollback sin asumir desde el principio el coste operativo de una plataforma de alta disponibilidad.
+ProPractix V2 necesita validar en un entorno real la configuración, las migraciones, los contenedores, el backup/restore y el rollback. Ese objetivo no debe bloquear la entrega de valor local: durante el Incremento 1 las historias H01, H03, H04 y H05 pueden completarse y cerrarse con su aceptación local antes del primer despliegue AWS.
 
-AWS permite comenzar con créditos y servicios elegibles, pero su oferta gratuita para cuentas nuevas es temporal. A 2026-09-12, el Free Plan ofrece hasta USD 200 en créditos y dura como máximo seis meses; por tanto, no se considera una base gratuita permanente ni se permitirá que su vencimiento convierta silenciosamente la cuenta a consumo pagado.
+`staging` sirve inicialmente a una sola persona. La prioridad operativa es minimizar recursos y desembolso, aprovechar los créditos del AWS Free Plan y no anticipar una topología de producción.
 
-La solución debe seguir siendo portable. Ningún bounded context, aggregate o caso de uso dependerá de AWS, y el entorno local seguirá ejecutándose mediante Docker Compose.
+La cuenta AWS fue creada el 2026-09-13 bajo Free Plan. AWS documenta que el plan termina a los seis meses o al agotar créditos, lo que ocurra primero, y que la cuenta se cierra si no se convierte expresamente a Paid Plan. Esta conversión nunca será automática por decisión del proyecto.
+
+AWS es solo infraestructura. Ningún bounded context, aggregate o caso de uso dependerá de AWS, y el entorno local seguirá ejecutándose mediante Docker Compose.
 
 ## Decisión
 
-### Entornos
-
-Se mantienen cuatro perfiles con configuración externa y diferencias mínimas:
+### Entornos y secuencia de valor
 
 | Entorno | Propósito | Datos |
 |---|---|---|
-| `local` | Desarrollo individual | Fixtures locales |
+| `local` | Desarrollo y aceptación funcional individual | Fixtures locales |
 | `test` | Pruebas automatizadas | Efímeros |
-| `staging` | Demostración y validación de cada incremento | Sintéticos hasta cerrar las puertas de privacidad aplicables |
+| `staging` | Validación integrada de H05 y releases posteriores | Sintéticos mientras las puertas de privacidad aplicables estén pendientes |
 | `production` | Operación real | No se aprovisiona en el Incremento 1 |
 
-El Incremento 1 creará un único entorno compartido `staging` en AWS. No se crea un entorno permanente por rama o incremento. Cada entrega aprobada sustituye de forma controlada la versión anterior y conserva una referencia al artefacto previo para rollback.
+El Incremento 1 mantiene un único `staging` AWS. No se crea un entorno permanente por rama ni por historia.
 
-### Infraestructura inicial
-
-La primera topología será un único host Linux elegible para el AWS Free Plan, con un mínimo de 2 GiB de memoria, ejecutando una release coordinada mediante Docker Compose:
+La aceptación local y la promoción cloud son hitos distintos:
 
 ```mermaid
 flowchart TD
-    G["GitHub Actions"] --> H["Host AWS staging"]
-    U["Navegador"] --> P["Caddy: HTTPS y proxy"]
-    P --> F["Cliente web"]
-    P --> B["Spring Boot"]
-    B --> D["PostgreSQL"]
+    H01["H01 local"] --> H03["H03 local"]
+    H03 --> H04["H04 local"]
+    H04 --> H05["H05 local navegable"]
+    H05 --> STG["Despliegue y verificación en staging"]
 ```
 
-- Se preferirá una instancia `t4g.small` cuando siga siendo elegible, esté disponible en la región y todas las imágenes soporten `linux/arm64`.
-- El tamaño concreto se resuelve por configuración de infraestructura y puede sustituirse sin cambiar código de dominio.
-- La región inicial preferida será Europa (España), actualmente `eu-south-2`, previa comprobación de disponibilidad de cada servicio. La región no se incrusta en Java, TypeScript ni imágenes.
-- PostgreSQL comparte el host únicamente en `staging`. Usa un volumen persistente y una copia externa cifrada; esta decisión no autoriza la misma topología para producción.
-- El frontend se entrega como contenido estático detrás de Caddy y el backend no se expone directamente.
-- RDS, App Runner, ECS, balanceadores, NAT Gateway y Kubernetes quedan fuera de la baseline para evitar coste y complejidad prematuros.
+Cerrar H01 localmente habilita sus sucesoras cuando sus propios gates estén cerrados. `CL0_CLOUD_STAGING` no bloquea ese cierre local ni obliga a desplegar una base sin recorrido funcional.
 
-Antes de que termine el Free Plan, Producto y Operaciones decidirán explícitamente entre mantener EC2 en modalidad pagada, trasladar el mismo stack portable a Lightsail o adoptar servicios administrados. Lightsail de 2 GiB, publicado a USD 12/mes en la fecha de este ADR, es una referencia de coste, no un compromiso ni una constante del sistema.
+### Baseline de staging
 
-### Artefactos y despliegue
+La topología inicial será:
 
-- Backend y frontend se construyen una sola vez en CI como imágenes OCI reproducibles.
-- Toda imagen se etiqueta con el SHA completo del commit; `latest` no identifica una release desplegable.
-- Un manifiesto de release fija los digests exactos del cliente y servidor.
-- CI se ejecuta en cada pull request. El despliegue a `staging` requiere que las validaciones estén verdes y una aprobación del GitHub Environment.
-- El workflow de despliegue recibe un commit o manifiesto aprobado mediante `workflow_dispatch`; no despliega automáticamente una rama de trabajo.
-- GitHub autentica contra AWS mediante OIDC y un rol de permisos mínimos. No se guardan access keys de larga duración en GitHub.
-- El host recibe la orden mediante AWS Systems Manager cuando la instancia y región lo permitan. No se abre SSH a Internet para automatizar despliegues.
-- Flyway se ejecuta una sola vez antes de declarar saludable la nueva release.
-- El despliegue comprueba readiness, ejecuta smoke tests y solo entonces marca la release como activa.
-- Ante fallo, se recupera el manifiesto anterior. Una migración incompatible debe tener estrategia forward-compatible; rollback de imagen nunca deshace una migración aplicada.
+- región `eu-north-1` (Europa, Estocolmo);
+- una instancia `t4g.small` ARM64 con Amazon Linux 2023, sujeta a verificación de disponibilidad y coste antes de cada aprovisionamiento;
+- créditos CPU en modo `standard`, salvo nueva decisión explícita;
+- un único volumen EBS `gp3` cifrado, inicialmente de 16 GiB;
+- Docker Compose para Caddy, cliente web, Spring Boot y PostgreSQL 16;
+- PostgreSQL en el mismo host, sin puerto público;
+- dos repositorios privados ECR, imágenes inmutables y lifecycle de retención;
+- SSM Parameter Store Standard; `SecureString` para valores sensibles;
+- un bucket S3 operativo privado para backups y manifiestos de release;
+- administración y despliegue mediante AWS Systems Manager;
+- infraestructura reproducible con OpenTofu según ADR-011.
+
+No habrá alta disponibilidad. RDS, App Runner, ECS, EKS, balanceadores, NAT Gateway, endpoints VPC de pago, AWS Backup y Secrets Manager quedan fuera de la baseline.
+
+### Red y acceso
+
+Hasta que H05 requiera acceso navegable:
+
+- no se reserva Elastic IP;
+- no se configura DNS ni TLS público;
+- el Security Group no contiene reglas de entrada;
+- no se abren 22, 80, 443 ni 5432;
+- el acceso del único tester se realiza con Session Manager y port forwarding.
+
+La instancia podrá recibir una IPv4 pública dinámica solo cuando sea necesaria para egress hacia SSM, ECR y repositorios de paquetes. Esa dirección no habilita ingreso, pero sí tiene precio horario. OpenTofu permitirá desactivarla, y el plan deberá mostrar su coste estimado antes de aplicar. Una alternativa sin IPv4 pública —IPv6 o endpoints privados— requerirá una evaluación posterior de coste y complejidad.
+
+Cuando H05 esté lista se decidirá separadamente si continuar con port forwarding o añadir exposición pública, DNS, HTTPS y una dirección estable. Nada de ello se presupone en esta revisión.
+
+### Artefactos y promoción
+
+- Backend y frontend se construyen una vez en CI como imágenes OCI compatibles con `linux/arm64`.
+- Cada imagen se etiqueta con el SHA completo; `latest` no identifica una release.
+- Un manifiesto fija SHA y digest de cliente y servidor.
+- CI se ejecuta en pull requests sin credenciales AWS.
+- La promoción usa `workflow_dispatch`, GitHub Environment `staging` y aprobación humana.
+- GitHub obtiene credenciales temporales mediante OIDC; no se crean access keys permanentes.
+- El rol de despliegue solo puede publicar en los repositorios ECR aprobados, escribir manifiestos y enviar/consultar comandos SSM sobre la instancia de staging.
+- La instancia obtiene imágenes y parámetros mediante su Instance Role.
+- Flyway se ejecuta antes de declarar saludable la release.
+- Readiness y smoke tests deben pasar antes de marcar la release activa.
+- Un fallo recupera el manifiesto anterior; nunca ejecuta una down migration.
+
+El `sub` OIDC esperado usa el formato inmutable actual de GitHub y el Environment `staging`:
+
+```text
+repo:omarjtoscano@206257688/propractix-v2@1367197608:environment:staging
+```
+
+El claim real y `aud=sts.amazonaws.com` se verificarán en un workflow diagnóstico antes de crear definitivamente la trust policy. No se permiten comodines de propietario o repositorio.
 
 ### Datos, secretos y copias
 
-- Ningún secreto se almacena en Git, imágenes, archivos Compose versionados o logs.
-- Los secretos de `staging` se resuelven desde AWS Systems Manager Parameter Store o un mecanismo equivalente aprobado.
-- PostgreSQL no expone su puerto públicamente.
-- HTTPS es obligatorio fuera de `local`.
-- Mientras `P0_PRIVACY` permanezca pendiente, `staging` utiliza exclusivamente datos sintéticos.
-- Se ejecuta una copia lógica cifrada de PostgreSQL hacia almacenamiento externo compatible con S3 y se prueba su restauración antes de cerrar el incremento.
-- Retención, frecuencia y eliminación de copias se configuran por entorno y deben alinearse con ML-15 antes de almacenar datos reales.
+- No se almacenan secretos en Git, imágenes, Compose versionado, variables OpenTofu, state o logs.
+- OpenTofu crea rutas y permisos de Parameter Store, pero los valores sensibles se introducen fuera de IaC.
+- No se crea una clave KMS administrada por el cliente para esta baseline; se usan mecanismos administrados por AWS.
+- `pg_dump` genera backups lógicos que se suben cifrados al bucket operativo.
+- Antes de cerrar `CL0` se restaura un backup sintético en un PostgreSQL vacío y se verifica su contenido.
+- Restore de base de datos es recuperación, no rollback ordinario de release.
 
-### Coste y seguridad de cuenta
+### Coste y ciclo de vida de la cuenta
 
-La puerta `CL0_CLOUD_STAGING` exige antes del primer despliegue:
+El objetivo es desembolso aproximado de 0 EUR mientras el Free Plan y sus créditos estén vigentes. El techo de producto es 20 EUR/mes, no un objetivo de consumo.
 
-1. cuenta AWS y modalidad de facturación elegidas explícitamente por el propietario;
-2. MFA en la cuenta raíz y ausencia de access keys del usuario raíz;
-3. región y servicios comprobados;
-4. presupuesto y alertas de consumo configurados;
-5. rol OIDC de despliegue con permisos mínimos;
-6. DNS/TLS o URL temporal aprobada;
-7. parámetros y secretos creados fuera del repositorio;
-8. destino, cifrado y restauración de backup verificados;
-9. procedimiento de despliegue, health check y rollback probado;
-10. fecha de vencimiento de créditos registrada y revisión previa calendarizada.
+La cuenta Free Plan usa créditos para las instancias EC2 elegibles, incluida `t4g.small`. La prueba promocional específica de 750 horas mensuales de `t4g.small` hasta el 2026-12-31 es una oferta de corta duración del Paid Plan y no se presupone para esta cuenta mientras continúe en Free Plan.
 
-En el Free Plan no se activan servicios exclusivos del plan pagado. Migrar a Paid Plan requiere una decisión humana; las alertas de presupuesto no se consideran un límite duro de gasto.
+La IPv4 pública dedicada cuesta actualmente USD 0,005 por hora. Mantener una durante 720 horas consumiría aproximadamente USD 3,60 de créditos al mes. El coste se vuelve a comprobar antes de `tofu apply` porque precios, elegibilidad y moneda son datos operativos temporales.
+
+Se configura un AWS Budget equivalente al techo aprobado, con avisos al 50 %, 80 %, 100 % y forecast de superación, enviados a `omarjtoscano@outlook.com`. El Budget no es un freno automático del gasto.
+
+No se compra Savings Plan, Reserved Instance ni se convierte la cuenta a Paid Plan sin aprobación humana. Se registran como hitos operativos el agotamiento de créditos y la fecha máxima aproximada 2027-03-13.
+
+### Estado de `CL0_CLOUD_STAGING`
+
+El gate usa tres estados:
+
+1. `PENDING`: faltan controles de cuenta, infraestructura o evidencia.
+2. `READY_FOR_APPLICATION`: cuenta y baseline están preparadas y probadas con artefactos sintéticos, sin exigir que H05 exista.
+3. `CLOSED`: H05 fue desplegada y verificada con promoción, readiness, smoke, rollback y backup/restore.
+
+`DEPLOYED_AND_VERIFIED` es una evidencia requerida para `CLOSED`, no un cuarto estado del gate.
 
 ## Relación con DDD y arquitectura hexagonal
 
-AWS, Docker, DNS, almacenamiento y CI/CD son detalles de infraestructura:
-
-- el dominio no importa SDK de AWS;
-- aplicación define puertos cuando necesita archivos, correo, reloj u otras capacidades externas;
-- los adapters implementan esos puertos;
-- `configuration` realiza el wiring;
-- cambiar de EC2 a Lightsail o a otro proveedor no modifica aggregates ni políticas legales;
-- país empresarial, locale, jurisdicción y región cloud permanecen separados.
-
-## Observabilidad mínima
-
-- Spring Boot Actuator publica liveness y readiness sin datos sensibles.
-- Logs JSON incluyen `correlationId`, release SHA y entorno.
-- Los contenedores tienen rotación de logs y límites de recursos.
-- Se registran despliegue iniciado, completado, fallido y rollback.
-- Las métricas y alertas cloud adicionales se habilitan solo después de evaluar su coste.
-
-## Alternativas consideradas
-
-- **App Runner + RDS:** aplazado; simplifica operación, pero introduce coste fijo y más servicios antes de validar el producto.
-- **ECS/Fargate + ALB:** rechazado para el MVP inicial por coste y complejidad.
-- **Kubernetes:** rechazado; no existe una necesidad de orquestación que lo justifique.
-- **Render gratuito:** rechazado como entorno persistente porque su PostgreSQL gratuito caduca.
-- **Cloud Run + base externa:** viable, pero aplazado para evitar operar dos proveedores y conservar una ruta AWS coherente.
-- **Solo despliegues locales:** rechazado porque no valida el requisito de incremento desplegable en un entorno real.
+- El dominio no importa SDK de AWS.
+- Aplicación define puertos cuando necesita almacenamiento, correo, reloj u otras capacidades externas.
+- Los adapters implementan esos puertos y `configuration` realiza el wiring.
+- Cambiar EC2, ECR, S3 o el proveedor cloud no modifica aggregates ni políticas legales.
+- País empresarial, locale, jurisdicción legal y región cloud permanecen separados.
 
 ## Consecuencias
 
-- El primer entorno será económico, portable y suficiente para demostraciones con poco tráfico.
-- `staging` tendrá un único punto de fallo y no representa producción de alta disponibilidad.
-- La aplicación deberá soportar `linux/arm64` si se elige `t4g.small`.
-- Las migraciones y el rollback se ejercitan desde H01.
-- El vencimiento de créditos se convierte en una decisión operativa visible.
-- Producción requerirá un ADR posterior que evalúe base gestionada, alta disponibilidad, recuperación, capacidad, protección de datos y coste real.
+- Las historias entregan valor y se aceptan localmente sin esperar infraestructura externa.
+- El primer despliegue útil valida un recorrido navegable, no una carcasa técnica.
+- `staging` tiene un único punto de fallo y no representa producción.
+- La baseline consume créditos aunque el desembolso sea cero; coste cero y factura cero no son equivalentes.
+- ARM64 se convierte en plataforma obligatoria de las imágenes desplegables mientras se mantenga `t4g.small`.
+- Detener la instancia reduce cómputo e IPv4, pero EBS, ECR y S3 pueden seguir consumiendo créditos.
+- Producción requerirá un ADR posterior sobre alta disponibilidad, recuperación, datos reales, seguridad y coste.
 
-## Fuentes de coste consultadas
+## Alternativas consideradas
 
-- [AWS Free Tier](https://aws.amazon.com/free/), consultado el 2026-09-12.
-- [AWS Free Compute](https://aws.amazon.com/free/compute/), consultado el 2026-09-12.
-- [Amazon Lightsail Pricing](https://aws.amazon.com/lightsail/pricing/), consultado el 2026-09-12.
-- [AWS App Runner Pricing](https://aws.amazon.com/apprunner/pricing/), consultado el 2026-09-12.
+- **Desplegar H01 inmediatamente:** rechazado; no entrega un recorrido navegable y bloqueaba artificialmente H03–H05.
+- **EC2 privada con NAT Gateway:** rechazado por coste fijo innecesario.
+- **Endpoints VPC para SSM/ECR/S3:** aplazados; aumentan coste y recursos para un solo tester.
+- **IPv6-only:** viable, pero aplazado hasta demostrar que reduce coste sin dificultar herramientas o dependencias.
+- **EIP desde el inicio:** rechazado; no hace falta una dirección estable antes de exponer H05.
+- **RDS/ECS/Fargate/ALB/EKS:** rechazados para la baseline por coste y complejidad.
+- **GHCR:** viable, pero se elige ECR privado para autenticación IAM sin PAT persistente.
 
-Los precios y condiciones promocionales son datos operativos temporales. Deben volver a comprobarse antes de aprovisionar o renovar recursos.
+## Conformidad
 
-## Conformidad de la implementación
+- `tofu fmt -check`, `tofu validate` y plan revisado.
+- IAM Access Analyzer valida las políticas antes de aplicarlas.
+- Root MFA habilitado y root sin access keys.
+- `docker compose config` válido y sin secretos versionados.
+- Security Group sin ingress y sin SSH/PostgreSQL públicos.
+- OIDC real restringido al repositorio y Environment aprobados.
+- Push/pull ECR y comando/Session Manager probados con artefactos sintéticos.
+- Release fijada por SHA/digest, rollback sintético y backup/restore verificados.
+- Budget, tags y ausencia de secretos en Git/state comprobados.
+- `CL0` solo se cierra después de desplegar y verificar H05.
 
-- `docker compose config` valida la release sin secretos versionados.
-- Las imágenes están fijadas por digest/SHA y soportan la arquitectura seleccionada.
-- CI puede construir y probar sin credenciales AWS.
-- El despliegue usa OIDC, aprobación de entorno y permisos mínimos.
-- Un fallo de migración, readiness o smoke test no marca la release como desplegada.
-- El rollback al artefacto anterior está probado.
-- El backup puede restaurarse en PostgreSQL vacío.
-- El entorno no contiene datos reales mientras las puertas aplicables estén pendientes.
-- El coste, vencimiento de créditos y recursos activos son observables por el propietario.
+## Fuentes operativas consultadas
+
+- [AWS: Choosing a plan](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/free-tier-plans.html), consultado el 2026-09-13.
+- [AWS Free Compute](https://aws.amazon.com/free/compute/), consultado el 2026-09-13.
+- [Amazon VPC Pricing](https://aws.amazon.com/vpc/pricing/), consultado el 2026-09-13.
+- [Amazon EC2 FAQs — T4g free trial](https://aws.amazon.com/ec2/faqs/), consultado el 2026-09-13.
+- [GitHub Actions OIDC reference](https://docs.github.com/en/actions/reference/security/oidc), consultado el 2026-09-13.
+
+Los precios, promociones y condiciones de plan deben verificarse otra vez inmediatamente antes de aprovisionar, renovar o cambiar la modalidad de cuenta.

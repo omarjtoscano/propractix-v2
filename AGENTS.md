@@ -14,7 +14,7 @@ Si dos documentos se contradicen, detente y solicita una decisión. Un ADR acept
 ## Alcance vigente
 
 - Trabaja únicamente en el Incremento 1 y en una historia autorizada cada vez.
-- ADR-001, ADR-002 y ADR-004 a ADR-008 están aceptados en revisión 4; ADR-003 en revisión 5; ADR-009 en revisión 1; el plan está aprobado en revisión 5. La única historia actualmente `READY` y autorizada es I1-H01.
+- ADR-001, ADR-002 y ADR-004 a ADR-008 están aceptados en revisión 4; ADR-003 en revisión 5; ADR-009 en revisión 2; ADR-011 en revisión 1; ADR-010 está reservado para policy packs. El plan está aprobado en revisión 6. La única historia actualmente `READY` y autorizada es I1-H01.
 - No inicies I1-H02 ni historias posteriores hasta que sus gates y predecesoras figuren cerrados en el plan.
 - No implementes ofertas, candidaturas, prevalidación, formalización, prácticas ni documentos todavía.
 - La empresa es el tenant principal.
@@ -66,10 +66,14 @@ Si dos documentos se contradicen, detente y solicita una decisión. Un ADR acept
 ## Despliegue cloud
 
 - Sigue ADR-009: un único `staging` AWS económico y portable mediante Docker Compose; producción está fuera del Incremento 1.
-- H01 puede preparar imágenes, Compose y workflows con `CL0_CLOUD_STAGING` pendiente, pero no puede declararse desplegada/cerrada hasta resolver ese gate.
+- La aceptación local de una historia y su promoción cloud son hitos distintos. H01 puede cerrarse localmente con `CL0_CLOUD_STAGING` pendiente y habilitar sucesoras cuando sus demás gates estén cerrados.
+- `CL0_CLOUD_STAGING` sigue `PENDING -> READY_FOR_APPLICATION -> CLOSED`; solo se cierra después de desplegar y verificar H05. Consulta ADR-011 y los planes/checklists cloud antes de tocar AWS.
+- Preparar IaC puede avanzar en paralelo, pero ninguna mutación AWS, `tofu apply`, conversión a Paid Plan o exposición pública se ejecuta sin autorización explícita del propietario.
+- La baseline usa `eu-north-1`, una `t4g.small` ARM64, ECR privado, Parameter Store Standard, S3, EBS `gp3` y OpenTofu. No presupongas que créditos equivalen a recursos sin coste.
+- No reserves EIP ni abras ingress. Una IPv4 pública dinámica solo se habilita para egress cuando el plan aprobado justifique su necesidad y coste; el acceso inicial usa SSM/port forwarding.
 - Las imágenes se identifican por SHA/digest; no uses `latest` como release.
 - El despliegue exige CI verde, aprobación de GitHub Environment, OIDC con permisos mínimos, migración Flyway, readiness, smoke test y rollback.
-- No introduzcas RDS, App Runner, ECS, balanceadores, NAT Gateway o Kubernetes en la baseline sin un ADR posterior aprobado.
+- No introduzcas RDS, App Runner, ECS, EKS, balanceadores, NAT Gateway, endpoints VPC de pago, AWS Backup o Secrets Manager en la baseline sin un ADR posterior aprobado.
 - `staging` utiliza datos sintéticos mientras las puertas de privacidad aplicables estén pendientes.
 - AWS es infraestructura: ningún dominio o caso de uso importa SDKs o conceptos del proveedor.
 
