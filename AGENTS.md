@@ -14,7 +14,7 @@ Si dos documentos se contradicen, detente y solicita una decisión. Un ADR acept
 ## Alcance vigente
 
 - Trabaja únicamente en el Incremento 1 y en una historia autorizada cada vez.
-- ADR-001 a ADR-008 y el plan están aceptados en revisión 4; la única historia actualmente `READY` y autorizada es I1-H01.
+- ADR-001, ADR-002 y ADR-004 a ADR-008 están aceptados en revisión 4; ADR-003 en revisión 5; ADR-009 en revisión 1; el plan está aprobado en revisión 5. La única historia actualmente `READY` y autorizada es I1-H01.
 - No inicies I1-H02 ni historias posteriores hasta que sus gates y predecesoras figuren cerrados en el plan.
 - No implementes ofertas, candidaturas, prevalidación, formalización, prácticas ni documentos todavía.
 - La empresa es el tenant principal.
@@ -22,7 +22,7 @@ Si dos documentos se contradicen, detente y solicita una decisión. Un ADR acept
 - La universidad es una referencia externa y no requiere cuenta ni workspace.
 - España es la primera jurisdicción del MVP según D-001.
 - País empresarial, locale de interfaz y jurisdicción legal son conceptos distintos; un fallback de idioma nunca aplica reglas españolas a otro país.
-- No inventes reglas legales. `UNKNOWN` e `INDETERMINATE` bloquean puertas críticas.
+- No inventes reglas legales. `UNKNOWN` e `INDETERMINATE` de cumplimiento bloquean puertas legales críticas. El `INDETERMINATE` técnico de la ruta de correo no bloquea H03 y sigue D-007/ADR-003.
 
 ## Arquitectura obligatoria
 
@@ -40,6 +40,8 @@ Si dos documentos se contradicen, detente y solicita una decisión. Un ADR acept
 - Países habilitados, locales soportados, correspondencias país→locale y locale de fallback proceden de configuración tipada y validada.
 - Los dominios de correo público no admitidos para el alta empresarial proceden de una política versionada; nunca de listas o condicionales incrustados en Java/TypeScript.
 - La regla evalúa el dominio normalizado después de `@`, no el proveedor de hosting: un dominio corporativo propio alojado en Google Workspace o Microsoft 365 es admisible.
+- Después de la política, `EmailDomainRoutingVerificationPort` es la comprobación técnica principal. Devuelve `MAIL_CAPABLE`, `NO_MAIL_ROUTE` o `INDETERMINATE`; los dos últimos no bloquean la solicitud, la mantienen pendiente de verificación y se reintentan con backoff.
+- La política ausente sí mantiene H03 cerrada; no confundas esa configuración obligatoria con un fallo transitorio de DNS.
 - Toda etiqueta, acción, estado, ayuda, validación o error visible usa una clave i18n; no incrustes textos de presentación en Java, TypeScript o JSX.
 - API, dominio y persistencia conservan códigos estables independientes del idioma.
 - Los textos legales se versionan separadamente de los catálogos generales de traducción.
@@ -60,6 +62,16 @@ Si dos documentos se contradicen, detente y solicita una decisión. Un ADR acept
 - Las entidades JPA y sus mappers viven en adapters, separadas del modelo de dominio.
 - La API se documenta con OpenAPI, usa Problem Details y mantiene compatibilidad dentro de `/api/v1`.
 - Las operaciones de creación con riesgo de repetición siguen el ADR de idempotencia.
+
+## Despliegue cloud
+
+- Sigue ADR-009: un único `staging` AWS económico y portable mediante Docker Compose; producción está fuera del Incremento 1.
+- H01 puede preparar imágenes, Compose y workflows con `CL0_CLOUD_STAGING` pendiente, pero no puede declararse desplegada/cerrada hasta resolver ese gate.
+- Las imágenes se identifican por SHA/digest; no uses `latest` como release.
+- El despliegue exige CI verde, aprobación de GitHub Environment, OIDC con permisos mínimos, migración Flyway, readiness, smoke test y rollback.
+- No introduzcas RDS, App Runner, ECS, balanceadores, NAT Gateway o Kubernetes en la baseline sin un ADR posterior aprobado.
+- `staging` utiliza datos sintéticos mientras las puertas de privacidad aplicables estén pendientes.
+- AWS es infraestructura: ningún dominio o caso de uso importa SDKs o conceptos del proveedor.
 
 ## Flujo de trabajo
 

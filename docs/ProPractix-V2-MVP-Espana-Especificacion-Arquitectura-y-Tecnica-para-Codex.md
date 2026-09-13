@@ -1,8 +1,8 @@
 # ProPractix V2 — Especificación de arquitectura y técnica para Codex
 
-**Versión:** 1.0  
+**Versión:** 1.1
 **Fecha:** 12 de septiembre de 2026  
-**Estado:** `PROPOSED_FOR_IMPLEMENTATION`  
+**Estado:** `APPROVED_FOR_IMPLEMENTATION`
 **Ámbito:** MVP de prácticas académicas externas universitarias en España  
 **Destinatario principal:** Codex y equipo de desarrollo
 
@@ -95,12 +95,14 @@ Cada incremento DEBE dejar una versión desplegable, demostrable y usable. La in
 7. La selección es condicionada hasta resolver la prevalidación.
 8. El correo institucional es una evidencia de afiliación aparente, no prueba suficiente de elegibilidad.
 9. El estudiante no sustituye a la universidad en la firma del convenio marco.
-10. `UNKNOWN` o `INDETERMINATE` bloquean cualquier puerta crítica.
+10. `UNKNOWN` o `INDETERMINATE` de una evaluación jurídica/de cumplimiento bloquean cualquier puerta legal crítica; el `INDETERMINATE` técnico de la ruta de correo se rige por D-007 y no bloquea H03.
 11. El país registral de la empresa, el idioma de interfaz y la jurisdicción legal son conceptos distintos.
 12. Un locale no soportado cae a español; una jurisdicción no soportada nunca cae a las reglas españolas.
 13. Países, locales, etiquetas y políticas se resuelven mediante catálogos o configuración validada; no mediante condicionales o textos visibles dispersos en código.
 14. El autorregistro empresarial exige un correo cuyo dominio no figure como proveedor público/común en la política vigente; el dominio propio sigue permitido aunque use Google Workspace, Microsoft 365 u otro proveedor como infraestructura.
 15. Admitir un dominio no verifica la identidad, existencia o representación legal de la empresa.
+16. La comprobación de ruta de correo es la validación técnica principal; `NO_MAIL_ROUTE` y los fallos transitorios `INDETERMINATE` no bloquean H03, mantienen la solicitud pendiente de verificación y se reintentan.
+17. Cada incremento aprobado se despliega sobre un único entorno AWS `staging`; el entorno inicial usa una topología Docker Compose económica y portable según ADR-009.
 
 ## 6. Arquitectura objetivo
 
@@ -225,6 +227,8 @@ flowchart TD
 Las flechas van del consumidor al proveedor de un contrato público; no representan acceso directo a tablas ni entidades internas. `notifications` implementa capacidades de entrega solicitadas por los contextos propietarios y no consulta repositorios ajenos.
 
 `organization` posee `CompanyEmailAdmissionPolicy`. La política clasifica únicamente el dominio normalizado después de `@` mediante un catálogo versionado y configurable. No inspecciona si el MX pertenece a Google, Microsoft u otro proveedor, porque un dominio corporativo propio puede utilizar cualquiera de esas infraestructuras.
+
+Después de superar la política, `organization` usa `EmailDomainRoutingVerificationPort` como validación técnica principal. El adapter devuelve `MAIL_CAPABLE`, `NO_MAIL_ROUTE` o `INDETERMINATE`; ninguno de los dos últimos rechaza H03. Ambos dejan el onboarding pendiente de verificación, activan backoff y pueden resolverse por reintento o por la verificación efectiva del enlace. La política ausente continúa siendo un fallo cerrado distinto de un resultado DNS.
 
 ## 10. Estructura interna de cada módulo backend
 
@@ -944,6 +948,17 @@ El pipeline DEBE ejecutar jobs separados y paralelizables:
 - prueba de contrato frontend/backend;
 - E2E mínimo contra stack efímero.
 
+### Despliegue de `staging`
+
+- imágenes OCI reproducibles de cliente y servidor, etiquetadas con el SHA completo;
+- manifiesto de release con digests inmutables;
+- autenticación GitHub→AWS mediante OIDC y rol de permisos mínimos;
+- aprobación del GitHub Environment antes de desplegar;
+- migración Flyway controlada, readiness y smoke tests;
+- rollback al manifiesto anterior sin intentar revertir migraciones aplicadas;
+- backup/restore smoke test y evidencia del release desplegado;
+- ningún despliegue de una rama de trabajo sin revisión.
+
 No se permite fusionar si backend o frontend no compilan, si falla el aislamiento tenant o si una migración no puede aplicarse.
 
 ## 29. Configuración y entornos
@@ -955,9 +970,12 @@ No se permite fusionar si backend o frontend no compilan, si falla el aislamient
 - Flags de funcionalidad en Application; nunca para saltarse una invariante legal.
 - Países habilitados, locales soportados, correspondencias país→locale y locale de fallback se cargan desde configuración tipada con valores por entorno.
 - La política de dominios públicos no admitidos para onboarding empresarial se carga desde configuración tipada y versionada, con comportamiento fail-closed si no está disponible al exponer H03.
+- Timeout, caché, backoff y límite de reintentos de `EmailDomainRoutingVerificationPort` proceden de configuración validada. `NO_MAIL_ROUTE` e `INDETERMINATE` no bloquean H03 ni se presentan como prueba de que el solicitante no controla el correo.
 - El fallback de presentación no se reutiliza para resolver jurisdicción, moneda, zona horaria ni política legal.
 - Jurisdicciones con estados `CATALOGUED`, `INTERNAL_TEST`, `PILOT`, `SUPPORTED`, `DEPRECATED`.
 - Solo `SUPPORTED`, o `PILOT` con flag y tenant autorizado, es seleccionable.
+- `staging` usa AWS según ADR-009; región, host, imágenes, endpoints y secretos son configuración de infraestructura y nunca entran en el dominio.
+- Producción no se aprovisiona en el Incremento 1 y `staging` usa solo datos sintéticos mientras las puertas de privacidad aplicables estén pendientes.
 
 ## 30. Roadmap de implementación
 
@@ -967,6 +985,7 @@ Valor demostrable:
 
 - empresa registrada en `SELF_DECLARED`, con primer usuario y correo verificados;
 - correo del primer administrador admitido por la política empresarial, sin confundir esa admisión con verificación de la empresa;
+- ruta de correo evaluada como control técnico principal, con degradación recuperable ante indisponibilidad DNS;
 - primer usuario operativo;
 - estudiante registrado;
 - correo verificado;
@@ -974,7 +993,7 @@ Valor demostrable:
 - catálogo institucional consultable;
 - aislamiento tenant probado.
 
-Incluye la fundación mínima: repositorio, CI, seguridad, i18n, migraciones, observabilidad y reglas ArchUnit necesarias para este recorrido.
+Incluye la fundación mínima: repositorio, CI, seguridad, i18n, migraciones, observabilidad, reglas ArchUnit y despliegue AWS `staging` necesarios para este recorrido.
 
 ### Incremento 2 — Oferta publicable
 
@@ -1067,12 +1086,14 @@ Un incremento está terminado solo si:
 - no existen etiquetas visibles hardcodeadas y la paridad de catálogos i18n está verificada;
 - añadir un país o locale soportado no exige modificar aggregates ni introducir condicionales por código de país;
 - cambiar la política de dominios públicos no exige modificar el aggregate ni textos de UI, y todos sus errores se resuelven por códigos i18n;
+- la comprobación técnica de correo diferencia `MAIL_CAPABLE`, `NO_MAIL_ROUTE` e `INDETERMINATE`; los dos últimos dejan el onboarding pendiente de verificación sin rechazarlo;
 - existen tests de dominio, aplicación, integración y E2E;
 - existe al menos una prueba negativa de autorización;
 - fallos externos son reintentables o dejan estado recuperable;
 - logs y métricas permiten operar el flujo;
 - documentación y ADR están actualizados;
 - no quedan secretos, tokens o archivos autenticados en Git;
+- la versión está desplegada y validada en `staging`, o existe evidencia explícita de un bloqueo externo en `CL0_CLOUD_STAGING` que impide cerrar el incremento;
 - la versión puede desplegarse sin depender del siguiente incremento.
 
 ## 33. ADR obligatorios antes o durante el Incremento 1
@@ -1087,10 +1108,11 @@ Un incremento está terminado solo si:
 | `ADR-006` | Separación dominio/JPA y propiedad de tablas. |
 | `ADR-007` | Access token, refresh cookie y protección CSRF/origin. |
 | `ADR-008` | OpenAPI, errores e idempotencia. |
-| `ADR-009` | Policy packs y publicación de reglas. |
-| `ADR-010` | Almacenamiento, versiones y firma documental. |
-| `ADR-011` | Enlaces seguros para participantes universitarios. |
-| `ADR-012` | Estructura frontend y cliente generado. |
+| `ADR-009` | Despliegue cloud incremental en AWS. |
+| `ADR-010` | Policy packs y publicación de reglas. |
+| `ADR-011` | Almacenamiento, versiones y firma documental. |
+| `ADR-012` | Enlaces seguros para participantes universitarios. |
+| `ADR-013` | Estructura frontend y cliente generado. |
 
 Los ADR deben contener contexto, decisión, alternativas, consecuencias y fecha. No se crean ADR para justificar retroactivamente una implementación ya realizada.
 
@@ -1160,6 +1182,6 @@ Codex NO DEBE:
 
 La primera orden no debería ser “construye ProPractix V2”. Debe ser:
 
-> Implementa el Incremento 1 definido en esta especificación. Antes de modificar código, propone los ADR-001 a ADR-008, el context map inicial, el esquema mínimo de datos y el recorrido E2E empresa–estudiante–catálogo. No implementes ofertas, candidaturas, prevalidación ni formalización. El resultado debe ser desplegable, permitir registrar y verificar una empresa y un estudiante, consultar el catálogo institucional y demostrar aislamiento multi-tenant.
+> Implementa el Incremento 1 definido en esta especificación. Antes de modificar código, revisa los ADR-001 a ADR-009 aceptados, el context map inicial, el esquema mínimo de datos y el recorrido E2E empresa–estudiante–catálogo. No implementes ofertas, candidaturas, prevalidación ni formalización. El resultado debe desplegarse en `staging` según ADR-009, permitir registrar y verificar una empresa y un estudiante, consultar el catálogo institucional y demostrar aislamiento multi-tenant.
 
 Esta orden mantiene el alcance verificable y evita que Codex convierta el blueprint completo en una implementación monolítica sin hitos de producto.

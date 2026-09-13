@@ -1,6 +1,6 @@
 # ProPractix V2 — Blueprint de dominio y mapas legales para España
 
-**Versión:** 1.3
+**Versión:** 1.4
 **Fecha:** 12 de septiembre de 2026  
 **Enfoque:** Domain-Driven Design (DDD), arquitectura hexagonal y monolito modular  
 **Estado:** alcance de producto y arquitectura aprobado; reglas jurídicas pendientes de validación profesional
@@ -432,7 +432,11 @@ El primer administrador deberá usar una dirección cuyo dominio normalizado des
 
 La lista, su versión, ámbito y fecha efectiva procederán de configuración tipada. No habrá arrays, enums, expresiones condicionales por proveedor ni mensajes visibles hardcodeados. Un rechazo utilizará un código estable traducido por i18n. Si la política no está disponible en un entorno que expone H03, el registro falla de forma cerrada.
 
-Que un dominio no esté bloqueado significa únicamente `NOT_LISTED_AS_PUBLIC_PROVIDER`. No acredita existencia de la empresa, propiedad del dominio, relación laboral, representación ni derecho a reclamar un tenant. La empresa continuará `SELF_DECLARED` hasta el proceso independiente de verificación empresarial anterior a `G1_PUBLICATION`.
+Después de superar esa política determinista, la existencia de una ruta de correo se comprobará mediante un puerto técnico sustituible. Esta será la validación técnica principal del dominio y distinguirá `MAIL_CAPABLE`, `NO_MAIL_ROUTE` e `INDETERMINATE`. Ni `NO_MAIL_ROUTE` ni un timeout, `SERVFAIL`, caída del resolver o error equivalente rechazarán la solicitud: conservarán la comprobación pendiente, activarán reintentos con backoff y exigirán la verificación efectiva del enlace antes de activar la cuenta. La interfaz no presentará un resultado DNS como si demostrara por sí solo que el solicitante no controla la dirección.
+
+La comprobación técnica no examina quién hospeda el correo y no constituye verificación empresarial. La verificación mediante enlace seguirá siendo la prueba definitiva de control de la dirección; completarla resolverá una comprobación técnica previamente indeterminada para ese onboarding. Se conservará solo evidencia técnica mínima y no se dependerá del DNS público real en pruebas automatizadas.
+
+Que un dominio no esté bloqueado significa únicamente `NOT_LISTED_AS_PUBLIC_PROVIDER`. Que exista ruta de correo significa únicamente `MAIL_CAPABLE`. Ninguno acredita existencia de la empresa, propiedad del dominio, relación laboral, representación ni derecho a reclamar un tenant. La empresa continuará `SELF_DECLARED` hasta el proceso independiente de verificación empresarial anterior a `G1_PUBLICATION`.
 
 ## 13. Criterio de revisión de D-001
 

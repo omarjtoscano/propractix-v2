@@ -1,9 +1,9 @@
 # ADR-003 — Multi-tenancy, identidad y tenant activo
 
-- Estado: Aceptado — revisión 4
+- Estado: Aceptado — revisión 5
 - Fecha: 2026-09-12
 - Decisores: Producto, Seguridad y Arquitectura
-- Reemplaza: revisión 3 del ADR-003
+- Reemplaza: revisión 4 del ADR-003
 
 ## Contexto
 
@@ -75,6 +75,23 @@ La comparación será exacta sobre el dominio normalizado y nunca por substring.
 
 El servidor aplica la política de forma autoritativa antes de crear el onboarding. Un dominio bloqueado devuelve una violación estable `company_email_domain_not_allowed`; una política ausente o inválida en un entorno que expone H03 falla de forma cerrada con `company_email_policy_unavailable`. Ambos mensajes visibles se resuelven mediante i18n. No existe excepción automática; una futura recuperación administrativa requerirá decisión y trazabilidad propias.
 
+#### Comprobación técnica principal de correo
+
+Después de superar `CompanyEmailAdmissionPolicy`, `organization` invoca `EmailDomainRoutingVerificationPort`. El puerto comprueba si el dominio posee una ruta de correo admisible sin inferir la identidad del proveedor que la opera y devuelve exclusivamente:
+
+```text
+MAIL_CAPABLE
+NO_MAIL_ROUTE
+INDETERMINATE
+```
+
+- `MAIL_CAPABLE` permite continuar, pero no verifica la empresa ni al representante.
+- `NO_MAIL_ROUTE` indica que la comprobación no encontró una ruta admisible después de considerar la ruta implícita del protocolo. No rechaza H03: mantiene la solicitud pendiente de verificación y programa una nueva comprobación.
+- `INDETERMINATE` representa timeout, `SERVFAIL`, resolver no disponible o fallo técnico equivalente. Tampoco bloquea H03, no se presenta como email inválido y programa reintentos con backoff.
+- Una verificación de enlace completada demuestra control de la dirección y resuelve un resultado técnico previamente `INDETERMINATE` para ese onboarding.
+
+Timeout, caché, backoff y límite de reintentos son configuración tipada. El adapter guarda solo estado, instante y código técnico mínimo; no persiste la respuesta DNS completa ni registra el email/dominio en claro. Los tests sustituyen el resolver por un adapter determinista y no dependen de Internet.
+
 ## Membresías y tenant activo
 
 Una `Membership` relacionará `UserId`, `TenantId`, rol, estado y versión. Una persona podrá tener varias membresías activas. El primer miembro de una empresa usa el rol canónico `COMPANY_OWNER`.
@@ -142,6 +159,7 @@ No se confiará exclusivamente en `ThreadLocal`, filtros Hibernate o un tenant e
 - La ceremonia de cuenta existente y la política de empresa duplicada no permiten enlace ni enumeración automática.
 - La rotación HMAC conserva la unicidad fiscal mediante blind indexes para todas las versiones activas y un backfill verificable.
 - D-007 y `CompanyEmailAdmissionPolicy` impiden correos de dominios públicos comunes sin hardcodear proveedores ni confundir admisión con verificación empresarial.
+- La verificación de ruta es el control técnico principal, distingue ausencia de ruta de fallos de infraestructura y no bloquea H03 por `NO_MAIL_ROUTE` o `INDETERMINATE`.
 
 ## Conformidad de la implementación
 
@@ -150,4 +168,4 @@ No se confiará exclusivamente en `ThreadLocal`, filtros Hibernate o un tenant e
 - Las pruebas anteriores se asignan a historias concretas del plan.
 - Las respuestas no permiten enumerar recursos ajenos.
 - Las pruebas de rotación y alta concurrente demuestran que una nueva versión HMAC no permite crear otro tenant para el mismo identificador.
-- Las pruebas de email cubren normalización, coincidencia exacta, dominio bloqueado, dominio propio alojado por un proveedor común, política ausente e i18n.
+- Las pruebas de email cubren normalización, coincidencia exacta, dominio bloqueado, dominio propio alojado por un proveedor común, política ausente, `MAIL_CAPABLE`, `NO_MAIL_ROUTE`, `INDETERMINATE`, reintentos e i18n.

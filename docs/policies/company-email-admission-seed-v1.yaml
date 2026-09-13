@@ -1,0 +1,112 @@
+policyId: company-email-admission
+version: 2026-09-12.1
+status: DRAFT
+scope: COMPANY_SELF_REGISTRATION
+source:
+  system: ProPractix-V1
+  artifact: server/src/main/resources/blocked-email-domains.txt
+  sha256: 6e33c1d8dcd825a3a895dd2379e7181e9e63aebd6619bbf294d886a5ba213c7e
+matching:
+  field: NORMALIZED_DOMAIN_AFTER_AT
+  mode: EXACT
+categories:
+  - code: PUBLIC_OR_COMMON_PROVIDER
+    domains:
+      - gmail.com
+      - googlemail.com
+      - hotmail.com
+      - hotmail.es
+      - hotmail.co.uk
+      - outlook.com
+      - outlook.es
+      - live.com
+      - live.es
+      - live.co.uk
+      - msn.com
+      - yahoo.com
+      - yahoo.es
+      - yahoo.co.uk
+      - yahoo.com.ar
+      - yahoo.com.mx
+      - icloud.com
+      - me.com
+      - mac.com
+      - protonmail.com
+      - proton.me
+      - tutanota.com
+      - tutanota.de
+      - tuta.io
+      - gmx.com
+      - gmx.es
+      - gmx.net
+      - gmx.de
+      - mail.com
+      - aol.com
+      - yandex.com
+      - yandex.ru
+      - mail.ru
+      - inbox.com
+      - zoho.com
+      - fastmail.com
+      - fastmail.fm
+      - hushmail.com
+      - mailfence.com
+      - posteo.de
+      - posteo.net
+      - runbox.com
+      - startmail.com
+      - disroot.org
+      - riseup.net
+  - code: DISPOSABLE_PROVIDER
+    domains:
+      - mailinator.com
+      - guerrillamail.com
+      - guerrillamail.info
+      - guerrillamail.net
+      - guerrillamail.org
+      - guerrillamailblock.com
+      - trashmail.com
+      - trashmail.net
+      - trashmail.me
+      - throwam.com
+      - throwaway.email
+      - tempmail.com
+      - temp-mail.org
+      - 10minutemail.com
+      - 10minutemail.net
+      - sharklasers.com
+      - grr.la
+      - spam4.me
+      - yopmail.com
+      - yopmail.fr
+      - cool.fr.nf
+      - jetable.fr.nf
+      - nospam.ze.tc
+      - nomail.xl.cx
+      - mega.zik.dj
+      - speed.1s.fr
+      - courriel.fr.nf
+      - moncourrier.fr.nf
+      - monemail.fr.nf
+      - monmail.fr.nf
+      - dispostable.com
+      - mailnesia.com
+      - mailnull.com
+      - spamgourmet.com
+      - spamgourmet.net
+      - spamgourmet.org
+      - maildrop.cc
+      - discard.email
+      - fakeinbox.com
+excludedLegacyRules:
+  reason: Educational suffixes from V1 require separate governed review and are not migrated as implicit wildcard rules.
+  suffixes:
+    - .edu
+    - .ac.uk
+    - .edu.co
+    - .edu.mx
+    - .edu.ar
+    - .edu.pe
+    - .edu.ve
+    - .edu.ec
+    - .edu.bo
