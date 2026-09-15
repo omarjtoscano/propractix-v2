@@ -1,10 +1,10 @@
 # Plan técnico propuesto — Incremento 1
 
-- Estado: Aprobado — revisión 6
-- Fecha: 2026-09-13
+- Estado: Aprobado — revisión 7
+- Fecha: 2026-09-15
 - Rama: `increment/01-company-identity-catalog`
 - Resultado: empresa y estudiante con cuentas verificadas, catálogo universitario consultable, declaración académica trazable y aislamiento tenant demostrado.
-- Reemplaza: revisión 5 aprobada en `docs/reviews/resolucion-correo-cloud-revision-5.md`.
+- Reemplaza: revisión 6 aprobada en `docs/reviews/resolucion-cloud-staging-revision-6.md`.
 
 ## 1. Decisiones de producto incorporadas
 
@@ -29,6 +29,7 @@
 19. La comprobación de ruta de correo es la validación técnica principal después de la política; `NO_MAIL_ROUTE` y un fallo DNS/infraestructura `INDETERMINATE` no rechazan la solicitud, la mantienen pendiente de verificación y activan reintentos.
 20. Cada incremento aprobado se despliega en un único entorno AWS `staging`; H01–H05 se aceptan primero en local y el primer despliegue cloud útil verifica el recorrido navegable de H05 según ADR-009.
 21. La aceptación local de una historia y su promoción cloud son hitos distintos; `CL0_CLOUD_STAGING` no bloquea cerrar H01 ni avanzar a una sucesora cuyos demás gates estén cerrados.
+22. ADR-012 fija PostgreSQL 16, Mailpit y secretos sintéticos mediante archivos/config tree para desarrollo local; LocalStack solo existe en el perfil opcional `aws-contract`. H01–H05 se aceptan sin AWS.
 
 ## 2. Gates de preparación
 
@@ -36,14 +37,14 @@ No se inicia implementación no desechable hasta que los ADR aplicables estén e
 
 | Gate | Estado | Owners | Bloquea | Resultado requerido |
 |---|---|---|---|---|
-| `D0_DECISIONS` | `CLOSED` | Producto + Arquitectura + Seguridad | I1-H01 | ADR-001 a ADR-009 y ADR-011 aceptados; ADR-010 reservado; contextos, credencial, roles, duplicados, contratos, correo y despliegue alineados. |
+| `D0_DECISIONS` | `CLOSED` | Producto + Arquitectura + Seguridad | I1-H01 | ADR-001 a ADR-009, ADR-011 y ADR-012 aceptados; ADR-010 reservado; contextos, credencial, roles, duplicados, contratos, correo, desarrollo local y despliegue alineados. |
 | `F0_CLIENT_BASELINE` | `CLOSED` | Arquitectura + Frontend | I1-H02 | Versiones exactas, generador OpenAPI, router, i18n, testing, lockfile y política de actualización aprobados. |
 | `C0_CATALOG` | `PENDING` | Producto + Datos + Legal/licencias | I1-H02 | Fuente, licencia, formato, actualización, publicación, rollback y fixture aprobados. |
 | `B0_COMPANY_EMAIL_POLICY` | `PENDING` | Producto + Seguridad | I1-H03 | Revisión V1 completada; falta aprobar/publicar la versión inicial, revisar cobertura, ejercitar actualización/rollback y probar política, MX, `INDETERMINATE` y no enumeración. |
 | `P0_PRIVACY` | `PENDING` | Producto + Privacidad/Legal + Seguridad | I1-H03 e I1-H06 con datos reales | ML-15, finalidad, campos, evidencia, base jurídica, derechos y retención aprobados. |
 | `S0_PUBLIC_ENDPOINTS` | `PENDING` | Seguridad + Operaciones | Exposición pública de I1-H02 a I1-H06 | Límites por operación, claves pseudonimizadas, TTL, fail-closed, métricas, alertas y pruebas `429`/`Retry-After`. |
 | `E0_EMAIL` | `PENDING` | Arquitectura + Operaciones + Seguridad + Privacidad/Legal | I1-H04 con correo real | Adapter, remitente/dominio, templates i18n, TTL, métricas, runbook, rol contractual, región, subencargados, retención/borrado, redacción e incident response aprobados. |
-| `CL0_CLOUD_STAGING` | `PENDING` | Producto + Arquitectura + Operaciones + Seguridad | Primer despliegue AWS de H05 y releases posteriores | Alcanzar `READY_FOR_APPLICATION` con cuenta, coste, OpenTofu, OIDC, SSM, ECR, secretos y pruebas sintéticas; cerrar solo después de desplegar/verificar H05, rollback y backup/restore. |
+| `CL0_CLOUD_STAGING` | `PENDING` | Producto + Arquitectura + Operaciones + Seguridad | Primer despliegue AWS de H05 y releases posteriores | Alcanzar `READY_FOR_APPLICATION` con cuenta, coste, OpenTofu, OIDC, SSM, ECR, secretos y la fixture sintética exclusiva de staging; cerrar solo después de desplegar/verificar H05, rollback y backup/restore. |
 
 Los gates son decisiones/evidencias y no historias de implementación. `C0`, `B0`, `P0`, `S0`, `E0` y `CL0` pueden prepararse sin introducir funcionalidad anticipada. H01 está `READY` y se cierra por su aceptación local; no necesita desplegarse en AWS. La preparación cloud puede avanzar como workstream separado y pasa a `READY_FOR_APPLICATION` sin bloquear H03–H05. `CL0` solo se cierra tras desplegar y verificar H05. Cerrar D0 o aceptar los ADR no habilita datos reales, correo real ni endpoints públicos mientras sus gates permanezcan pendientes.
 
@@ -86,7 +87,17 @@ Antes de exponer el primer registro con datos reales deben estar resueltos:
 - tratamiento de derechos y eliminación;
 - distinción entre información, términos, consentimiento opcional y marketing.
 
-En local/test se podrá usar una fixture claramente no productiva. Esa fixture no se exporta ni promueve. En staging/production, si no existe aviso `APPROVED` vigente, el API devuelve `503 privacy_policy_unavailable` antes de aceptar el body personal.
+En local/test se usa una fixture claramente no productiva. `staging` usa exclusivamente `docs/policies/staging-synthetic-privacy-fixture-v1.yaml`, aislada de datos reales y no promovible. Producción nunca admite esas fixtures: si no existe aviso real `APPROVED` vigente, el API devuelve `503 privacy_policy_unavailable` antes de aceptar el body personal.
+
+### Baseline local aprobada
+
+ADR-012 gobierna la aceptación de H01–H05:
+
+- PostgreSQL 16 es la única base de datos local;
+- Mailpit captura correo sintético sin relay externo;
+- secretos sintéticos se montan como archivos y Spring los consume mediante config tree;
+- LocalStack solo arranca con el perfil opcional `aws-contract` para contratos de adapters AWS;
+- ninguna aceptación de H01, H02, H03, H04 o H05 exige credenciales, red o recursos AWS.
 
 ## 3. Alcance
 
@@ -178,11 +189,11 @@ Si el correo ya pertenece a una cuenta, la respuesta continúa siendo genérica 
 
 | Historia | ADR aplicables | Gates/predecesoras antes de empezar |
 |---|---|---|
-| I1-H01 | ADR-001, ADR-002, ADR-006, ADR-007, ADR-008, ADR-009 | `D0_DECISIONS` cerrado. ADR-004 se difiere hasta la primera historia que use IDs, reloj o concurrencia. `CL0_CLOUD_STAGING` no bloquea el inicio ni el cierre local. |
-| I1-H02 | ADR-001, ADR-002, ADR-004, ADR-005, ADR-006, ADR-007, ADR-008, ADR-009 | H01 + `C0_CATALOG` + `F0_CLIENT_BASELINE` + `S0_PUBLIC_ENDPOINTS`. |
-| I1-H03 | ADR-001 a ADR-009 | H01 + `B0_COMPANY_EMAIL_POLICY` + `P0_PRIVACY` + `S0_PUBLIC_ENDPOINTS`. |
-| I1-H04 | ADR-001 a ADR-009 | H03 + `E0_EMAIL` + `S0_PUBLIC_ENDPOINTS`. |
-| I1-H05 | ADR-001 a ADR-009 | H04 + `S0_PUBLIC_ENDPOINTS`. |
+| I1-H01 | ADR-001, ADR-002, ADR-006, ADR-007, ADR-008, ADR-009 y ADR-012 | `D0_DECISIONS` cerrado. ADR-004 se difiere hasta la primera historia que use IDs, reloj o concurrencia. `CL0_CLOUD_STAGING` no bloquea el inicio ni el cierre local. |
+| I1-H02 | ADR-001, ADR-002, ADR-004, ADR-005, ADR-006, ADR-007, ADR-008, ADR-009 y ADR-012 | H01 + `C0_CATALOG` + `F0_CLIENT_BASELINE` + `S0_PUBLIC_ENDPOINTS`. |
+| I1-H03 | ADR-001 a ADR-009 y ADR-012 | H01 + `B0_COMPANY_EMAIL_POLICY` + `P0_PRIVACY` + `S0_PUBLIC_ENDPOINTS`. |
+| I1-H04 | ADR-001 a ADR-009 y ADR-012 | H03 + `E0_EMAIL` + `S0_PUBLIC_ENDPOINTS`. |
+| I1-H05 | ADR-001 a ADR-009 y ADR-012 | H04 + `S0_PUBLIC_ENDPOINTS`. |
 | I1-H06 | ADR-001 a ADR-009 | H04 + H05 + `P0_PRIVACY` + `S0_PUBLIC_ENDPOINTS`. |
 | I1-H07 | ADR-001 a ADR-009 | H02 + H06. |
 
@@ -201,7 +212,8 @@ La matriz identifica adopción documental. La conformidad de cada ADR se demuest
 **Incluye:**
 
 - perfiles `local`, `test`, `staging`, `production` con diferencias mínimas;
-- configuración tipada y validada; secretos externos;
+- configuración tipada y validada; secretos locales sintéticos montados como archivos y consumidos mediante Spring config tree;
+- PostgreSQL 16 y Mailpit en el perfil local; LocalStack únicamente en el perfil opcional `aws-contract`;
 - catálogo de países/locales y fallback configurable, sin etiquetas de UI en código;
 - Flyway y `ddl-auto=validate`;
 - ArchUnit con reglas ADR-001/002;
@@ -216,7 +228,7 @@ La matriz identifica adopción documental. La conformidad de cada ADR se demuest
 
 **Fuera:** tablas de negocio, registro, auth y frontend funcional.
 
-**Pruebas/aceptación:** Maven Wrapper, contexto Spring, migración vacía, PostgreSQL Testcontainers, health/readiness sin secretos, violación ArchUnit de prueba controlada, `docker compose config`, build de imágenes ARM64, ausencia de secretos, manifiesto inmutable, backup/restore local y validación estática/dry-run del contrato de workflow. Ninguna prueba AWS forma parte del cierre local de H01.
+**Pruebas/aceptación:** Maven Wrapper, contexto Spring, migración vacía, PostgreSQL 16/Testcontainers, Mailpit sin relay, health/readiness sin secretos, config tree montado, violación ArchUnit de prueba controlada, `docker compose config` con `aws-contract` ausente por defecto, build de imágenes ARM64, ausencia de secretos, manifiesto inmutable, backup/restore local y validación estática/dry-run del contrato de workflow. Ninguna prueba AWS forma parte del cierre local de H01.
 
 **Migración:** solo baseline técnico si es imprescindible; no crear tablas futuras.
 
@@ -286,7 +298,7 @@ Después, `EmailDomainRoutingVerificationPort` actúa como comprobación técnic
 
 **Migraciones:** onboarding, company, `organization_company_tax_fingerprint`, user sin credencial, privacidad aplicable, outbox, idempotencia, rate limiting y auditoría necesarias. La PII mínima del process manager se cifra y se elimina o redacta según el valor aprobado en ML-15.
 
-**Criterios:** dado un request válido, dominio admitido, ruta `MAIL_CAPABLE`, aviso autoritativo coincidente y empresa no duplicada, responde `202` y llega a `EMAIL_PENDING`; dado el mismo caso con `NO_MAIL_ROUTE` o `INDETERMINATE`, devuelve igualmente `202`, conserva evidencia mínima y programa reintento; dado un retry con la misma clave/fingerprint, devuelve la misma operación; ante cuenta o empresa coincidente, la respuesta no cambia y no se crea ni enlaza otro tenant; solo un dominio bloqueado o una política indisponible impiden crear el onboarding por esta decisión; un aviso ausente, expirado, sustituido, manipulado o de finalidad equivocada no crea idempotencia derivada del body ni persiste PII.
+**Criterios:** dado un request válido, dominio admitido, ruta `MAIL_CAPABLE`, aviso autoritativo coincidente y empresa no duplicada, responde `202` y llega a `EMAIL_PENDING`; dado el mismo caso con `NO_MAIL_ROUTE` o `INDETERMINATE`, devuelve igualmente `202`, conserva evidencia mínima y programa reintento; dado un retry con la misma clave/fingerprint, devuelve la misma operación; ante cuenta o empresa coincidente, la respuesta no cambia y no se crea ni enlaza otro tenant; solo un dominio bloqueado o una política indisponible impiden crear el onboarding por esta decisión; un aviso ausente, expirado, sustituido, manipulado o de finalidad equivocada no crea idempotencia derivada del body ni persiste PII. Toda la aceptación se ejecuta localmente con datos sintéticos y sin AWS.
 
 **Pruebas:** invariantes, país/locale soportado y fallback, jurisdicción no soportada sin fallback legal, correo Gmail/Outlook/Hotmail u otro dominio de fixture bloqueado, normalización/case, coincidencia exacta, dominio corporativo con hosting externo permitido, política ausente fail-closed, `MAIL_CAPABLE`, ruta implícita admisible, `NO_MAIL_ROUTE`, timeout, `SERVFAIL`, resolver caído, `INDETERMINATE` no bloqueante, backoff, adapter DNS determinista sin Internet, códigos/i18n, transacciones separadas, eventos duplicados, idempotencia concurrente, `429`/`Retry-After`, enumeración, duplicado fiscal antes/durante/después de rotación HMAC, dos altas concurrentes, todos los casos del aviso autoritativo, rollback local, body tenant ignorado/rechazado y ausencia de contraseña/request en persistencia.
 
@@ -317,7 +329,7 @@ Después, `EmailDomainRoutingVerificationPort` actúa como comprobación técnic
 
 **Errores:** respuesta no enumeradora para token/reenvío, validación de contraseña, propósito inválido, expiración y `429 rate_limited` con `Retry-After`.
 
-**Criterios:** dado un token válido y contraseña aceptable, se consume una vez, se crea el hash y la cuenta queda `ACTIVE`; un segundo consumo o un token invalidado nunca cambia credenciales; la empresa permanece `SELF_DECLARED`; verificación y reenvío respetan los límites aprobados en S0.
+**Criterios:** dado un token válido y contraseña aceptable, se consume una vez, se crea el hash y la cuenta queda `ACTIVE`; un segundo consumo o un token invalidado nunca cambia credenciales; la empresa permanece `SELF_DECLARED`; verificación y reenvío respetan los límites aprobados en S0. La aceptación usa Mailpit y secretos sintéticos locales, sin correo real ni AWS.
 
 **Pruebas:** token válido, firma inválida, propósito/audiencia incorrectos, contraseña inválida, expirado, doble consumo concurrente, reenvío, `429`/`Retry-After` por operación, datos transitorios no registrados, caída del relay y recuperación sin duplicar efectos de dominio.
 
@@ -353,7 +365,7 @@ Después, `EmailDomainRoutingVerificationPort` actúa como comprobación técnic
 
 **Migraciones:** refresh sessions y versión de membership/company.
 
-**Criterios:** una cuenta con varias memberships solo obtiene un token tenant para una membership activa; revocarla impide selección, refresh y acceso a “mi empresa”; cambiar locale no cambia país ni jurisdicción.
+**Criterios:** una cuenta con varias memberships solo obtiene un token tenant para una membership activa; revocarla impide selección, refresh y acceso a “mi empresa”; cambiar locale no cambia país ni jurisdicción. El recorrido navegable completo se acepta localmente sin AWS antes de cualquier promoción a `staging`.
 
 **Pruebas:** login, claims, cookies, CORS, CSRF, Origin ausente/inválido, `active-tenant` sin bearer, refresh con tenant no autorizado, rotación concurrente, reuse detection, revocación de membresía, selección múltiple, `429`/`Retry-After` en login y demás operaciones públicas definidas por S0, fallback i18n y lectura/escritura negativa entre empresas A/B.
 
@@ -439,6 +451,9 @@ No es una historia funcional ni acumula API/UI diferida. Verifica que empresa, e
 
 - Un commit coherente por historia o subcambio técnico revisable.
 - No empezar la historia siguiente con la anterior en rojo.
+- Crear `main` desde el último commit revisado de `increment/01-company-identity-catalog`, establecerla como rama estable y predeterminada y registrar el SHA de origen.
+- Proteger `main`: integración solo por pull request con checks obligatorios; push directo, force push y borrado deshabilitados.
+- Mantener el trabajo posterior en ramas `increment/*` o `feature/*`; crear/configurar `main` es una acción administrativa explícita y no un efecto de OpenTofu ni de un workflow AWS.
 - Antes de cada commit:
 
 ```bash
@@ -484,7 +499,7 @@ git status --short
 
 ## 11. Autorización de ejecución
 
-La revisión 6 conserva resueltos BF-01 a BF-04, acepta ADR-009 revisión 2 y ADR-011 revisión 1, y mantiene `D0_DECISIONS` cerrado. Por tanto:
+La revisión 7 conserva resueltos BF-01 a BF-04, acepta ADR-009 revisión 3, ADR-011 revisión 1 y ADR-012 revisión 1, y mantiene `D0_DECISIONS` cerrado. Por tanto:
 
 - I1-H01 queda `READY` y es la única historia autorizada para comenzar;
 - I1-H02 a I1-H06 permanecen bloqueadas hasta cerrar los gates indicados en la matriz;

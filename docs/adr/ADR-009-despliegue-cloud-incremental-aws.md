@@ -1,9 +1,9 @@
 # ADR-009 — Despliegue cloud incremental en AWS
 
-- Estado: Aceptado — revisión 2
-- Fecha: 2026-09-13
+- Estado: Aceptado — revisión 3
+- Fecha: 2026-09-15
 - Decisores: Producto, Arquitectura, Operaciones y Seguridad
-- Reemplaza: revisión 1 aprobada el 2026-09-12
+- Reemplaza: revisión 2 aprobada el 2026-09-13
 
 ## Contexto
 
@@ -21,9 +21,9 @@ AWS es solo infraestructura. Ningún bounded context, aggregate o caso de uso de
 
 | Entorno | Propósito | Datos |
 |---|---|---|
-| `local` | Desarrollo y aceptación funcional individual | Fixtures locales |
+| `local` | Desarrollo y aceptación funcional individual según ADR-012 | Fixtures sintéticas locales |
 | `test` | Pruebas automatizadas | Efímeros |
-| `staging` | Validación integrada de H05 y releases posteriores | Sintéticos mientras las puertas de privacidad aplicables estén pendientes |
+| `staging` | Validación integrada de H05 y releases posteriores | Exclusivamente fixture sintética de staging; datos reales prohibidos |
 | `production` | Operación real | No se aprovisiona en el Incremento 1 |
 
 El Incremento 1 mantiene un único `staging` AWS. No se crea un entorno permanente por rama ni por historia.
@@ -58,6 +58,8 @@ La topología inicial será:
 
 No habrá alta disponibilidad. RDS, App Runner, ECS, EKS, balanceadores, NAT Gateway, endpoints VPC de pago, AWS Backup y Secrets Manager quedan fuera de la baseline.
 
+Los 16 GiB se mantienen como límite inicial, no como capacidad sin control. El host registra ocupación antes y después de cada despliegue: a partir del 70 % se revisan logs, capas e imágenes; a partir del 80 % se detiene la promoción hasta limpiar de forma segura o aprobar capacidad adicional; al 90 % se detienen despliegues y se trata como incidente operativo. Docker limita sus logs por contenedor a tres archivos de 10 MiB, la aplicación escribe a `stdout` y no conserva ficheros de log sin rotación. Solo se eliminan capas e imágenes no referenciadas después de conservar la release activa y la anterior; nunca se usa una limpieza que alcance volúmenes de PostgreSQL. Los dumps temporales se borran del host únicamente después de verificar su copia en S3.
+
 ### Red y acceso
 
 Hasta que H05 requiera acceso navegable:
@@ -68,7 +70,7 @@ Hasta que H05 requiera acceso navegable:
 - no se abren 22, 80, 443 ni 5432;
 - el acceso del único tester se realiza con Session Manager y port forwarding.
 
-La instancia podrá recibir una IPv4 pública dinámica solo cuando sea necesaria para egress hacia SSM, ECR y repositorios de paquetes. Esa dirección no habilita ingreso, pero sí tiene precio horario. OpenTofu permitirá desactivarla, y el plan deberá mostrar su coste estimado antes de aplicar. Una alternativa sin IPv4 pública —IPv6 o endpoints privados— requerirá una evaluación posterior de coste y complejidad.
+Bajo esta baseline —sin NAT, IPv6 ni endpoints VPC— la instancia necesita una IPv4 pública dinámica para egress hacia SSM, ECR y repositorios de paquetes. Por tanto, OpenTofu la asignará mientras se use esta topología. Esa dirección no habilita ingreso porque el Security Group permanece sin reglas entrantes, pero sí tiene precio horario y debe aparecer en el plan de coste. Solo podrá desactivarse después de aprobar e implementar otra ruta de salida. Una alternativa sin IPv4 pública —IPv6 o endpoints privados— requerirá una evaluación posterior de coste y complejidad.
 
 Cuando H05 esté lista se decidirá separadamente si continuar con port forwarding o añadir exposición pública, DNS, HTTPS y una dirección estable. Nada de ello se presupone en esta revisión.
 
@@ -96,6 +98,9 @@ El claim real y `aud=sts.amazonaws.com` se verificarán en un workflow diagnóst
 
 ### Datos, secretos y copias
 
+- `staging` carga exclusivamente `docs/policies/staging-synthetic-privacy-fixture-v1.yaml` o una materialización verificable de esa versión.
+- La fixture usa identidades ficticias y dominios reservados, prohíbe mezclar o importar datos personales reales y no puede promoverse, copiarse ni restaurarse en producción.
+- El modo sintético falla cerrado: si no se puede demostrar la procedencia de un dataset, no se carga en `staging`.
 - No se almacenan secretos en Git, imágenes, Compose versionado, variables OpenTofu, state o logs.
 - OpenTofu crea rutas y permisos de Parameter Store, pero los valores sensibles se introducen fuera de IaC.
 - No se crea una clave KMS administrada por el cliente para esta baseline; se usan mecanismos administrados por AWS.
@@ -111,9 +116,9 @@ La cuenta Free Plan usa créditos para las instancias EC2 elegibles, incluida `t
 
 La IPv4 pública dedicada cuesta actualmente USD 0,005 por hora. Mantener una durante 720 horas consumiría aproximadamente USD 3,60 de créditos al mes. El coste se vuelve a comprobar antes de `tofu apply` porque precios, elegibilidad y moneda son datos operativos temporales.
 
-Se configura un AWS Budget equivalente al techo aprobado, con avisos al 50 %, 80 %, 100 % y forecast de superación, enviados a `omarjtoscano@outlook.com`. El Budget no es un freno automático del gasto.
+Se configura un AWS Budget equivalente al techo aprobado, con avisos al 50 %, 80 %, 100 % y forecast de superación, enviados al valor externo `BUDGET_ALERT_EMAIL`. El Budget no es un freno automático del gasto y el correo no se versiona.
 
-No se compra Savings Plan, Reserved Instance ni se convierte la cuenta a Paid Plan sin aprobación humana. Se registran como hitos operativos el agotamiento de créditos y la fecha máxima aproximada 2027-03-13.
+No se compra Savings Plan, Reserved Instance ni se convierte la cuenta a Paid Plan sin aprobación humana. Crear o unirse a AWS Organizations, configurar AWS Control Tower, unirse a AWS Partner Network, contratar Professional Services, adherirse a un Enterprise Agreement, comprar AWS Skill Builder Team o designar la cuenta como HIPAA/SEC compliant son condiciones de parada porque AWS las identifica como conversiones automáticas a Paid Plan. Se registran como hitos operativos el agotamiento de créditos y la fecha máxima aproximada 2027-03-13.
 
 ### Estado de `CL0_CLOUD_STAGING`
 
@@ -160,6 +165,7 @@ El gate usa tres estados:
 - Root MFA habilitado y root sin access keys.
 - `docker compose config` válido y sin secretos versionados.
 - Security Group sin ingress y sin SSH/PostgreSQL públicos.
+- IPv4 pública dinámica asignada y usada solo para egress mientras no exista NAT, IPv6 o endpoints VPC.
 - OIDC real restringido al repositorio y Environment aprobados.
 - Push/pull ECR y comando/Session Manager probados con artefactos sintéticos.
 - Release fijada por SHA/digest, rollback sintético y backup/restore verificados.
@@ -169,6 +175,7 @@ El gate usa tres estados:
 ## Fuentes operativas consultadas
 
 - [AWS: Choosing a plan](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/free-tier-plans.html), consultado el 2026-09-13.
+- [AWS Free Tier FAQs](https://aws.amazon.com/free/free-tier-faqs/), consultado el 2026-09-15.
 - [AWS Free Compute](https://aws.amazon.com/free/compute/), consultado el 2026-09-13.
 - [Amazon VPC Pricing](https://aws.amazon.com/vpc/pricing/), consultado el 2026-09-13.
 - [Amazon EC2 FAQs — T4g free trial](https://aws.amazon.com/ec2/faqs/), consultado el 2026-09-13.

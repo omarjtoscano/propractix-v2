@@ -1,9 +1,9 @@
 # Checklist — `CL0_CLOUD_STAGING`
 
 - Estado actual: `PENDING`
-- Fecha de corte: 2026-09-13
+- Fecha de corte: 2026-09-15
 - Owners: Producto, Arquitectura, Operaciones y Seguridad
-- Referencias: ADR-009 revisión 2, ADR-011 revisión 1
+- Referencias: ADR-009 revisión 3, ADR-011 revisión 1, ADR-012 revisión 1
 
 Marcar un elemento requiere evidencia verificable; aprobar una decisión no equivale a ejecutar el control.
 
@@ -17,9 +17,21 @@ Marcar un elemento requiere evidencia verificable; aprobar una decisión no equi
 - [ ] Región `eu-north-1` confirmada en CLI/console.
 - [ ] Moneda efectiva de billing registrada.
 - [ ] Budget equivalente a 20 EUR configurado.
-- [ ] Alertas 50 %, 80 %, 100 % y forecast llegan a `omarjtoscano@outlook.com`.
+- [ ] `BUDGET_ALERT_EMAIL` se proporciona externamente, no aparece en Git/state y recibe alertas 50 %, 80 %, 100 % y forecast.
 - [ ] Costes actuales de EC2, IPv4, EBS, ECR, S3 y transferencia revisados.
 - [ ] Ningún paso convierte la cuenta a Paid Plan.
+- [ ] El propietario no ha seleccionado `Upgrade Plan`.
+- [ ] La cuenta no crea ni se une a AWS Organizations y no configura AWS Control Tower.
+- [ ] La cuenta no se une a AWS Partner Network, Professional Services ni Enterprise Agreement.
+- [ ] La cuenta no compra AWS Skill Builder Team ni se designa HIPAA/SEC compliant.
+- [ ] Cualquiera de las acciones anteriores detiene el bootstrap y exige una nueva aprobación explícita.
+
+### Repositorio
+
+- [ ] `main` se crea desde el último commit revisado de `increment/01-company-identity-catalog`.
+- [ ] `main` queda configurada como rama predeterminada.
+- [ ] `main` exige pull request y checks; push directo, force push y borrado están bloqueados.
+- [ ] La creación/configuración de `main` se registra como acción administrativa separada y no como efecto de OpenTofu.
 
 ### OpenTofu y state
 
@@ -49,12 +61,20 @@ Marcar un elemento requiere evidencia verificable; aprobar una decisión no equi
 - [ ] Sin Elastic IP.
 - [ ] Security Group sin reglas inbound.
 - [ ] Puertos 22, 80, 443 y 5432 no públicos.
-- [ ] Necesidad y coste de IPv4 dinámica revisados antes de habilitarla.
+- [ ] IPv4 pública dinámica asignada para egress; sin NAT, IPv6 o endpoints VPC la baseline no funciona sin ella.
+- [ ] Coste de IPv4 dinámica revisado y acceso entrante nuevamente comprobado como inexistente.
 - [ ] Session Manager y Run Command funcionan.
-- [ ] EBS `gp3` cifrado y tamaño inicial revisado.
+- [ ] EBS `gp3` cifrado mantiene 16 GiB iniciales.
+- [ ] Ocupación de disco se registra antes/después de desplegar: aviso 70 %, bloqueo 80 %, incidente 90 %.
+- [ ] Docker rota logs con `max-size=10m` y `max-file=3`; la aplicación no conserva logs locales ilimitados.
+- [ ] Solo se limpian capas/imágenes no referenciadas conservando release activa y anterior; nunca volúmenes PostgreSQL.
+- [ ] Dumps temporales se borran solo después de verificar la copia en S3.
 - [ ] Docker Compose válido y sin secretos versionados.
 - [ ] ECR push/pull ARM64 sintético probado.
 - [ ] Parameter Store Standard creado sin pasar secretos por OpenTofu.
+- [ ] Se carga exclusivamente `staging-synthetic-privacy-fixture-v1.yaml` y la evidencia registra su versión.
+- [ ] No existen datos personales reales, datos derivados de producción, datasets mezclados ni procedencia desconocida.
+- [ ] La fixture no puede promoverse, exportarse ni restaurarse en producción y no envía correo externamente.
 - [ ] Backup/restore sintético hacia/desde S3 verificado.
 - [ ] Rollback entre dos manifiestos sintéticos verificado.
 - [ ] Tags y retenciones mínimas comprobados.
@@ -66,7 +86,8 @@ Cuando todos los puntos anteriores estén completos, registrar:
 ## `READY_FOR_APPLICATION` → `CLOSED`
 
 - [ ] H05 completada y aceptada localmente.
-- [ ] Gates de H03–H05 requeridos para la prueba están cerrados o se usan exclusivamente fixtures sintéticos aprobados.
+- [ ] H01–H05 tienen aceptación local completa sin depender de AWS, según ADR-012.
+- [ ] Gates de H03–H05 requeridos para datos/servicios reales están cerrados o se usa exclusivamente la fixture sintética aprobada.
 - [ ] Mecanismo de acceso del tester decidido: SSM port forwarding o exposición pública aprobada.
 - [ ] Si existe exposición pública, DNS/TLS y Security Group tienen revisión específica.
 - [ ] Manifiesto H05 aprobado por GitHub Environment `staging`.

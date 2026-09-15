@@ -1,0 +1,65 @@
+policyId: staging-synthetic-privacy-fixture
+version: 2026-09-15.1
+status: APPROVED_TEST_FIXTURE
+scope: STAGING_ONLY
+classification: SYNTHETIC_NON_PERSONAL
+
+environments:
+  allowed:
+    - staging
+  forbidden:
+    - production
+  promotion: FORBIDDEN
+  exportToProduction: FORBIDDEN
+  restoreIntoProduction: FORBIDDEN
+
+sourceRules:
+  realPersonalData: FORBIDDEN
+  copiedProductionData: FORBIDDEN
+  anonymizedProductionData: FORBIDDEN
+  externalContactLists: FORBIDDEN
+  generation: DETERMINISTIC_OR_MANUAL_SYNTHETIC_ONLY
+  unknownProvenance: REJECT
+
+identityRules:
+  marker: SYNTHETIC_TEST_ONLY
+  emailDomains:
+    - example.invalid
+  externalEmailDelivery: FORBIDDEN
+  namesMustBeObviouslyFictitious: true
+  identifiersMustCarrySyntheticMetadata: true
+  taxIdentifiers:
+    source: GENERATED_FOR_TESTS
+    externalUse: FORBIDDEN
+    note: Format-valid values, if a test requires them, are generated only for that run and are never copied from a real subject.
+
+privacyNoticeFixture:
+  noticeId: staging-synthetic-notice
+  version: 2026-09-15.1
+  status: TEST_ONLY
+  purposes:
+    - EXERCISE_COMPANY_ONBOARDING
+    - EXERCISE_EMAIL_VERIFICATION
+    - EXERCISE_AUTHENTICATED_COMPANY_ACCESS
+  legalApproval: NOT_APPLICABLE_TO_REAL_DATA
+  productionApproval: FORBIDDEN
+
+isolationControls:
+  ingress: NONE
+  operatorAccess: SSM_PORT_FORWARDING_ONLY
+  outboundPersonalCommunications: FORBIDDEN
+  mixedDatasets: FORBIDDEN
+  backupPrefix: synthetic-only/
+  releaseEvidenceMustRecordFixtureVersion: true
+
+retention:
+  cleanupAfterTestRun: true
+  maximumDays: 7
+  backupsFollowSameLimit: true
+
+stopConditions:
+  - DATA_PROVENANCE_UNKNOWN
+  - REAL_OR_POSSIBLY_REAL_PERSONAL_DATA_DETECTED
+  - DESTINATION_IS_PRODUCTION
+  - EXTERNAL_EMAIL_DESTINATION_DETECTED
+  - FIXTURE_VERSION_NOT_RECORDED
