@@ -1,0 +1,61 @@
+name: Deploy approved release to staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Full Git SHA approved for deployment
+        required: true
+        type: string
+      server_image:
+        description: Server registry reference pinned by digest
+        required: true
+        type: string
+      client_image:
+        description: Client registry reference pinned by digest
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    if: ${{ vars.CL0_CLOUD_STAGING == 'READY_FOR_APPLICATION' || vars.CL0_CLOUD_STAGING == 'CLOSED' }}
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      - name: Validate immutable release inputs
+        env:
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          SERVER_IMAGE: ${{ inputs.server_image }}
+          CLIENT_IMAGE: ${{ inputs.client_image }}
+        run: |
+          test "${#SOURCE_SHA}" -eq 40
+          printf '%s' "$SOURCE_SHA" | grep -Eq '^[0-9a-f]{40}$'
+          printf '%s' "$SERVER_IMAGE" | grep -Eq '@sha256:[0-9a-f]{64}$'
+          printf '%s' "$CLIENT_IMAGE" | grep -Eq '@sha256:[0-9a-f]{64}$'
+      - uses: aws-actions/configure-aws-credentials@cabfdba3510de1431bac9dba27511d97497fc100
+        with:
+          role-to-assume: ${{ vars.STAGING_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.STAGING_AWS_REGION }}
+      - name: Request deployment through Systems Manager
+        env:
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          SERVER_IMAGE: ${{ inputs.server_image }}
+          CLIENT_IMAGE: ${{ inputs.client_image }}
+          INSTANCE_ID: ${{ vars.STAGING_INSTANCE_ID }}
+          DEPLOY_DOCUMENT: ${{ vars.STAGING_DEPLOY_DOCUMENT }}
+        run: |
+          parameters="$(jq -cn \
+            --arg sourceSha "$SOURCE_SHA" \
+            --arg serverImage "$SERVER_IMAGE" \
+            --arg clientImage "$CLIENT_IMAGE" \
+            '{SourceSha:[$sourceSha],ServerImage:[$serverImage],ClientImage:[$clientImage]}')"
+          aws ssm send-command \
+            --document-name "$DEPLOY_DOCUMENT" \
+            --instance-ids "$INSTANCE_ID" \
+            --parameters "$parameters" \
+            --comment "ProPractix staging release $SOURCE_SHA"

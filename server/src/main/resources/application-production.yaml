@@ -1,0 +1,14 @@
+spring:
+  config:
+    activate:
+      on-profile: production
+    import: configtree:/run/secrets/
+  datasource:
+    url: ${PROPRACTIX_DB_URL}
+    username: ${PROPRACTIX_DB_USER}
+    password: ${database.password}
+
+propractix:
+  runtime:
+    environment: production
+    release-sha: ${PROPRACTIX_RELEASE_SHA}

@@ -1,0 +1,51 @@
+openapi: 3.1.0
+info:
+  title: ProPractix API
+  version: 1.0.0
+  description: Contrato design-first de la API ProPractix V2. I1-H01 no expone endpoints funcionales.
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+paths: {}
+components:
+  schemas:
+    ProblemDetail:
+      type: object
+      required:
+        - type
+        - title
+        - status
+        - code
+        - correlationId
+      properties:
+        type:
+          type: string
+          format: uri-reference
+        title:
+          type: string
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        code:
+          type: string
+        correlationId:
+          type: string
+          maxLength: 64
+        violations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Violation'
+    Violation:
+      type: object
+      required:
+        - field
+        - code
+      properties:
+        field:
+          type: string
+        code:
+          type: string

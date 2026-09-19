@@ -21,3 +21,23 @@ Thumbs.db
 # Local runtime data
 .local/
 data/
+*.log
+
+# Local synthetic secret material (templates remain versioned)
+infra/local/secrets/*
+
+# Generated knowledge graphs
+**/graphify-out/
+
+# OpenTofu local state, plans and overrides
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfplan.*
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
