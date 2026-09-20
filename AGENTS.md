@@ -14,7 +14,9 @@ Si dos documentos se contradicen, detente y solicita una decisión. Un ADR acept
 ## Alcance vigente
 
 - Trabaja únicamente en el Incremento 1 y en una historia autorizada cada vez.
-- ADR-001, ADR-002 y ADR-004 a ADR-008 están aceptados en revisión 4; ADR-003 en revisión 5; ADR-009 en revisión 3; ADR-011 y ADR-012 en revisión 1; ADR-010 está reservado para policy packs. El plan está aprobado en revisión 7. La única historia actualmente `READY` y autorizada es I1-H01.
+- ADR-001, ADR-002 y ADR-004 a ADR-008 están aceptados en revisión 4; ADR-003 en revisión 5; ADR-009 en revisión 3; ADR-011 y ADR-012 en revisión 1; ADR-010 está reservado para policy packs. El plan está aprobado en revisión 7. I1-H01 está `DONE / ACCEPTED` y no debe volver a implementarse.
+- I1-H02 permanece `BLOCKED`; ninguna nueva historia está autorizada todavía.
+- Los siguientes trabajos autorizados son únicamente cerrar `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS`.
 - No inicies I1-H02 ni historias posteriores hasta que sus gates y predecesoras figuren cerrados en el plan.
 - No implementes ofertas, candidaturas, prevalidación, formalización, prácticas ni documentos todavía.
 - La empresa es el tenant principal.
