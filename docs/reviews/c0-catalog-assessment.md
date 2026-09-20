@@ -8,12 +8,12 @@
 | Fecha | 2026-09-20 |
 | Recomendación | **Mantener `PENDING`** |
 | Fuente primaria candidata | RUCT, sección Universidades |
-| Fuente productiva autorizada | Ninguna todavía |
+| Reutilización de RUCT | Habilitada por el régimen general; publicación productiva todavía no aprobada |
 | `I1-H02` | `BLOCKED`; no `READY` |
 | `S0_PUBLIC_ENDPOINTS` | `PENDING`; no evaluado ni cerrado |
 | Operaciones AWS | Ninguna |
 
-La evidencia confirma la autoridad y el alcance nacional de RUCT, pero no satisface las condiciones mínimas para copiar y redistribuir un catálogo productivo con trazabilidad. La incertidumbre es material, por lo que no procede recomendar el cierre condicionado ni marcarlo como aprobado.
+La evidencia confirma la autoridad y el alcance nacional de RUCT y permite reutilizar sus datos bajo el régimen general de la Ley 37/2007 y el RD 1495/2011. Persisten incertidumbres materiales de adquisición y semántica, por lo que todavía no procede recomendar el cierre ni aprobar una versión productiva.
 
 ## Evidencia revisada
 
@@ -33,7 +33,7 @@ La evidencia confirma la autoridad y el alcance nacional de RUCT, pero no satisf
 | Existe sección diferenciada de universidades | [Consulta RUCT](https://www.educacion.gob.es/ruct/consultauniversidades?actual=universidades) y arts. 2 y 9 del RD 1509/2008 | Satisfecha. |
 | Existe identificador oficial | Art. 9 del [RD 1509/2008](https://www.boe.es/buscar/act.php?id=BOE-A-2008-15464) prevé `clave registral` | Parcial: falta confirmar estabilidad/no reutilización. |
 | Hay distribución máquina a máquina gobernada | La UI ofrece exportación «Excel», sin API, esquema, versión o checksum documentados | No satisfecha. |
-| La licencia permite el uso previsto | [Aviso del portal](https://www.ciencia.gob.es/InfoGeneralPortal/AvisoLegal.html), [aviso de sede](https://universidades.sede.gob.es/pagina/index/directorio/avisos_legales), [Ley 37/2007](https://www.boe.es/buscar/act.php?id=BOE-A-2007-19814) y [RD 1495/2011](https://www.boe.es/eli/es/rd/2011/10/24/1495/con) | No satisfecha: no hay términos RUCT específicos inequívocos. |
+| La reutilización permite el uso previsto | [Ley 37/2007](https://www.boe.es/buscar/act.php?id=BOE-A-2007-19814), [RD 1495/2011](https://www.boe.es/eli/es/rd/2011/10/24/1495/con), [aviso del portal](https://www.ciencia.gob.es/InfoGeneralPortal/AvisoLegal.html) y [aviso de sede](https://universidades.sede.gob.es/pagina/index/directorio/avisos_legales) | Satisfecha por la modalidad general: uso comercial/no comercial, copia, transformación, extracción y redistribución con atribución y condiciones generales. No se localizó decisión motivada que imponga una modalidad específica a RUCT. |
 | RUCT está publicado como dataset en datos.gob.es | Búsqueda del catálogo y [API de datos.gob.es](https://datos.gob.es/es/apidata), realizada el 2026-09-20 | No: no se localizaron datasets ni servicios con «RUCT» o el nombre completo. |
 | Existe alternativa oficial equivalente | [QEDU](https://www.ciencia.gob.es/Universidades/QEDU.html) combina RUCT/SIIU y es orientativa | No: sirve solo como contraste, no como fuente equivalente. |
 
@@ -43,8 +43,8 @@ El [dossier de gobierno](../plans/c0-catalog-governance.md) registra propietario
 
 | Decisión | Propuesta |
 |---|---|
-| Fuente primaria | RUCT, sección Universidades, tras autorización/condiciones expresas. |
-| Contingencia | Última versión aprobada; como alternativa de adquisición, extracto oficial del Ministerio con licencia y procedencia. |
+| Fuente primaria | RUCT, sección Universidades, bajo la modalidad general del RD 1495/2011. |
+| Contingencia | Última versión aprobada; como alternativa de adquisición, extracto oficial del Ministerio con procedencia y condiciones que lo acompañen. |
 | Alcance | Solo universidades españolas confirmadas; se excluyen centros, títulos, agregados y entidades extranjeras. |
 | Identidad | `ES:RUCT:<clave registral>`, con código opaco y ceros preservados. |
 | Nombres | Denominación oficial; aliases solo de evidencia oficial. |
@@ -57,13 +57,13 @@ El [dossier de gobierno](../plans/c0-catalog-governance.md) registra propietario
 | Rollback | Republicación auditada como versión nueva; nunca reescritura del historial. |
 | Fallo de fuente | Servir última versión buena, degradar frescura, alertar y bloquear sustitución automática. |
 | No encontrada | Opción explícita separada; no altera el catálogo ni infiere afiliación. |
-| Aprobación futura | Data Steward prepara; licencias confirma; Arquitectura valida; Product Owner aprueba expresamente. |
+| Aprobación futura | Data Steward prepara; Cumplimiento verifica el régimen; Arquitectura valida; Product Owner aprueba expresamente. |
 
 ## Riesgos y controles
 
 | Riesgo | Severidad | Control propuesto | Situación |
 |---|---|---|---|
-| Redistribución sin permiso aplicable | Alta | Autorización escrita o licencia RUCT específica archivada y allowlist de `sourceLicense` | Abierto. |
+| Incumplir atribución o una condición específica futura | Media | Referencia normativa en `sourceLicense`, atribución generada y comprobación de cambios antes de cada versión | Mitigado por diseño. |
 | Centros agregados tratados como universidades | Alta | Discriminador oficial, no heurística de nombre; rechazo por defecto | Abierto. |
 | Código reasignado o cambiado | Alta | Confirmación de no reutilización y reglas de fusión/extinción | Abierto. |
 | Exportación cambia sin aviso | Alta | Contrato de adquisición, validación de esquema y bloqueo ante drift | Abierto. |
@@ -75,12 +75,11 @@ El [dossier de gobierno](../plans/c0-catalog-governance.md) registra propietario
 
 El propietario no debe cerrar `C0_CATALOG` hasta disponer de:
 
-1. **G1 — permiso de reutilización:** documento o licencia emitida por el Ministerio que cubra copia, transformación, almacenamiento y redistribución en el producto, más texto de atribución y regla de última actualización;
-2. **G2 — contrato de adquisición:** canal estable o entrega oficial, formato/esquema, versión o protocolo de snapshot, frecuencia/aviso de cambios y expectativas de disponibilidad;
-3. **G3 — semántica oficial:** forma de distinguir universidades de contenedores agregados, estados y transiciones, y estabilidad/no reutilización de la clave en cambios, fusiones y extinciones;
-4. **G4 — evidencia de primera versión:** artefacto obtenido bajo G1–G3, procedencia, licencia, hash, informe de validación/diff y aprobación expresa de los responsables.
+1. **G1 — contrato de adquisición:** canal oficial operativo, formato y mapeo documentados, versión o protocolo de snapshot, frecuencia de comprobación y tratamiento de indisponibilidad/cambios;
+2. **G2 — semántica:** forma verificable de distinguir universidades de contenedores agregados, estados y transiciones, y tratamiento de la clave en cambios, fusiones y extinciones;
+3. **G3 — evidencia de primera versión:** artefacto obtenido bajo el régimen general, procedencia, atribución, hash, informe de validación/diff y aprobación expresa de los responsables.
 
-Son bloqueos acumulativos. Una licencia suficiente sin semántica estable, o un fichero técnicamente válido sin permiso, no cierra el gate.
+Son bloqueos acumulativos. La base de reutilización se considera resuelta y no exige una licencia RUCT individual; un artefacto reutilizable pero semánticamente ambiguo tampoco cierra el gate.
 
 ## Revisión de entregables
 
@@ -93,8 +92,8 @@ Son bloqueos acumulativos. Una licencia suficiente sin semántica estable, o un 
 
 ## Criterio para una reevaluación
 
-Una futura revisión podrá recomendar `C0_CATALOG = READY_FOR_OWNER_APPROVAL` solo cuando G1–G4 estén documentados y las validaciones sean reproducibles. El cierre seguirá requiriendo aprobación expresa del Product Owner; no será una consecuencia automática de este dossier.
+Una futura revisión podrá recomendar `C0_CATALOG = READY_FOR_OWNER_APPROVAL` solo cuando G1–G3 estén documentados y las validaciones sean reproducibles. El cierre seguirá requiriendo aprobación expresa del Product Owner; no será una consecuencia automática de este dossier.
 
 ## Conclusión
 
-**`C0_CATALOG` permanece `PENDING`.** RUCT es el candidato oficial adecuado, pero la licencia específica, el contrato de adquisición y la semántica necesaria no están confirmados. No se autoriza importar datos reales, implementar `I1-H02`, cerrar `S0_PUBLIC_ENDPOINTS`, desplegar infraestructura ni realizar operaciones AWS.
+**`C0_CATALOG` permanece `PENDING`.** RUCT es el candidato oficial adecuado y su reutilización general se considera habilitada, pero el contrato de adquisición, la semántica y la primera versión aprobada siguen pendientes. No se implementa `I1-H02`, no se cierra `S0_PUBLIC_ENDPOINTS`, no se despliega infraestructura y no se realizan operaciones AWS.

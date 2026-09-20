@@ -25,7 +25,7 @@ El contrato tiene dos niveles para evitar que el hash se contenga a sí mismo.
 | `sourceId` | string, obligatorio | Identificador controlado de la fuente o fixture. Producción prevista: `RUCT-UNIVERSITIES-ES`. |
 | `sourceVersion` | string, obligatorio | Versión oficial si existe. Si no existe, identificador de snapshot ProPractix basado en recuperación UTC y marcado como no oficial. |
 | `effectiveAt` | RFC 3339 UTC, obligatorio | Instante desde el que la versión puede considerarse efectiva tras aprobación; termina en `Z`. |
-| `sourceLicense` | URI/URN o referencia de permiso, obligatorio | Debe resolver a condiciones aprobadas o a una autorización archivada. No se acepta `unknown`, vacío ni una inferencia basada solo en acceso público. |
+| `sourceLicense` | URI/URN o referencia normativa, obligatorio | Identifica el régimen aplicable. Para RUCT v1: `https://www.boe.es/eli/es/rd/2011/10/24/1495/con`, modalidad general de los arts. 7 y 8.1 y el anexo. No se acepta `unknown` ni vacío. |
 | `artifactHash` | string, obligatorio | `sha256:` seguido de 64 dígitos hexadecimales minúsculos, calculados sobre los bytes exactos del CSV. |
 
 ### Fila CSV
@@ -49,11 +49,14 @@ La publicación añade metadatos internos, no columnas CSV:
 | `catalogVersion` | Identifica de forma única cada decisión de publicación, incluidos rollbacks por republicación. |
 | `retrievedAt` | Distingue el instante de adquisición de `effectiveAt`. |
 | `sourceUrl` | Conserva procedencia directa. |
+| `sourceAttribution` | Materializa la cita exigida y distingue datos originales de elaboración propia. |
 | `approvedBy` / `approvedAt` | Prueba aprobación expresa. |
 | `previousCatalogVersion` | Permite auditoría y concurrencia optimista del puntero activo. |
-| `decisionReference` | Enlaza licencia, permiso, informe de validación y motivo. |
+| `decisionReference` | Enlaza la evaluación del régimen aplicable, el informe de validación y el motivo. |
 
 No se añaden ciudad, campus, titularidad, URL, CIF, títulos ni datos personales: quedan fuera del alcance de v1.
+
+Para una versión RUCT, la atribución mínima será `Origen de los datos: Ministerio de Ciencia, Innovación y Universidades — Registro de Universidades, Centros y Títulos (RUCT)`. Si el artefacto se transforma, se identificará como elaboración propia a partir de RUCT. Se mencionará la última actualización cuando figure en el origen; `retrievedAt` no se presentará falsamente como fecha oficial de actualización.
 
 ## Perfil CSV
 
@@ -142,7 +145,8 @@ Una baja aparente entre snapshots no cambia el estado automáticamente. Un cambi
 
 - campos obligatorios presentes y sin campos con significado contradictorio;
 - `schemaVersion` soportado;
-- `sourceLicense` en la lista de permisos aprobados y resoluble a evidencia;
+- `sourceLicense` reconocido; para RUCT, referencia al RD 1495/2011 y comprobación de que no se ha publicado una condición específica incompatible;
+- atribución generada, fecha de actualización conservada cuando exista y prohibición de sugerir respaldo institucional;
 - fechas RFC 3339 UTC coherentes;
 - hash aportado igual al calculado;
 - fuente y namespace de identificadores compatibles.
@@ -196,5 +200,5 @@ El valor de `sourceLicense` identifica únicamente el carácter sintético y no 
 - La cabecera, tipos, semántica, normalización, hash u orden de v1 no cambian silenciosamente.
 - Una modificación incompatible crea una nueva versión mayor de esquema y una decisión de arquitectura/gobierno.
 - Una nueva fuente o país necesita su propio contrato de procedencia aunque pueda reutilizar el formato.
-- Un cambio de licencia o semántica de la fuente bloquea publicación aunque el CSV siga siendo sintácticamente válido.
+- Un cambio del régimen de reutilización o de la semántica de la fuente bloquea publicación aunque el CSV siga siendo sintácticamente válido.
 - El historial conserva el `schemaVersion` original de cada artefacto; no se reescribe.
