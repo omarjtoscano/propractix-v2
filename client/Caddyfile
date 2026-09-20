@@ -1,0 +1,22 @@
+{$PROPRACTIX_SITE_ADDRESS}
+
+encode zstd gzip
+
+handle /healthz {
+    respond "ok" 200
+}
+
+handle /readyz {
+    rewrite * /actuator/health/readiness
+    reverse_proxy server:8080
+}
+
+handle /api/* {
+    reverse_proxy server:8080
+}
+
+handle {
+    root * /srv
+    try_files {path} /index.html
+    file_server
+}

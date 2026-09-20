@@ -1,0 +1,21 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+    import: configtree:${PROPRACTIX_LOCAL_SECRETS_PATH:./infra/local/secrets/}
+  datasource:
+    url: ${PROPRACTIX_DB_URL:jdbc:postgresql://localhost:5432/propractix}
+    username: ${PROPRACTIX_DB_USER:propractix}
+    password: ${database.password}
+  docker:
+    compose:
+      enabled: false
+  mail:
+    host: localhost
+    port: 1025
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false

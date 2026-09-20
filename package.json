@@ -4,17 +4,34 @@
   "private": true,
   "description": "Local orchestration for ProPractix V2",
   "packageManager": "npm@11.9.0",
+  "workspaces": [
+    "client"
+  ],
   "engines": {
     "node": ">=24 <25",
-    "npm": ">=11 <12"
+    "npm": ">=11.9.0 <11.10.0"
   },
   "scripts": {
-    "infra:up": "docker compose -f infra/compose.yaml up -d",
+    "infra:prepare": "./scripts/prepare-local-secrets.sh",
+    "infra:config": "npm run infra:prepare && docker compose -f infra/compose.yaml config --quiet",
+    "infra:up": "npm run infra:prepare && docker compose -f infra/compose.yaml up -d --wait",
     "infra:down": "docker compose -f infra/compose.yaml down",
     "infra:logs": "docker compose -f infra/compose.yaml logs -f",
-    "server:run": "cd server && ./mvnw spring-boot:run",
+    "infra:backup": "npm run infra:prepare && ./infra/local/scripts/backup.sh",
+    "infra:restore-smoke": "npm run infra:prepare && ./infra/local/scripts/restore-smoke.sh",
+    "infra:backup-restore-smoke": "npm run infra:prepare && ./infra/local/scripts/backup-restore-smoke.sh",
+    "server:run": "npm run infra:prepare && SPRING_PROFILES_ACTIVE=local ./server/mvnw -f server/pom.xml spring-boot:run -Dspring-boot.run.workingDirectory=..",
     "server:test": "cd server && ./mvnw test",
     "server:verify": "cd server && ./mvnw verify",
-    "check": "npm run server:verify"
+    "client:lint": "npm run lint --workspace=client",
+    "client:typecheck": "npm run typecheck --workspace=client",
+    "client:test": "npm run test --workspace=client",
+    "client:build": "npm run build --workspace=client",
+    "openapi:lint": "redocly lint docs/api/openapi.yaml",
+    "openapi:bundle": "redocly bundle docs/api/openapi.yaml --output .local/openapi.yaml",
+    "check": "npm run infra:config && ./scripts/check-local-baseline.sh && ./infra/staging/scripts/deployment-gate-test.sh && npm run openapi:lint && npm run server:verify && npm run client:lint && npm run client:test && npm run client:build"
+  },
+  "devDependencies": {
+    "@redocly/cli": "2.52.1"
   }
 }

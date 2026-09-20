@@ -1,0 +1,113 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          cache-dependency-path: server/pom.xml
+      - name: Verify backend and architecture
+        run: ./server/mvnw -B verify -f server/pom.xml
+
+  client-and-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install with the approved npm version
+        run: npx --yes npm@11.9.0 ci
+      - name: Validate OpenAPI
+        run: npx --yes npm@11.9.0 run openapi:lint
+      - name: Lint and typecheck client
+        run: npx --yes npm@11.9.0 run client:lint && npx --yes npm@11.9.0 run client:typecheck
+      - name: Test and build client
+        run: npx --yes npm@11.9.0 run client:test && npx --yes npm@11.9.0 run client:build
+
+  repository-and-infrastructure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          fetch-depth: 0
+      - name: Validate diffs and Flyway locations
+        run: git diff --check && ./scripts/check-migrations.sh && sh -n scripts/*.sh infra/local/scripts/*.sh infra/staging/scripts/*.sh
+      - name: Prepare and validate local secrets from a clean checkout
+        run: |
+          ./scripts/prepare-local-secrets.sh
+          test -d infra/local/secrets
+          test -r infra/local/secrets/database.password
+          test "$(stat -c '%a' infra/local/secrets)" = "700"
+          test "$(stat -c '%a' infra/local/secrets/database.password)" = "600"
+          git check-ignore -q infra/local/secrets/database.password
+      - name: Validate local baseline and deployment gate contract
+        run: ./scripts/check-local-baseline.sh && ./infra/staging/scripts/deployment-gate-test.sh
+      - name: Validate local Compose
+        run: docker compose -f infra/compose.yaml config --quiet
+      - name: Exercise PostgreSQL, Mailpit and local backup/restore
+        run: |
+          docker compose -f infra/compose.yaml up -d --wait
+          docker compose -f infra/compose.yaml exec -T postgres postgres --version | grep -Eq 'PostgreSQL\) 16\.'
+          curl --fail --silent --show-error http://127.0.0.1:8025/readyz
+          ./infra/local/scripts/backup-restore-smoke.sh
+      - name: Stop local infrastructure
+        if: always()
+        run: docker compose -f infra/compose.yaml down -v
+      - name: Validate staging Compose without deploying
+        env:
+          PROPRACTIX_SERVER_IMAGE: registry.invalid/propractix/server@sha256:0000000000000000000000000000000000000000000000000000000000000000
+          PROPRACTIX_CLIENT_IMAGE: registry.invalid/propractix/client@sha256:0000000000000000000000000000000000000000000000000000000000000000
+          PROPRACTIX_RELEASE_SHA: "0000000000000000000000000000000000000000"
+          PROPRACTIX_SITE_ADDRESS: :8080
+          PROPRACTIX_DB_PASSWORD_FILE: /tmp/propractix_ci_database_password
+        run: install -m 600 /dev/null "$PROPRACTIX_DB_PASSWORD_FILE" && ./infra/staging/scripts/preflight.sh
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          fetch-depth: 0
+      - name: Scan repository history for secrets
+        uses: gitleaks/gitleaks-action@dcedce43c6f43de0b836d1fe38946645c9c638dc
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  dependency-and-filesystem-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          cache-dependency-path: server/pom.xml
+      - name: Populate Maven cache for dependency analysis
+        run: ./server/mvnw -B -ntp dependency:go-offline -f server/pom.xml
+      - name: Scan dependencies and filesystem
+        uses: aquasecurity/trivy-action@d2a0b60797ff03db6132bd4e2b293f9b37081297
+        with:
+          scan-type: fs
+          scan-ref: .
+          cache-dir: ${{ runner.temp }}/trivy-cache
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://propractix.invalid/schemas/release-manifest.schema.json",
+  "title": "ProPractix staging release manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["sourceSha", "serverImage", "clientImage"],
+  "properties": {
+    "sourceSha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "serverImage": {
+      "type": "string",
+      "pattern": "^[^\\s]+@sha256:[0-9a-f]{64}$"
+    },
+    "clientImage": {
+      "type": "string",
+      "pattern": "^[^\\s]+@sha256:[0-9a-f]{64}$"
+    }
+  }
+}

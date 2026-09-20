@@ -1,0 +1,9 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+
+propractix:
+  runtime:
+    environment: test
+    release-sha: test

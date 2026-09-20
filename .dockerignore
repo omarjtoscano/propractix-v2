@@ -1,0 +1,11 @@
+.git
+.github
+.idea
+.local
+docs
+infra
+node_modules
+client/node_modules
+client/dist
+server
+*.md

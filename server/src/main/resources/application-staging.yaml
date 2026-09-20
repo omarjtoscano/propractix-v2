@@ -1,0 +1,14 @@
+spring:
+  config:
+    activate:
+      on-profile: staging
+    import: configtree:/run/secrets/
+  datasource:
+    url: ${PROPRACTIX_DB_URL}
+    username: ${PROPRACTIX_DB_USER}
+    password: ${database.password}
+
+propractix:
+  runtime:
+    environment: staging
+    release-sha: ${PROPRACTIX_RELEASE_SHA}

@@ -1,0 +1,8 @@
+{
+  "enabledCountries": ["ES"],
+  "supportedLocales": ["es", "en"],
+  "countryDefaultLocales": {
+    "ES": "es"
+  },
+  "fallbackLocale": "es"
+}

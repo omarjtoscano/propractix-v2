@@ -1,5 +1,13 @@
 # Client
 
-El cliente React/TypeScript se generará dentro del Incremento 1 después de aprobar los ADR y el plan técnico.
+Shell técnico React/TypeScript de I1-H01. Permite validar el toolchain, i18n y la
+imagen OCI sin implementar ninguna capacidad de negocio.
 
-No se debe copiar el frontend de V1 ni crear pantallas fuera de las historias autorizadas.
+```bash
+npm run client:typecheck
+npm run client:test
+npm run client:build
+```
+
+No contiene registro, autenticación, empresas, estudiantes, catálogo ni rutas
+funcionales de historias posteriores.
