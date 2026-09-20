@@ -10,6 +10,13 @@ if [ ! -r "${template_file}" ]; then
     exit 1
 fi
 
+umask 077
+mkdir -p "${secret_directory}"
+chmod 700 "${secret_directory}"
+
+temporary_file="${secret_file}.tmp"
+trap 'rm -f "${temporary_file}"' EXIT HUP INT TERM
+
 source_file="${secret_file}"
 if [ ! -e "${secret_file}" ]; then
     source_file="${template_file}"
@@ -21,8 +28,6 @@ if [ -z "${secret_value}" ]; then
     exit 1
 fi
 
-umask 077
-temporary_file="${secret_file}.tmp"
 printf '%s' "${secret_value}" > "${temporary_file}"
 mv "${temporary_file}" "${secret_file}"
 

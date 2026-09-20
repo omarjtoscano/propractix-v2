@@ -20,6 +20,7 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: maven
+          cache-dependency-path: server/pom.xml
       - name: Verify backend and architecture
         run: ./server/mvnw -B verify -f server/pom.xml
 
@@ -48,8 +49,16 @@ jobs:
           fetch-depth: 0
       - name: Validate diffs and Flyway locations
         run: git diff --check && ./scripts/check-migrations.sh && sh -n scripts/*.sh infra/local/scripts/*.sh infra/staging/scripts/*.sh
+      - name: Prepare and validate local secrets from a clean checkout
+        run: |
+          ./scripts/prepare-local-secrets.sh
+          test -d infra/local/secrets
+          test -r infra/local/secrets/database.password
+          test "$(stat -c '%a' infra/local/secrets)" = "700"
+          test "$(stat -c '%a' infra/local/secrets/database.password)" = "600"
+          git check-ignore -q infra/local/secrets/database.password
       - name: Validate local baseline and deployment gate contract
-        run: ./scripts/prepare-local-secrets.sh && ./scripts/check-local-baseline.sh && ./infra/staging/scripts/deployment-gate-test.sh
+        run: ./scripts/check-local-baseline.sh && ./infra/staging/scripts/deployment-gate-test.sh
       - name: Validate local Compose
         run: docker compose -f infra/compose.yaml config --quiet
       - name: Exercise PostgreSQL, Mailpit and local backup/restore
@@ -85,11 +94,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          cache-dependency-path: server/pom.xml
+      - name: Populate Maven cache for dependency analysis
+        run: ./server/mvnw -B -ntp dependency:go-offline -f server/pom.xml
       - name: Scan dependencies and filesystem
         uses: aquasecurity/trivy-action@d2a0b60797ff03db6132bd4e2b293f9b37081297
         with:
           scan-type: fs
           scan-ref: .
+          cache-dir: ${{ runner.temp }}/trivy-cache
           severity: CRITICAL,HIGH
           ignore-unfixed: true
           exit-code: "1"
