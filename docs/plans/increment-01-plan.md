@@ -46,7 +46,7 @@ No se inicia implementación no desechable hasta que los ADR aplicables estén e
 | `E0_EMAIL` | `PENDING` | Arquitectura + Operaciones + Seguridad + Privacidad/Legal | I1-H04 con correo real | Adapter, remitente/dominio, templates i18n, TTL, métricas, runbook, rol contractual, región, subencargados, retención/borrado, redacción e incident response aprobados. |
 | `CL0_CLOUD_STAGING` | `PENDING` | Producto + Arquitectura + Operaciones + Seguridad | Primer despliegue AWS de H05 y releases posteriores | Alcanzar `READY_FOR_APPLICATION` con cuenta, coste, OpenTofu, OIDC, SSM, ECR, secretos y la fixture sintética exclusiva de staging; cerrar solo después de desplegar/verificar H05, rollback y backup/restore. |
 
-Los gates son decisiones/evidencias y no historias de implementación. `C0`, `B0`, `P0`, `S0`, `E0` y `CL0` pueden prepararse sin introducir funcionalidad anticipada. H01 está `READY` y se cierra por su aceptación local; no necesita desplegarse en AWS. La preparación cloud puede avanzar como workstream separado y pasa a `READY_FOR_APPLICATION` sin bloquear H03–H05. `CL0` solo se cierra tras desplegar y verificar H05. Cerrar D0 o aceptar los ADR no habilita datos reales, correo real ni endpoints públicos mientras sus gates permanezcan pendientes.
+Los gates son decisiones/evidencias y no historias de implementación. H01 está `DONE / ACCEPTED` por su aceptación local y no necesita desplegarse en AWS. H02 permanece `BLOCKED`: con H01 terminada y `F0_CLIENT_BASELINE` cerrado, todavía requiere cerrar `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS`. Ninguna nueva historia está autorizada; los siguientes trabajos autorizados son únicamente cerrar esos dos gates. `B0`, `P0`, `E0` y `CL0` permanecen pendientes y no constituyen trabajo actualmente autorizado. `CL0` solo se cierra tras desplegar y verificar H05. Cerrar D0 o aceptar los ADR no habilita datos reales, correo real ni endpoints públicos mientras sus gates permanezcan pendientes.
 
 ### Baseline F0 aprobada
 
@@ -201,6 +201,8 @@ La matriz identifica adopción documental. La conformidad de cada ADR se demuest
 
 ### I1-H01 — Fundación ejecutable mínima
 
+**Estado:** `DONE / ACCEPTED`. Evidencia: [aceptación de I1-H01](../reviews/aceptacion-i1-h01.md).
+
 **Actor y valor:** equipo de desarrollo; puede construir y probar localmente una base reproducible y empaquetable.
 
 **Contextos:** ninguno de negocio; configuración y guardrails.
@@ -233,6 +235,8 @@ La matriz identifica adopción documental. La conformidad de cada ADR se demuest
 **Migración:** solo baseline técnico si es imprescindible; no crear tablas futuras.
 
 ### I1-H02 — Catálogo institucional consultable
+
+**Estado:** `BLOCKED`. No está `READY`; permanecen pendientes `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS`.
 
 **Actor y valor:** visitante/estudiante; encuentra una universidad española sin que esta se registre.
 
@@ -499,12 +503,14 @@ git status --short
 
 ## 11. Autorización de ejecución
 
-La revisión 7 conserva resueltos BF-01 a BF-04, acepta ADR-009 revisión 3, ADR-011 revisión 1 y ADR-012 revisión 1, y mantiene `D0_DECISIONS` cerrado. Por tanto:
+La revisión 7 conserva resueltos BF-01 a BF-04, acepta ADR-009 revisión 3, ADR-011 revisión 1 y ADR-012 revisión 1, y mantiene `D0_DECISIONS` cerrado. Tras la aceptación documental de H01:
 
-- I1-H01 queda `READY` y es la única historia autorizada para comenzar;
-- I1-H02 a I1-H06 permanecen bloqueadas hasta cerrar los gates indicados en la matriz;
+- I1-H01 está `DONE / ACCEPTED` y no debe volver a implementarse;
+- I1-H02 permanece `BLOCKED` y no debe marcarse `READY` mientras `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS` sigan pendientes;
+- ninguna nueva historia está autorizada todavía;
+- los siguientes trabajos autorizados son únicamente cerrar `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS`;
+- I1-H03 a I1-H06 permanecen bloqueadas por los gates y predecesoras indicados en la matriz;
 - I1-H07 permanece bloqueada por sus predecesoras;
-- H01 puede cerrarse tras su aceptación local sin AWS; después, cada historia solo avanza al cerrar sus propios gates y predecesoras;
-- la preparación de `CL0` es un workstream separado y ninguna mutación AWS se ejecuta sin autorización explícita;
+- `CL0_CLOUD_STAGING` permanece `PENDING`, no se declara `staging` desplegado y ninguna mutación AWS se ejecuta sin autorización explícita;
 - aceptar el plan no aprueba ML-15, licencias, valores de rate limiting, proveedor de correo ni verificación empresarial;
 - ninguna historia puede omitir sus pruebas de conformidad por el hecho de que su ADR esté aceptado.
