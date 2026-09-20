@@ -1,0 +1,4 @@
+institutionId,officialName,controlledAlternativeNames,countryCode,institutionStatus
+ES:SYNTH:0001,Universidad Sintética de Ejemplo Norte,"[""USEN"",""Universidad de Prueba del Norte""]",ES,ACTIVE
+ES:SYNTH:0002,Universidad Ficticia de Ejemplo Sur,"[""UFES""]",ES,ACTIVE
+ES:SYNTH:0003,Universidad de Ensayo del Centro,[],ES,INACTIVE

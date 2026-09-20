@@ -25,9 +25,13 @@
 21. [Seed documental de la política de correo empresarial](policies/company-email-admission-seed-v1.yaml).
 22. [Fixture/política sintética exclusiva de staging](policies/staging-synthetic-privacy-fixture-v1.yaml).
 23. [Aceptación de I1-H01 — Fundación ejecutable mínima](reviews/aceptacion-i1-h01.md).
+24. [Dossier de gobierno de C0_CATALOG](plans/c0-catalog-governance.md).
+25. [Esquema del catálogo de instituciones académicas v1](catalog/academic-institution-catalog-schema-v1.md).
+26. [Fixture sintética del catálogo académico v1](catalog/fixtures/academic-institutions-es-synthetic-v1.csv).
+27. [Evaluación de C0_CATALOG](reviews/c0-catalog-assessment.md).
 
 ## Estado de decisión
 
-ADR-001, ADR-002 y ADR-004 a ADR-008 tienen estado `Aceptado — revisión 4`; ADR-003, `Aceptado — revisión 5`; ADR-009, `Aceptado — revisión 3`; ADR-011 y ADR-012, `Aceptado — revisión 1`; ADR-010 está reservado para policy packs. El plan del Incremento 1 está aprobado en revisión 7. I1-H01 está `DONE / ACCEPTED` y no debe volver a implementarse; su evidencia se conserva en la [aceptación de I1-H01](reviews/aceptacion-i1-h01.md). I1-H02 permanece `BLOCKED` y ninguna nueva historia está autorizada todavía. Los siguientes trabajos autorizados son únicamente cerrar `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS`. H01–H05 se aceptan localmente sin AWS según ADR-012. `CL0_CLOUD_STAGING` permanece `PENDING` y solo se cierra después de desplegar y verificar H05 con la fixture sintética exclusiva de staging.
+ADR-001, ADR-002 y ADR-004 a ADR-008 tienen estado `Aceptado — revisión 4`; ADR-003, `Aceptado — revisión 5`; ADR-009, `Aceptado — revisión 3`; ADR-011 y ADR-012, `Aceptado — revisión 1`; ADR-010 está reservado para policy packs. El plan del Incremento 1 está aprobado en revisión 7. I1-H01 está `DONE / ACCEPTED` y no debe volver a implementarse; su evidencia se conserva en la [aceptación de I1-H01](reviews/aceptacion-i1-h01.md). La [evaluación de C0_CATALOG](reviews/c0-catalog-assessment.md) mantiene el gate `PENDING` por incertidumbres materiales de licencia, adquisición y semántica. I1-H02 permanece `BLOCKED`, no `READY`; `S0_PUBLIC_ENDPOINTS` permanece `PENDING` y ninguna nueva historia está autorizada todavía. H01–H05 se aceptan localmente sin AWS según ADR-012. `CL0_CLOUD_STAGING` permanece `PENDING` y solo se cierra después de desplegar y verificar H05 con la fixture sintética exclusiva de staging.
 
 Las conclusiones jurídicas del blueprint continúan sujetas a contraste profesional. Un ADR técnico no convierte una interpretación jurídica en una regla aprobada.
