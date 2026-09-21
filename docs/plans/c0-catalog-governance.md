@@ -80,18 +80,31 @@ sourceSystem,sourceRecordId,officialName,countryCode,sourceStatus
 
 `sourceStatus` queda vacío cuando la fuente no lo proporciona claramente. Los aliases y demás metadatos se aplazan hasta que exista evidencia de que mejoran la búsqueda.
 
+## Metadatos del snapshot
+
+| Metadato | Obligatorio | Regla |
+|---|---:|---|
+| `sourceUrl` | Sí | URL oficial desde la que se obtuvo la información. |
+| `retrievedAt` | Sí | Fecha y hora en que se obtuvo la fuente. |
+| `sourceAttribution` | Sí | Atribución a RUCT y al Ministerio responsable. |
+| `artifactHash` | Sí | SHA-256 de los bytes exactos del CSV entregado a `PublishInstitutionCatalog` y posteriormente publicado. |
+| `sourceDownloadHash` | No | SHA-256 del fichero original descargado de RUCT, únicamente cuando dicho fichero se conserva. |
+
+`artifactHash` identifica el artefacto importado y publicado. `sourceDownloadHash` documenta, de forma opcional, la descarga previa y nunca sustituye a `artifactHash`.
+
 ## Controles del MVP
 
 La actualización inicial es manual y aplica únicamente estos controles:
 
-1. registrar `sourceSystem` y la URL oficial utilizada;
-2. registrar la fecha y hora de descarga;
-3. conservar la atribución `Origen de los datos: Ministerio de Ciencia, Innovación y Universidades — Registro de Universidades, Centros y Títulos (RUCT)`;
-4. calcular SHA-256 del archivo descargado y guardar el valor junto al snapshot;
-5. validar codificación, cabecera, columnas obligatorias, campos vacíos, país y duplicados básicos;
-6. omitir filas agregadas o ambiguas;
-7. conservar la última versión válida si la descarga o la validación falla;
-8. publicar la actualización manual solo después de revisar el resultado.
+1. registrar `sourceSystem` y `sourceUrl` con la URL oficial utilizada;
+2. registrar `retrievedAt` con la fecha y hora de obtención;
+3. conservar `sourceAttribution` con el valor `Origen de los datos: Ministerio de Ciencia, Innovación y Universidades — Registro de Universidades, Centros y Títulos (RUCT)`;
+4. calcular `artifactHash` sobre los bytes exactos del CSV entregado a `PublishInstitutionCatalog` y verificar que esos mismos bytes sean los publicados;
+5. calcular `sourceDownloadHash` sobre el fichero original de RUCT solo cuando dicho fichero se conserve;
+6. validar codificación, cabecera, columnas obligatorias, campos vacíos, país y duplicados básicos;
+7. omitir filas agregadas o ambiguas;
+8. conservar la última versión válida si la descarga o la validación falla;
+9. publicar la actualización manual solo después de revisar el resultado.
 
 No se necesita API, SLA, checksum oficial, automatización, resolución jurídica individual de filas ni un historial avanzado para comenzar el MVP.
 
@@ -116,7 +129,7 @@ La interfaz debe ofrecer «No encuentro mi universidad». La entrada manual:
 
 El contrato de adquisición de C0 se considera satisfecho mediante descarga manual controlada. La generación, revisión y carga del primer snapshot real forman parte de la Definition of Done de `I1-H02`; no son precondición para autorizar su implementación.
 
-La fixture [academic-institutions-es-synthetic-v1.csv](../catalog/fixtures/academic-institutions-es-synthetic-v1.csv) permite desarrollar y probar el importador sin incorporar datos reales al repositorio.
+La fixture [academic-institutions-es-synthetic-v1.csv](../catalog/fixtures/academic-institutions-es-synthetic-v1.csv) permite desarrollar y probar el importador sin incorporar datos reales al repositorio. Su hash documentado es `artifactHash`, porque ese CSV es el artefacto exacto entregado al importador.
 
 ## Decisión recomendada
 

@@ -61,27 +61,29 @@ No forman parte de v1:
 
 Podrán añadirse en una versión posterior solo si aportan valor comprobado a la búsqueda o a otro caso de uso aprobado.
 
-## Metadatos de la descarga
+## Metadatos de importación
 
 Los siguientes datos acompañan al snapshot, pero no se repiten en el CSV:
 
-| Metadato | Uso |
-|---|---|
-| Fuente y URL | Identificar el origen oficial utilizado. |
-| Fecha de descarga | Saber cuándo se obtuvo el archivo. |
-| Atribución | `Origen de los datos: Ministerio de Ciencia, Innovación y Universidades — Registro de Universidades, Centros y Títulos (RUCT)`. |
-| SHA-256 | Comprobar la integridad del archivo descargado. |
+| Metadato | Obligatorio | Uso |
+|---|---:|---|
+| `sourceUrl` | Sí | Identificar la URL oficial utilizada. |
+| `retrievedAt` | Sí | Registrar cuándo se obtuvo la fuente. |
+| `sourceAttribution` | Sí | Conservar `Origen de los datos: Ministerio de Ciencia, Innovación y Universidades — Registro de Universidades, Centros y Títulos (RUCT)`. |
+| `artifactHash` | Sí | SHA-256 de los bytes exactos del CSV entregado a `PublishInstitutionCatalog` y posteriormente publicado. |
+| `sourceDownloadHash` | No | SHA-256 del fichero original descargado de RUCT, únicamente cuando dicho fichero se conserva. |
 
-No se exige una versión, API, SLA o checksum proporcionado por RUCT. El hash lo calcula ProPractix sobre la descarga obtenida.
+`artifactHash` siempre identifica el artefacto importado y publicado. `sourceDownloadHash` permite verificar opcionalmente la descarga original y no sustituye a `artifactHash`. Ninguno requiere un checksum proporcionado por RUCT: ambos valores los calcula ProPractix.
 
 ## Actualización manual
 
-1. Descargar el fichero desde la URL oficial y registrar fecha, URL y SHA-256.
-2. Transformar únicamente las columnas necesarias.
-3. Omitir filas agregadas o ambiguas.
-4. Ejecutar la validación básica.
-5. Si falla, conservar la última versión válida.
-6. Si pasa, revisar y activar manualmente el nuevo snapshot.
+1. Descargar el fichero desde `sourceUrl` y registrar `retrievedAt` y `sourceAttribution`.
+2. Si se conserva el fichero original de RUCT, calcular su `sourceDownloadHash`.
+3. Transformar únicamente las columnas necesarias y omitir filas agregadas o ambiguas.
+4. Ejecutar la validación básica y serializar el CSV definitivo.
+5. Calcular `artifactHash` sobre los bytes exactos de ese CSV; no transformarlo después del cálculo.
+6. Si falla la validación, conservar la última versión válida.
+7. Si pasa, entregar esos mismos bytes y metadatos a `PublishInstitutionCatalog` y activar manualmente el snapshot.
 
 El primer snapshot real y su evidencia pertenecen a la Definition of Done de `I1-H02`.
 
@@ -97,4 +99,4 @@ La [fixture sintética v1](fixtures/academic-institutions-es-synthetic-v1.csv):
 - usa `sourceSystem=SYNTHETIC`;
 - deja `sourceStatus` vacío para verificar que es opcional;
 - no deriva de RUCT ni es apta para producción;
-- tiene SHA-256 `612b46e73d3fa6843e79b0efd2b0f253326803b976de5627a58daf6d416cc89a`.
+- tiene `artifactHash` SHA-256 `612b46e73d3fa6843e79b0efd2b0f253326803b976de5627a58daf6d416cc89a`, calculado sobre los bytes exactos de este CSV, que es el artefacto importado.

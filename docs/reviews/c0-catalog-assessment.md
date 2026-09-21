@@ -49,13 +49,13 @@ Estas limitaciones deben mantenerse en producto y documentación para evitar que
 | Universidad ausente | Entrada manual separada y pendiente de verificación. |
 | Actualización | Manual inicialmente. |
 | Fallo de descarga o formato | Se conserva la última versión válida. |
-| Integridad | SHA-256 calculado por ProPractix sobre el archivo descargado. |
+| Integridad | `artifactHash` obligatorio sobre los bytes exactos del CSV importado y publicado; `sourceDownloadHash` opcional sobre el fichero original de RUCT cuando se conserva. |
 
 ## Reevaluación de los bloqueos anteriores
 
 | Bloqueo anterior | Resolución |
 |---|---|
-| Contrato de adquisición | **Satisfecho** mediante descarga manual controlada, con URL, fecha, atribución, hash y validación básica. |
+| Contrato de adquisición | **Satisfecho** mediante descarga manual controlada, con `sourceUrl`, `retrievedAt`, `sourceAttribution`, `artifactHash`, `sourceDownloadHash` opcional y validación básica. |
 | Filas agregadas y semántica completa | **No bloqueante**: las filas dudosas se omiten y `sourceStatus` solo se carga cuando es claro. |
 | Estabilidad jurídica de la clave RUCT | **No requerida**: la clave es referencia externa, no identidad de dominio. |
 | Primer snapshot real | **Transferido a la Definition of Done de `I1-H02`**; no es precondición para autorizar su implementación. |
@@ -64,10 +64,11 @@ No quedan incertidumbres materiales dentro del alcance limitado de `C0_CATALOG`.
 
 ## Controles conservados
 
-- fuente y URL;
-- fecha de descarga;
-- atribución a RUCT;
-- checksum SHA-256 calculado sobre la descarga;
+- `sourceUrl` de la fuente oficial;
+- `retrievedAt`;
+- `sourceAttribution` a RUCT;
+- `artifactHash` obligatorio, calculado sobre los bytes exactos del CSV entregado a `PublishInstitutionCatalog` y posteriormente publicado;
+- `sourceDownloadHash` opcional, calculado sobre el fichero original descargado de RUCT cuando se conserva;
 - validación básica del formato;
 - conservación de la última versión válida;
 - actualización manual inicial.
@@ -80,7 +81,7 @@ No se requieren para el MVP confirmación escrita, licencia individual, API ofic
 |---|---|
 | [Gobierno mínimo](../plans/c0-catalog-governance.md) | Define alcance informativo, controles y fallback manual. |
 | [Esquema CSV v1](../catalog/academic-institution-catalog-schema-v1.md) | Contrato mínimo sin identidad de dominio ni aliases. |
-| [Fixture sintética](../catalog/fixtures/academic-institutions-es-synthetic-v1.csv) | Conforme, ficticia y no productiva. |
+| [Fixture sintética](../catalog/fixtures/academic-institutions-es-synthetic-v1.csv) | Conforme, ficticia y no productiva; su SHA-256 documentado es `artifactHash` porque el CSV es el artefacto exacto importado. |
 | [Índice documental](../README.md) | Enlaza los documentos y muestra el estado del gate. |
 
 ## Conclusión
