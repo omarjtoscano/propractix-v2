@@ -4,96 +4,85 @@
 
 | Elemento | Resultado |
 |---|---|
-| Gate evaluado | `C0_CATALOG` |
-| Fecha | 2026-09-20 |
-| Recomendación | **Mantener `PENDING`** |
-| Fuente primaria candidata | RUCT, sección Universidades |
-| Reutilización de RUCT | Habilitada por el régimen general; publicación productiva todavía no aprobada |
-| `I1-H02` | `BLOCKED`; no `READY` |
-| `S0_PUBLIC_ENDPOINTS` | `PENDING`; no evaluado ni cerrado |
-| Operaciones AWS | Ninguna |
+| Gate | `C0_CATALOG` |
+| Fecha | 2026-09-21 |
+| Recomendación | **`READY_FOR_OWNER_APPROVAL`** |
+| Fuente | RUCT |
+| Uso | Búsqueda y autocompletado informativo |
+| Cierre automático | No |
+| `I1-H02` | `BLOCKED` hasta aprobación del Product Owner y resolución de `S0_PUBLIC_ENDPOINTS` |
 
-La evidencia confirma la autoridad y el alcance nacional de RUCT y permite reutilizar sus datos bajo el régimen general de la Ley 37/2007 y el RD 1495/2011. Persisten incertidumbres materiales de adquisición y semántica, por lo que todavía no procede recomendar el cierre ni aprobar una versión productiva.
+El alcance está suficientemente definido para solicitar la aprobación del propietario. RUCT no se convierte en una dependencia jurídica ni funcional de la práctica: es una fuente informativa, reemplazable por la última versión válida y complementada por entrada manual.
 
-## Evidencia revisada
+## Evidencia oficial suficiente
 
-### Estado del repositorio
-
-- La rama base `increment/01-company-identity-catalog` existe.
-- [I1-H01](aceptacion-i1-h01.md) está documentada como `DONE / ACCEPTED`.
-- El [plan del Incremento 1](../plans/increment-01-plan.md) mantiene `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS` como gates previos y `I1-H02` bloqueada.
-- Los ADR y blueprints aplicables permiten el modelo propuesto de puerto de importación, artefacto versionado, persistencia propiedad del módulo, publicación transaccional, errores estables e internacionalización.
-- No se encontraron contradicciones documentales que obliguen a detener esta preparación.
-
-### Fuentes oficiales
-
-| Comprobación | Evidencia | Resultado |
-|---|---|---|
-| RUCT es registro administrativo público y de revisión continua | [Ministerio — RUCT](https://www.ciencia.gob.es/Universidades/RUCT.html), [procedimiento](https://universidades.sede.gob.es/pagina/index/directorio/Proc_Ruct) y [RD 1509/2008](https://www.boe.es/buscar/act.php?id=BOE-A-2008-15464) | Satisfecha. |
-| Existe sección diferenciada de universidades | [Consulta RUCT](https://www.educacion.gob.es/ruct/consultauniversidades?actual=universidades) y arts. 2 y 9 del RD 1509/2008 | Satisfecha. |
-| Existe identificador oficial | Art. 9 del [RD 1509/2008](https://www.boe.es/buscar/act.php?id=BOE-A-2008-15464) prevé `clave registral` | Parcial: falta confirmar estabilidad/no reutilización. |
-| Hay distribución máquina a máquina gobernada | La UI ofrece exportación «Excel», sin API, esquema, versión o checksum documentados | No satisfecha. |
-| La reutilización permite el uso previsto | [Ley 37/2007](https://www.boe.es/buscar/act.php?id=BOE-A-2007-19814), [RD 1495/2011](https://www.boe.es/eli/es/rd/2011/10/24/1495/con), [aviso del portal](https://www.ciencia.gob.es/InfoGeneralPortal/AvisoLegal.html) y [aviso de sede](https://universidades.sede.gob.es/pagina/index/directorio/avisos_legales) | Satisfecha por la modalidad general: uso comercial/no comercial, copia, transformación, extracción y redistribución con atribución y condiciones generales. No se localizó decisión motivada que imponga una modalidad específica a RUCT. |
-| RUCT está publicado como dataset en datos.gob.es | Búsqueda del catálogo y [API de datos.gob.es](https://datos.gob.es/es/apidata), realizada el 2026-09-20 | No: no se localizaron datasets ni servicios con «RUCT» o el nombre completo. |
-| Existe alternativa oficial equivalente | [QEDU](https://www.ciencia.gob.es/Universidades/QEDU.html) combina RUCT/SIIU y es orientativa | No: sirve solo como contraste, no como fuente equivalente. |
-
-El [dossier de gobierno](../plans/c0-catalog-governance.md) registra propietario, mantenedor, alcance, formatos, identificadores, actualización, reutilización, atribución, límites, tratamiento histórico y riesgos para cada fuente.
-
-## Decisiones preparadas
-
-| Decisión | Propuesta |
+| Evidencia | Conclusión |
 |---|---|
-| Fuente primaria | RUCT, sección Universidades, bajo la modalidad general del RD 1495/2011. |
-| Contingencia | Última versión aprobada; como alternativa de adquisición, extracto oficial del Ministerio con procedencia y condiciones que lo acompañen. |
-| Alcance | Solo universidades españolas confirmadas; se excluyen centros, títulos, agregados y entidades extranjeras. |
-| Identidad | `ES:RUCT:<clave registral>`, con código opaco y ceros preservados. |
-| Nombres | Denominación oficial; aliases solo de evidencia oficial. |
-| Estado | `ACTIVE`, `INACTIVE`, `UNKNOWN`, sin inferir bajas por ausencia. |
-| Normalización | UTF-8/NFC, espacios canónicos y grafía oficial conservada; clave auxiliar tolerante para detectar candidatos. |
-| Duplicados | ID duplicado rechaza; colisión de nombre/alias bloquea y exige revisión. |
-| Artefacto | [CSV v1](../catalog/academic-institution-catalog-schema-v1.md) versionado con sobre de metadatos. |
-| Integridad | SHA-256 de bytes canónicos, antes de persistir y publicar. |
-| Publicación | Validación total, versión inmutable y cambio atómico del puntero activo. |
-| Rollback | Republicación auditada como versión nueva; nunca reescritura del historial. |
-| Fallo de fuente | Servir última versión buena, degradar frescura, alertar y bloquear sustitución automática. |
-| No encontrada | Opción explícita separada; no altera el catálogo ni infiere afiliación. |
-| Aprobación futura | Data Steward prepara; Cumplimiento verifica el régimen; Arquitectura valida; Product Owner aprueba expresamente. |
+| [Página oficial RUCT](https://www.ciencia.gob.es/Universidades/RUCT.html) y [consulta de universidades](https://www.educacion.gob.es/ruct/consultauniversidades?actual=universidades) | Fuente oficial adecuada para denominación y referencia registral. |
+| [RD 1509/2008](https://www.boe.es/buscar/act.php?id=BOE-A-2008-15464) | RUCT es público, tiene sección de universidades y asigna claves registrales. |
+| [Ley 37/2007](https://www.boe.es/buscar/act.php?id=BOE-A-2007-19814) y [RD 1495/2011](https://www.boe.es/eli/es/rd/2011/10/24/1495/con) | La reutilización general permite trabajar con la información pública bajo atribución y condiciones generales; no se necesita licencia individual para comenzar el MVP. |
+| Exportación disponible en la consulta | Suficiente para una descarga manual controlada; no se requiere API, SLA o checksum oficial. |
 
-## Riesgos y controles
+La ausencia de una ficha específica en datos.gob.es no bloquea el uso de la descarga oficial.
 
-| Riesgo | Severidad | Control propuesto | Situación |
-|---|---|---|---|
-| Incumplir atribución o una condición específica futura | Media | Referencia normativa en `sourceLicense`, atribución generada y comprobación de cambios antes de cada versión | Mitigado por diseño. |
-| Centros agregados tratados como universidades | Alta | Discriminador oficial, no heurística de nombre; rechazo por defecto | Abierto. |
-| Código reasignado o cambiado | Alta | Confirmación de no reutilización y reglas de fusión/extinción | Abierto. |
-| Exportación cambia sin aviso | Alta | Contrato de adquisición, validación de esquema y bloqueo ante drift | Abierto. |
-| Fuente caída genera catálogo vacío | Alta | Última versión buena y publicación atómica | Diseñado; no implementado. |
-| Alias crea afiliación ambigua | Media | Procedencia oficial, detección global de colisiones y revisión | Diseñado; no implementado. |
-| Rollback elimina trazabilidad | Media | Republicación append-only con motivo y enlace a versión anterior | Diseñado; no implementado. |
+## Alcance aceptado
 
-## Bloqueos exactos del gate
+El catálogo únicamente ayuda a localizar una universidad. No:
 
-El propietario no debe cerrar `C0_CATALOG` hasta disponer de:
+- certifica la aprobación de una práctica;
+- acredita convenios;
+- aporta reglas jurídicas;
+- reemplaza la validación de una universidad;
+- demuestra afiliación.
 
-1. **G1 — contrato de adquisición:** canal oficial operativo, formato y mapeo documentados, versión o protocolo de snapshot, frecuencia de comprobación y tratamiento de indisponibilidad/cambios;
-2. **G2 — semántica:** forma verificable de distinguir universidades de contenedores agregados, estados y transiciones, y tratamiento de la clave en cambios, fusiones y extinciones;
-3. **G3 — evidencia de primera versión:** artefacto obtenido bajo el régimen general, procedencia, atribución, hash, informe de validación/diff y aprobación expresa de los responsables.
+Estas limitaciones deben mantenerse en producto y documentación para evitar que una referencia informativa adquiera un significado que no tiene.
 
-Son bloqueos acumulativos. La base de reutilización se considera resuelta y no exige una licencia RUCT individual; un artefacto reutilizable pero semánticamente ambiguo tampoco cierra el gate.
+## Decisiones de MVP
 
-## Revisión de entregables
-
-| Entregable | Evaluación |
+| Tema | Decisión |
 |---|---|
-| [Dossier de gobierno](../plans/c0-catalog-governance.md) | Cubre fuentes, decisiones, operación, auditoría, incertidumbres y responsables. |
-| [Esquema CSV v1](../catalog/academic-institution-catalog-schema-v1.md) | Conserva todos los campos conceptuales y justifica metadatos adicionales. |
-| [Fixture sintética](../catalog/fixtures/academic-institutions-es-synthetic-v1.csv) | Pequeña, UTF-8, conforme al esquema, inequívocamente no productiva y sin universidades reales. |
-| Índice documental | Enlaza los tres documentos y esta evaluación. |
+| Identidad | `AcademicInstitutionId` interno UUID v4 según ADR-004. |
+| Referencia externa | `sourceSystem=RUCT` y `sourceRecordId=<clave registral>`. |
+| CSV | `sourceSystem`, `sourceRecordId`, `officialName`, `countryCode`, `sourceStatus` opcional. |
+| Alias | Aplazados hasta demostrar valor para búsqueda. |
+| Filas agregadas o ambiguas | Se omiten sin bloquear el catálogo. |
+| Universidad ausente | Entrada manual separada y pendiente de verificación. |
+| Actualización | Manual inicialmente. |
+| Fallo de descarga o formato | Se conserva la última versión válida. |
+| Integridad | SHA-256 calculado por ProPractix sobre el archivo descargado. |
 
-## Criterio para una reevaluación
+## Reevaluación de los bloqueos anteriores
 
-Una futura revisión podrá recomendar `C0_CATALOG = READY_FOR_OWNER_APPROVAL` solo cuando G1–G3 estén documentados y las validaciones sean reproducibles. El cierre seguirá requiriendo aprobación expresa del Product Owner; no será una consecuencia automática de este dossier.
+| Bloqueo anterior | Resolución |
+|---|---|
+| Contrato de adquisición | **Satisfecho** mediante descarga manual controlada, con URL, fecha, atribución, hash y validación básica. |
+| Filas agregadas y semántica completa | **No bloqueante**: las filas dudosas se omiten y `sourceStatus` solo se carga cuando es claro. |
+| Estabilidad jurídica de la clave RUCT | **No requerida**: la clave es referencia externa, no identidad de dominio. |
+| Primer snapshot real | **Transferido a la Definition of Done de `I1-H02`**; no es precondición para autorizar su implementación. |
+
+No quedan incertidumbres materiales dentro del alcance limitado de `C0_CATALOG`.
+
+## Controles conservados
+
+- fuente y URL;
+- fecha de descarga;
+- atribución a RUCT;
+- checksum SHA-256 calculado sobre la descarga;
+- validación básica del formato;
+- conservación de la última versión válida;
+- actualización manual inicial.
+
+No se requieren para el MVP confirmación escrita, licencia individual, API oficial, SLA, checksum oficial ni confirmación sobre la reutilización de la clave registral.
+
+## Entregables
+
+| Entregable | Resultado |
+|---|---|
+| [Gobierno mínimo](../plans/c0-catalog-governance.md) | Define alcance informativo, controles y fallback manual. |
+| [Esquema CSV v1](../catalog/academic-institution-catalog-schema-v1.md) | Contrato mínimo sin identidad de dominio ni aliases. |
+| [Fixture sintética](../catalog/fixtures/academic-institutions-es-synthetic-v1.csv) | Conforme, ficticia y no productiva. |
+| [Índice documental](../README.md) | Enlaza los documentos y muestra el estado del gate. |
 
 ## Conclusión
 
-**`C0_CATALOG` permanece `PENDING`.** RUCT es el candidato oficial adecuado y su reutilización general se considera habilitada, pero el contrato de adquisición, la semántica y la primera versión aprobada siguen pendientes. No se implementa `I1-H02`, no se cierra `S0_PUBLIC_ENDPOINTS`, no se despliega infraestructura y no se realizan operaciones AWS.
+Se recomienda que el Product Owner apruebe expresamente `C0_CATALOG`. Hasta esa decisión el gate permanece **`READY_FOR_OWNER_APPROVAL`**, no cerrado. `I1-H02` continúa `BLOCKED` y no pasa a `READY` hasta que el propietario apruebe C0 y se resuelva `S0_PUBLIC_ENDPOINTS`. No se implementa código ni se realizan operaciones AWS.

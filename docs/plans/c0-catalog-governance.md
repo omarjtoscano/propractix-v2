@@ -1,223 +1,123 @@
-# Dossier de gobierno para C0_CATALOG
+# Gobierno mínimo de C0_CATALOG
 
 ## Estado y propósito
 
 | Campo | Valor |
 |---|---|
 | Gate | `C0_CATALOG` |
-| Fecha de evaluación | 2026-09-20 |
-| Estado recomendado | `PENDING` |
-| Alcance | Catálogo inicial de universidades españolas; excluye centros y titulaciones |
-| Fuente primaria candidata | Registro de Universidades, Centros y Títulos (`RUCT`), sección Universidades |
-| Implementación autorizada | Ninguna; este dossier no habilita `I1-H02` |
+| Fecha de evaluación | 2026-09-21 |
+| Recomendación | `READY_FOR_OWNER_APPROVAL` |
+| Fuente | Registro de Universidades, Centros y Títulos (`RUCT`) |
+| Uso en el MVP | Búsqueda y autocompletado informativo de universidades españolas |
+| Implementación | No incluida; `I1-H02` continúa `BLOCKED` |
 
-Este documento prepara la decisión del gate; no la sustituye. La evidencia confirma que `RUCT` es el registro administrativo oficial y la mejor fuente primaria candidata. La base general de reutilización queda satisfecha por la Ley 37/2007 y el RD 1495/2011; una licencia específica de RUCT no es requisito mientras no exista una restricción específica adoptada y publicada conforme a ese régimen. El cierre continúa sin recomendarse porque faltan un contrato de adquisición estable y aclaraciones sobre la semántica de algunos registros e identificadores.
+RUCT se utiliza como fuente informativa para facilitar la selección de una universidad. No es un bounded context jurídico ni una autoridad sobre prácticas académicas.
 
-## Precondiciones y consistencia documental
+## Límite funcional
 
-- La rama base `increment/01-company-identity-catalog` existe.
-- `I1-H01` consta como `DONE / ACCEPTED` en la [aceptación de I1-H01](../reviews/aceptacion-i1-h01.md) y en el [plan del Incremento 1](increment-01-plan.md).
-- `I1-H02` sigue `BLOCKED`; no se cambia a `READY`.
-- `S0_PUBLIC_ENDPOINTS` sigue `PENDING` y queda fuera de esta decisión.
-- Se revisaron `AGENTS.md`, el índice documental, el plan del incremento, los blueprints y los ADR aplicables a monolito modular, arquitectura hexagonal, identificadores y concurrencia, persistencia, eventos, API pública, errores e internacionalización, y entorno local/cloud.
-- No se identificaron contradicciones entre esas decisiones y el contrato conceptual propuesto. La separación entre artefacto de catálogo, aplicación y persistencia respeta los puertos/adaptadores y la propiedad de tablas; la publicación inmutable evita convertir la importación en una escritura parcial observable.
+El catálogo:
 
-## Método y límite de la investigación
+- no certifica la aprobación de una práctica;
+- no demuestra que exista un convenio entre universidad y empresa;
+- no contiene ni determina reglas jurídicas aplicables a una práctica;
+- no sustituye la validación realizada por la universidad, la empresa o los responsables del proceso;
+- no convierte una selección en prueba de afiliación o representación.
 
-Se consultaron únicamente fuentes oficiales y primarias. La consulta se realizó el **2026-09-20**. No se usaron blogs, agregadores ni repositorios de terceros como evidencia. La interpretación del régimen general es una decisión de gobierno de producto y no asesoramiento legal. Si el organismo publica posteriormente una orden, resolución o condición específica aplicable a RUCT, prevalecerá para versiones futuras y obligará a una nueva evaluación.
+La aprobación, convenio, elegibilidad y cumplimiento pertenecen a flujos posteriores y a sus fuentes correspondientes. El catálogo solo reduce fricción de escritura y mejora la consistencia de búsqueda.
 
-## Inventario de fuentes oficiales
+## Fuentes oficiales consultadas
 
-| Fuente | Organismo responsable; propietario y mantenedor | URL directa | Alcance y formato disponible | Identificadores y actualización | Reutilización, atribución y límites | Inactivos/modificados y riesgos |
-|---|---|---|---|---|---|---|
-| RUCT: registro y consulta de universidades | Administración General del Estado. Gestión del registro atribuida al órgano competente en universidades; la página vigente identifica a la Secretaría General de Universidades. Universidades, administraciones educativas y órganos competentes responden por la información que comunican, conforme al art. 18 del RD 1509/2008. | [Página institucional](https://www.ciencia.gob.es/Universidades/RUCT.html), [procedimiento de sede](https://universidades.sede.gob.es/pagina/index/directorio/Proc_Ruct), [consulta de universidades](https://www.educacion.gob.es/ruct/consultauniversidades?actual=universidades) y [RD 1509/2008](https://www.boe.es/buscar/act.php?id=BOE-A-2008-15464) | Registro administrativo público de universidades, centros y títulos, con secciones separadas. La consulta ofrece HTML y una exportación etiquetada como «Excel»; no publica un API ni una especificación de fichero. | El art. 9 prevé una `clave registral` de identificación. La página declara revisión continua, pero no una cadencia, SLA, versión de entrega ni checksum oficiales. | La Ley 37/2007 incluye los documentos de la AGE y el RD 1495/2011 establece como modalidad general la reutilización sin condiciones específicas. Permite uso comercial o no comercial, copia, difusión, modificación, adaptación, extracción, reordenación y combinación. Debe citarse la fuente, indicar la última actualización si figura, no desnaturalizar, no sugerir respaldo y conservar metadatos. | El RD regula comunicación de creación, reconocimiento, supresión, revocación y modificación. La consulta no expone un estado de institución inequívoco. La sección observada devuelve 109 filas e incluye filas agregadas de centros que no son universidades. Riesgos: disponibilidad web, exportación no contractual, cambio de columnas, ausencia de versión y ambigüedad semántica. |
-| Ministerio competente: página RUCT, FAQ y avisos legales | Ministerio de Ciencia, Innovación y Universidades; mantenimiento institucional del portal y la sede. | [RUCT](https://www.ciencia.gob.es/Universidades/RUCT.html), [FAQ oficial](https://www.ciencia.gob.es/dam/jcr:73c24c62-bef3-41f9-a965-cb59f5349eab/RUCT_PreguntasFrecuentes_acc.pdf), [aviso del portal](https://www.ciencia.gob.es/InfoGeneralPortal/AvisoLegal.html) y [aviso de la sede](https://universidades.sede.gob.es/pagina/index/directorio/avisos_legales) | Información institucional y ayuda de consulta; no es una distribución versionada del catálogo. HTML y PDF. | Remite a códigos y fichas RUCT. No aporta política de no reutilización de códigos, release ID ni frecuencia contractual. | Los avisos genéricos contienen redacciones restrictivas sobre contenidos, diseño, código, logos y signos distintivos. No se localizó una orden o resolución motivada que someta los datos RUCT a una modalidad específica conforme al art. 8.2 del RD 1495/2011. Por ello se aplica como criterio de gobierno la modalidad general del art. 8.1 y su anexo, sin trasladar derechos sobre logos, diseño o software. | Los avisos pueden cambiar sin versionado. Debe monitorizarse cualquier condición específica futura, pero su ausencia actual no bloquea la reutilización general de los datos registrales. |
-| datos.gob.es: Catálogo Nacional y API de metadatos | Ministerio para la Transformación Digital y de la Función Pública; iniciativa mantenida a través de la entidad pública Red.es. | [Catálogo](https://datos.gob.es/es/catalogo/conjuntos-datos), [API](https://datos.gob.es/es/apidata), [función del portal](https://datos.gob.es/es/que-hacemos) y [aviso legal](https://datos.gob.es/es/aviso-legal) | Catálogo nacional de metadatos, no fuente material del RUCT. API de catálogo en JSON, XML, RDF, Turtle y CSV. La búsqueda de «RUCT» y del nombre completo no devolvió conjuntos ni servicios de datos el 2026-09-20. | Identifica datasets catalogados mediante metadatos; al no existir una ficha RUCT localizable, no proporciona identificador, versión ni distribución para este catálogo. | Su ausencia no elimina la modalidad general de reutilización del sector público estatal. Una ficha futura aportaría descubrimiento, metadatos y posiblemente condiciones específicas, pero no es requisito constitutivo de la reutilización general. | Dependencia de cosechado y metadatos del publicador. Una futura ficha deberá evaluarse por si modifica procedencia, formato o condiciones. |
-| Ley 37/2007 sobre reutilización de la información del sector público | Estado; publicación oficial en el BOE. | [Texto consolidado](https://www.boe.es/buscar/act.php?id=BOE-A-2007-19814) | Marco legal, no dataset. Su definición de documento incluye información y datos en soporte electrónico. HTML y formatos oficiales del BOE. | No define identificadores ni cadencia de RUCT. | Los documentos de la AGE son reutilizables para fines comerciales o no comerciales salvo exclusión aplicable. Para el catálogo institucional RUCT no se identificaron datos personales, derechos de terceros ni otra exclusión del art. 3. Las condiciones generales incluyen citar fuente y última actualización y no desnaturalizar. | Los cambios normativos deben monitorizarse; el reutilizador responde de su uso. |
-| Real Decreto 1495/2011 | Estado; publicación oficial en el BOE. | [Texto consolidado](https://www.boe.es/eli/es/rd/2011/10/24/1495/con) | Desarrollo del régimen de reutilización estatal, no dataset. HTML y formatos oficiales del BOE. | Exige favorecer identificación, formatos y actualización de documentos reutilizables; no versiona RUCT. | Los arts. 7 y 8.1 y el anexo establecen la modalidad general sin condiciones específicas y autorizan uso comercial/no comercial, copia, difusión, modificación, adaptación, extracción, reordenación y combinación. Una modalidad restrictiva requiere decisión motivada y publicada conforme al art. 8.2. | No garantiza continuidad, formato ni esquema de la fuente. Una condición específica posterior obligaría a reevaluar nuevas versiones. |
-| QEDU | Ministerio de Ciencia, Innovación y Universidades. | [Página oficial QEDU](https://www.ciencia.gob.es/Universidades/QEDU.html) | Herramienta informativa que combina datos de RUCT y SIIU para orientar sobre estudios; no es el registro de universidades ni una entrega íntegra del catálogo. | Hereda datos de varias fuentes; no ofrece el identificador contractual requerido para el catálogo institucional. | El aviso del portal sí contiene condiciones expresas para reutilizar información QEDU, pero esa autorización es específica de QEDU y no debe trasladarse a RUCT. | Puede servir como contraste humano, no como fuente primaria ni contingencia automática. Su mezcla de fuentes y finalidad orientativa añaden riesgo de divergencia. |
+| Fuente | Organismo | Aporte a la decisión | URL |
+|---|---|---|---|
+| RUCT | Ministerio de Ciencia, Innovación y Universidades | Registro administrativo público y fuente oficial de denominaciones y claves registrales. La consulta ofrece una exportación etiquetada como Excel. | [Página institucional](https://www.ciencia.gob.es/Universidades/RUCT.html), [consulta de universidades](https://www.educacion.gob.es/ruct/consultauniversidades?actual=universidades) |
+| Real Decreto 1509/2008 | Estado / BOE | Define el carácter público del RUCT, la sección de Universidades y la clave registral de cada universidad. | [Texto consolidado](https://www.boe.es/buscar/act.php?id=BOE-A-2008-15464) |
+| Ley 37/2007 | Estado / BOE | Establece el régimen general de reutilización de información del sector público. | [Texto consolidado](https://www.boe.es/buscar/act.php?id=BOE-A-2007-19814) |
+| Real Decreto 1495/2011 | Estado / BOE | Permite la reutilización general de documentos estatales con atribución y condiciones generales. | [Texto consolidado](https://www.boe.es/eli/es/rd/2011/10/24/1495/con) |
+| datos.gob.es | Ministerio para la Transformación Digital y de la Función Pública / Red.es | Punto nacional de descubrimiento. No se localizó una distribución RUCT específica el 2026-09-20; esto no impide usar la descarga oficial disponible. | [Catálogo](https://datos.gob.es/es/catalogo/conjuntos-datos), [API del catálogo](https://datos.gob.es/es/apidata) |
 
-## Resultado de la evaluación de fuentes
+La base general de reutilización se considera suficiente para el MVP. No se requiere confirmación escrita, licencia individual, API oficial, SLA, checksum emitido por el Ministerio ni confirmación de no reutilización de la clave registral.
 
-### Fuente primaria propuesta
+## Alcance del catálogo
 
-La fuente primaria propuesta es **RUCT, sección Universidades**, por su naturaleza de registro administrativo público, su cobertura nacional y la `clave registral` prevista por el RD 1509/2008.
+### Se incluye
 
-La reutilización puede apoyarse en la modalidad general de los arts. 7 y 8.1 y el anexo del RD 1495/2011. Se permite adquirir y transformar la exportación oficial con esas condiciones. La publicación productiva continúa condicionada a cerrar los huecos G1–G3 de adquisición, semántica y primera versión; este dossier por sí solo no aprueba una versión concreta.
+- una fila que represente claramente una universidad española;
+- la clave registral mostrada por RUCT como referencia externa;
+- la denominación oficial;
+- `countryCode=ES`;
+- el estado publicado por la fuente solo cuando sea inequívoco.
 
-### Fuente alternativa y contingencia
+### Se excluye
 
-No se ha identificado una segunda fuente oficial con igual autoridad, cobertura e identificadores. La alternativa admisible es una **entrega oficial del Ministerio** —distribución publicada o extracto suministrado— con procedencia, esquema y versión, sometida al régimen general o a las condiciones específicas que acompañen esa entrega.
+- centros, facultades, escuelas, titulaciones y planes de estudio;
+- agrupaciones o filas agregadas que no representen claramente una universidad;
+- filas ambiguas o incompletas;
+- aliases, acrónimos y nombres alternativos durante el MVP;
+- inferencias sobre vigencia, convenios, aprobación o elegibilidad.
 
-Ante indisponibilidad de RUCT:
+Una fila excluida no bloquea la actualización. El catálogo inicial puede ser deliberadamente incompleto mientras sea útil y no presente información ambigua como cierta.
 
-1. se mantiene publicada la última versión aprobada e inmutable;
-2. se registra degradación de frescura y se alerta al responsable;
-3. se reintenta la adquisición sin vaciar ni sustituir el catálogo;
-4. no se cambia automáticamente a QEDU, datos.gob.es ni una fuente no oficial;
-5. si el Ministerio entrega un extracto oficial, se valida como una versión nueva con la misma gobernanza.
+## Identidad de dominio y referencia RUCT
 
-datos.gob.es queda como mecanismo de descubrimiento de una futura distribución oficial, no como fuente actual. QEDU puede emplearse únicamente para contraste manual.
+`AcademicInstitution` usa un `AcademicInstitutionId` interno, representado como value object y generado como UUID v4 conforme al [ADR-004](../adr/ADR-004-identificadores-tiempo-concurrencia.md).
 
-## Alcance y reglas de selección
+La clave RUCT no es identidad de dominio ni identificador público de ProPractix. Se conserva como referencia externa:
 
-### Incluido
+```text
+sourceSystem = RUCT
+sourceRecordId = <clave registral>
+```
 
-- Instituciones que el órgano competente identifique positivamente como universidades españolas dentro de la sección Universidades de RUCT.
-- Universidades públicas o privadas, sin distinción por modelo de titularidad, siempre que satisfagan la regla anterior.
-- Estados históricos únicamente en versiones inmutables; la selección pública activa muestra por defecto instituciones `ACTIVE`.
+El par `(sourceSystem, sourceRecordId)` permite rastrear el origen y localizar una fila importada. No se exige demostrar que la clave nunca será reutilizada. Un cambio o una colisión observada se trata durante la actualización manual, sin modificar silenciosamente la identidad interna.
 
-### Excluido
+## CSV mínimo
 
-- Centros universitarios, facultades, escuelas, institutos, campus y unidades dependientes.
-- Títulos, planes de estudio y oferta académica.
-- Filas agregadas o contenedores de centros, aunque aparezcan en la consulta de universidades.
-- Instituciones extranjeras o agrupaciones de centros extranjeros.
-- Cualquier registro cuya condición de universidad no pueda demostrarse con un atributo o confirmación oficial.
-- Altas sugeridas por usuarios y fuentes no oficiales.
+El contrato se define en [academic-institution-catalog-schema-v1.md](../catalog/academic-institution-catalog-schema-v1.md). Sus únicas columnas son:
 
-No se admitirán heurísticas basadas solo en el nombre. La presencia de «Universidad» tampoco prueba por sí sola la inclusión.
+```text
+sourceSystem,sourceRecordId,officialName,countryCode,sourceStatus
+```
 
-## Identidad, nombres y estado
+`sourceStatus` queda vacío cuando la fuente no lo proporciona claramente. Los aliases y demás metadatos se aplazan hasta que exista evidencia de que mejoran la búsqueda.
 
-### Identificador estable
+## Controles del MVP
 
-`institutionId` se construirá como `ES:RUCT:<source-code>`, preservando la `clave registral` como cadena opaca, incluidos ceros iniciales. El prefijo evita colisiones con otros países y fuentes. No se reciclará un identificador internamente.
+La actualización inicial es manual y aplica únicamente estos controles:
 
-Esta regla necesita confirmación oficial de que la clave RUCT no se reasigna y de cómo se comporta en fusiones, escisiones o cambios de naturaleza. Hasta entonces no puede cerrarse el gate.
+1. registrar `sourceSystem` y la URL oficial utilizada;
+2. registrar la fecha y hora de descarga;
+3. conservar la atribución `Origen de los datos: Ministerio de Ciencia, Innovación y Universidades — Registro de Universidades, Centros y Títulos (RUCT)`;
+4. calcular SHA-256 del archivo descargado y guardar el valor junto al snapshot;
+5. validar codificación, cabecera, columnas obligatorias, campos vacíos, país y duplicados básicos;
+6. omitir filas agregadas o ambiguas;
+7. conservar la última versión válida si la descarga o la validación falla;
+8. publicar la actualización manual solo después de revisar el resultado.
 
-### Nombre oficial y alternativas controladas
+No se necesita API, SLA, checksum oficial, automatización, resolución jurídica individual de filas ni un historial avanzado para comenzar el MVP.
 
-- `officialName` reproduce la denominación oficial de la versión fuente, sin traducirla ni corregirla editorialmente.
-- `controlledAlternativeNames` solo acepta denominaciones anteriores, acrónimos o variantes lingüísticas publicados por una fuente oficial y con procedencia trazable.
-- Un nombre introducido por un usuario, un nombre comercial no oficial o una variante generada por normalización no se incorpora como alias.
-- Un cambio de nombre con el mismo identificador crea una nueva versión. El nombre anterior solo pasa a alternativa si la evidencia oficial permite conservarlo así.
+## Universidad no encontrada
 
-### Estado
+La interfaz debe ofrecer «No encuentro mi universidad». La entrada manual:
 
-Valores v1: `ACTIVE`, `INACTIVE` y `UNKNOWN`.
+- permanece separada del catálogo RUCT;
+- conserva el nombre introducido por la persona usuaria;
+- queda marcada como pendiente de verificación;
+- no crea automáticamente una fila global ni una referencia RUCT;
+- no bloquea el flujo por ausencia o desactualización del catálogo.
 
-- `ACTIVE`: existencia vigente confirmada por señal oficial acordada.
-- `INACTIVE`: supresión, revocación o cese confirmado oficialmente.
-- `UNKNOWN`: la fuente no permite determinar el estado sin inferencias.
+## Fallo y actualización
 
-La desaparición de una fila no equivale a `INACTIVE`: bloquea la publicación y abre revisión. Las instituciones inactivas se conservan en el historial y pueden resolverse para referencias previas, pero no aparecen en la selección ordinaria de nuevas afiliaciones.
+- Si RUCT no está disponible, se sigue usando la última versión válida.
+- Si cambia el formato, se mantiene la versión anterior hasta adaptar manualmente el importador.
+- Si una fila es dudosa, se omite; no se detiene el conjunto completo salvo que falle la validación básica del fichero.
+- La frecuencia inicial es manual, según necesidad de producto. La automatización se evaluará cuando el coste operativo lo justifique.
 
-## Normalización y control de ambigüedad
+## Transferencia a I1-H02
 
-La representación canónica aplica:
+El contrato de adquisición de C0 se considera satisfecho mediante descarga manual controlada. La generación, revisión y carga del primer snapshot real forman parte de la Definition of Done de `I1-H02`; no son precondición para autorizar su implementación.
 
-1. UTF-8 sin BOM y normalización Unicode NFC;
-2. eliminación de espacios exteriores;
-3. sustitución de secuencias de espacios Unicode por un único espacio U+0020;
-4. conservación de mayúsculas, minúsculas, tildes, eñes y signos del nombre oficial;
-5. rechazo de controles, saltos de línea, tabuladores y espacios invisibles no admitidos.
-
-Para búsqueda y detección de candidatos duplicados se genera una clave no persistida como nombre: Unicode NFKD, eliminación de marcas combinantes, `casefold`, normalización de espacios y puntuación. Esa clave puede confluir nombres distintos —por ejemplo, al retirar tildes— y **nunca decide identidad por sí sola**.
-
-Reglas de validación:
-
-- `institutionId` duplicado: rechazo.
-- Mismo nombre oficial normalizado con identificadores distintos: revisión manual y bloqueo de publicación.
-- Alias que coincide con el nombre o alias de otra institución: rechazo del alias o resolución documentada antes de publicar.
-- Cambio de identificador para lo que parece la misma institución: revisión de fusión/escisión; nunca se une automáticamente.
-- Homónimos oficialmente confirmados: deben conservar identificadores distintos y requieren una presentación que permita desambiguarlos antes de habilitar el endpoint público.
-
-## Contrato del artefacto
-
-El detalle normativo está en el [esquema CSV v1](../catalog/academic-institution-catalog-schema-v1.md). El contrato conceptual mantiene los campos solicitados y separa correctamente metadatos de artefacto y filas:
-
-| Nivel | Campos obligatorios |
-|---|---|
-| Sobre de importación | `schemaVersion`, `sourceId`, `sourceVersion`, `effectiveAt`, `sourceLicense`, `artifactHash` |
-| Fila CSV | `institutionId`, `officialName`, `controlledAlternativeNames`, `countryCode`, `institutionStatus` |
-
-`artifactHash` no se incluye dentro del propio CSV porque produciría una autorreferencia imposible; se calcula sobre sus bytes exactos y se aporta en el sobre. Se añaden como metadatos internos `retrievedAt`, `sourceUrl`, `sourceAttribution`, `catalogVersion`, `approvedBy`, `approvedAt`, `previousCatalogVersion` y `decisionReference`. No alteran los once campos conceptuales mínimos: permiten procedencia, cumplimiento, auditoría y republicación.
-
-Cuando la fuente no publique una versión, `sourceVersion` será un identificador de snapshot controlado con instante UTC, marcado como versión ProPractix y no como release oficial. `catalogVersion` identifica cada decisión de publicación, incluida una republicación de rollback.
-
-## Flujo gobernado de adquisición y publicación
-
-### Adquisición
-
-1. Recuperar solo desde la URL o el canal oficial identificado.
-2. Capturar `retrievedAt`, URL final, cabeceras relevantes y bytes originales en un área no pública de evidencia.
-3. Asociar en `sourceLicense` la base del RD 1495/2011, conservar en `decisionReference` esta evaluación y generar la atribución exigida; si aparece una condición específica, registrar también su referencia y vigencia.
-4. Transformar el origen al CSV canónico sin inventar estados, nombres o identificadores.
-
-### Validación previa
-
-La versión candidata se rechaza completa si falla cualquiera de estos controles:
-
-- codificación UTF-8, NFC, LF, cabecera y orden de columnas;
-- esquema y presencia de todos los metadatos;
-- identificadores y códigos de país válidos;
-- enum de estado y reglas de nombres/alias;
-- unicidad, ambigüedades y cambios anómalos respecto de la versión activa;
-- clasificación positiva como universidad y exclusión de centros/títulos/agregados;
-- base de reutilización reconocida, atribución generada y ausencia de una condición específica incompatible;
-- ausencia de datos personales y de campos fuera de alcance;
-- umbrales de variación de recuento, altas, bajas y cambios, con revisión humana cuando se superen.
-
-El informe de validación queda asociado a la versión, incluso si se rechaza.
-
-### Hash SHA-256
-
-El importador calcula SHA-256 sobre los bytes exactos del CSV canónico, incluidos cabecera, separadores LF y salto final. El resultado son 64 caracteres hexadecimales en minúsculas con prefijo lógico `sha256:` en el sobre. El valor aportado debe coincidir en tiempo constante con el calculado antes de persistir.
-
-### Publicación atómica e historial
-
-1. Se persisten en una transacción una importación inmutable y todas sus filas validadas.
-2. La misma transacción mueve el puntero de versión activa desde `previousCatalogVersion` a `catalogVersion` mediante control de concurrencia optimista.
-3. Los lectores resuelven siempre una única versión publicada; nunca observan carga parcial.
-4. Las importaciones, informes, aprobaciones y transiciones son append-only. Una versión publicada no se edita ni se borra por el flujo ordinario.
-5. El evento de cambio se registra conforme al patrón outbox cuando la versión activa cambia; este dossier no implementa ese comportamiento.
-
-### Auditoría
-
-Cada intento conserva: actor, instante, fuente y URL, versiones de fuente/esquema/catálogo, hash, base y condiciones de reutilización, atribución, recuentos, diferencias, resultado de validación, aprobadores, versión anterior, motivo, identificador de correlación y resultado de publicación.
-
-### Actualización y fallo
-
-- Frecuencia propuesta: comprobación mensual y comprobación extraordinaria ante aviso oficial; no es una afirmación sobre la cadencia RUCT.
-- Una descarga idéntica por hash se registra como comprobación, no como nueva publicación.
-- Un cambio de esquema, régimen de reutilización, identificadores o semántica bloquea automáticamente la publicación.
-- Ante fallo de fuente se conserva la última versión buena, se marca la frescura como degradada, se alerta y se reintenta. Nunca se publica un catálogo vacío.
-- Si se supera el umbral operativo de antigüedad que se apruebe, se escala al propietario; la lectura puede continuar con indicación interna de degradación.
-
-### Rollback por republicación
-
-No se mueve el puntero hacia atrás ni se modifica historia. Se selecciona un artefacto previamente aprobado, se vuelve a validar y se publica con un `catalogVersion` nuevo, el mismo `artifactHash` si los bytes son idénticos, referencia a la versión revertida y motivo obligatorio. La decisión queda auditada como una nueva publicación.
-
-## Comportamiento «universidad no encontrada»
-
-- La respuesta funcional mantiene la opción «No encuentro mi universidad» prevista en el plan.
-- No crea una institución en el catálogo ni convierte el texto libre en alias.
-- Una propuesta se registra, si una historia futura lo autoriza, separada del catálogo gobernado y sin inferir afiliación.
-- Solo una versión posterior aprobada puede incorporar una institución, tras evidencia oficial.
-- Este comportamiento no autoriza `I1-H02` ni cambia contratos de API.
-
-## Responsabilidad de versiones futuras
-
-| Rol | Responsabilidad |
-|---|---|
-| Data Steward del catálogo | Adquirir, transformar, validar, preparar diferencias y conservar evidencia. |
-| Responsable de cumplimiento | Verificar la vigencia de la base general, detectar condiciones específicas posteriores y fijar la atribución. |
-| Arquitectura | Verificar compatibilidad de esquema, persistencia, publicación atómica y consumidores. |
-| Product Owner | Aprobar expresamente cada versión productiva y el cierre del gate. |
-
-La publicación requiere evidencia del Data Steward, comprobación del régimen de reutilización y aprobación expresa del Product Owner. Arquitectura puede bloquear por incompatibilidad técnica. Ninguna actualización automática omite estas responsabilidades mientras el proceso no sea objeto de una decisión posterior.
-
-## Incertidumbres materiales y condiciones de salida
-
-`C0_CATALOG` permanece `PENDING` hasta cerrar, con evidencia enlazable, todos los puntos siguientes:
-
-- **G1 — Adquisición:** definir el canal oficial operativo, documentar el formato observado y su mapeo, fijar la regla de snapshot/versionado, la comprobación mensual y el tratamiento de indisponibilidad o cambio de columnas.
-- **G2 — Semántica:** establecer una regla verificable para separar universidades de contenedores agregados, determinar la señal de estado y confirmar el tratamiento de la `clave registral` ante cambios, fusiones y extinciones. Cuando la fuente no lo determine, la versión deberá usar `UNKNOWN` o bloquear el registro, sin inventar datos.
-- **G3 — Primera versión:** producir una extracción bajo el régimen general, conservar procedencia, atribución y hash, ejecutar la validación y el diff completos y obtener aprobación expresa de Data Steward, Cumplimiento y Product Owner.
-
-La base de reutilización no es un bloqueo pendiente: se documenta mediante la Ley 37/2007 y los arts. 7 y 8.1 y el anexo del RD 1495/2011. Si el organismo publica una restricción específica aplicable, las nuevas publicaciones se bloquearán hasta reevaluarla; no se sustituirá silenciosamente por datos de terceros.
+La fixture [academic-institutions-es-synthetic-v1.csv](../catalog/fixtures/academic-institutions-es-synthetic-v1.csv) permite desarrollar y probar el importador sin incorporar datos reales al repositorio.
 
 ## Decisión recomendada
 
-**Mantener `C0_CATALOG` en `PENDING`.** La reutilización general de los datos RUCT se considera habilitada, pero los huecos de adquisición, semántica y primera versión impiden todavía aprobar un catálogo productivo y cerrar el gate. `I1-H02` continúa `BLOCKED`, no `READY`; `S0_PUBLIC_ENDPOINTS` continúa abierto; no se autoriza ninguna operación AWS.
+`C0_CATALOG` queda **`READY_FOR_OWNER_APPROVAL`**, no cerrado. El Product Owner debe aprobar expresamente este alcance. Hasta entonces, y hasta que `S0_PUBLIC_ENDPOINTS` se resuelva, `I1-H02` permanece `BLOCKED` y no `READY`.
