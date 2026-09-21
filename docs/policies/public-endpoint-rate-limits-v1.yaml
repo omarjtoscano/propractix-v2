@@ -1,0 +1,105 @@
+apiVersion: propractix.io/v1
+kind: PublicEndpointRateLimitPolicy
+metadata:
+  policyId: public-endpoint-rate-limits
+  version: 1
+  status: READY_FOR_OWNER_APPROVAL
+  preparedAt: 2026-09-21
+  owners:
+    - SECURITY
+    - OPERATIONS
+spec:
+  activation:
+    requireApprovedStatus: true
+    missingOperationBehavior: DENY_NOT_CONFIGURED
+    unlistedEndpointsAuthorized: false
+  enforcement:
+    availabilityMode: FAIL_CLOSED
+    limitedResponse:
+      status: 429
+      contentType: application/problem+json
+      code: rate_limited
+      retryAfter: SECONDS_UNTIL_ALL_VIOLATED_WINDOWS_RESET
+    unavailableResponse:
+      status: 503
+      contentType: application/problem+json
+      code: rate_limiter_unavailable
+      retryAfterSeconds: 1
+  subject:
+    type: CLIENT_IP_HMAC
+    hmac:
+      algorithm: HMAC-SHA-256
+      purpose: RATE_LIMIT_CLIENT_IP
+      domainSeparator: "propractix:ratelimit-ip:v1\n"
+      encoding: BASE64URL_NO_PADDING
+      writeVersion: rl-ip-v1
+      readVersions:
+        - rl-ip-v1
+      materialSource: EXTERNAL_SECRET
+    normalization:
+      ipv4PrefixLength: 32
+      ipv6PrefixLength: 64
+      ipv4MappedIpv6: NORMALIZE_AS_IPV4
+      zoneIdentifier: REMOVE_BEFORE_CANONICALIZATION
+      ambiguousAddressSyntax: REJECT
+  clientIpResolution:
+    modeFromTypedEnvironmentConfiguration: true
+    allowedModes:
+      - REMOTE_ADDRESS
+      - FORWARDED
+      - X_FORWARDED_FOR
+    simultaneousForwardingHeaders: REJECT_CONFIGURATION
+    forwardedHeadersTrustedOnlyFromConfiguredProxyCidrs: true
+    untrustedPeerForwardingHeaders: IGNORE
+    trustedProxyChainTraversal: RIGHT_TO_LEFT_FIRST_UNTRUSTED
+    missingOrMalformedTrustedProxyChain: FAIL_CLOSED
+    forbiddenTrustedProxyCidrs:
+      - 0.0.0.0/0
+      - ::/0
+  storage:
+    owner: platform.ratelimit
+    adapter: POSTGRESQL_16
+    table: platform_rate_limit_bucket
+    atomicAcrossRulesAndActiveHmacVersions: true
+    expiredRowsAffectDecisions: false
+    cleanup:
+      mode: IDEMPOTENT_BATCH
+      interval: PT1M
+  observability:
+    metrics:
+      allowed: propractix_rate_limit_allowed_total
+      rejected: propractix_rate_limit_rejected_total
+      adapterErrors: propractix_rate_limit_adapter_errors_total
+    allowedLabels:
+      - operation_id
+      - policy_version
+      - rule_id
+      - error_class
+    forbiddenLabels:
+      - ip
+      - ip_fingerprint
+      - hmac_key_version
+      - query
+      - cursor
+      - user_agent
+      - correlation_id
+  operations:
+    - operationId: searchAcademicInstitutions
+      method: GET
+      pathTemplate: /api/v1/academic-institutions
+      contractVersion: v1
+      queryParametersDoNotCreateNewSubjects:
+        - query
+        - cursor
+        - limit
+      rules:
+        - ruleId: burst
+          algorithm: FIXED_WINDOW
+          limit: 15
+          window: PT10S
+          counterTtl: PT70S
+        - ruleId: sustained
+          algorithm: FIXED_WINDOW
+          limit: 60
+          window: PT60S
+          counterTtl: PT120S
