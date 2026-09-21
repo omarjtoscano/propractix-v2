@@ -6,10 +6,13 @@
 |---|---|
 | Gate | `C0_CATALOG` |
 | Fecha de evaluación | 2026-09-21 |
-| Recomendación | `READY_FOR_OWNER_APPROVAL` |
+| Estado | `CLOSED` |
+| Aprobado por | Product Owner |
+| Fecha de aprobación | 2026-09-21 |
+| Commit objeto de aprobación | `e98e11655da7a8f37b6c26d180d6b7ca2d3e8e52` |
 | Fuente | Registro de Universidades, Centros y Títulos (`RUCT`) |
 | Uso en el MVP | Búsqueda y autocompletado informativo de universidades españolas |
-| Implementación | No incluida; `I1-H02` continúa `BLOCKED` |
+| Implementación | No incluida; `I1-H02` continúa `BLOCKED` únicamente por `S0_PUBLIC_ENDPOINTS` |
 
 RUCT se utiliza como fuente informativa para facilitar la selección de una universidad. No es un bounded context jurídico ni una autoridad sobre prácticas académicas.
 
@@ -131,6 +134,6 @@ El contrato de adquisición de C0 se considera satisfecho mediante descarga manu
 
 La fixture [academic-institutions-es-synthetic-v1.csv](../catalog/fixtures/academic-institutions-es-synthetic-v1.csv) permite desarrollar y probar el importador sin incorporar datos reales al repositorio. Su hash documentado es `artifactHash`, porque ese CSV es el artefacto exacto entregado al importador.
 
-## Decisión recomendada
+## Decisión aprobada
 
-`C0_CATALOG` queda **`READY_FOR_OWNER_APPROVAL`**, no cerrado. El Product Owner debe aprobar expresamente este alcance. Hasta entonces, y hasta que `S0_PUBLIC_ENDPOINTS` se resuelva, `I1-H02` permanece `BLOCKED` y no `READY`.
+El Product Owner aprobó expresamente el alcance documentado de `C0_CATALOG` el 2026-09-21 sobre el commit `e98e11655da7a8f37b6c26d180d6b7ca2d3e8e52`. El gate queda **`CLOSED`**. `I1-H02` permanece `BLOCKED` y no pasa a `READY` únicamente porque `S0_PUBLIC_ENDPOINTS` continúa pendiente.

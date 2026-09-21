@@ -5,14 +5,17 @@
 | Elemento | Resultado |
 |---|---|
 | Gate | `C0_CATALOG` |
-| Fecha | 2026-09-21 |
-| Recomendación | **`READY_FOR_OWNER_APPROVAL`** |
+| Fecha de evaluación | 2026-09-21 |
+| Estado | **`CLOSED`** |
+| Aprobado por | Product Owner |
+| Fecha de aprobación | 2026-09-21 |
+| Commit objeto de aprobación | `e98e11655da7a8f37b6c26d180d6b7ca2d3e8e52` |
 | Fuente | RUCT |
 | Uso | Búsqueda y autocompletado informativo |
-| Cierre automático | No |
-| `I1-H02` | `BLOCKED` hasta aprobación del Product Owner y resolución de `S0_PUBLIC_ENDPOINTS` |
+| Cierre automático | No; el cierre procede de la aprobación expresa registrada |
+| `I1-H02` | `BLOCKED` únicamente por `S0_PUBLIC_ENDPOINTS` |
 
-El alcance está suficientemente definido para solicitar la aprobación del propietario. RUCT no se convierte en una dependencia jurídica ni funcional de la práctica: es una fuente informativa, reemplazable por la última versión válida y complementada por entrada manual.
+El Product Owner aprobó expresamente el alcance documentado en el commit `e98e11655da7a8f37b6c26d180d6b7ca2d3e8e52`. RUCT no se convierte en una dependencia jurídica ni funcional de la práctica: es una fuente informativa, reemplazable por la última versión válida y complementada por entrada manual.
 
 ## Evidencia oficial suficiente
 
@@ -86,4 +89,4 @@ No se requieren para el MVP confirmación escrita, licencia individual, API ofic
 
 ## Conclusión
 
-Se recomienda que el Product Owner apruebe expresamente `C0_CATALOG`. Hasta esa decisión el gate permanece **`READY_FOR_OWNER_APPROVAL`**, no cerrado. `I1-H02` continúa `BLOCKED` y no pasa a `READY` hasta que el propietario apruebe C0 y se resuelva `S0_PUBLIC_ENDPOINTS`. No se implementa código ni se realizan operaciones AWS.
+`C0_CATALOG` queda **`CLOSED`** por aprobación expresa del Product Owner el 2026-09-21 sobre el commit `e98e11655da7a8f37b6c26d180d6b7ca2d3e8e52`. `I1-H02` continúa `BLOCKED` y no pasa a `READY` únicamente porque `S0_PUBLIC_ENDPOINTS` permanece pendiente. No se implementa código ni se realizan operaciones AWS.
