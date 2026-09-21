@@ -39,14 +39,14 @@ No se inicia implementación no desechable hasta que los ADR aplicables estén e
 |---|---|---|---|---|
 | `D0_DECISIONS` | `CLOSED` | Producto + Arquitectura + Seguridad | I1-H01 | ADR-001 a ADR-009, ADR-011 y ADR-012 aceptados; ADR-010 reservado; contextos, credencial, roles, duplicados, contratos, correo, desarrollo local y despliegue alineados. |
 | `F0_CLIENT_BASELINE` | `CLOSED` | Arquitectura + Frontend | I1-H02 | Versiones exactas, generador OpenAPI, router, i18n, testing, lockfile y política de actualización aprobados. |
-| `C0_CATALOG` | `PENDING` | Producto + Datos + Legal/licencias | I1-H02 | Fuente, licencia, formato, actualización, publicación, rollback y fixture aprobados. |
+| `C0_CATALOG` | `CLOSED` | Producto + Datos | I1-H02 | Alcance aprobado expresamente por el Product Owner el 2026-09-21 sobre el commit `e98e11655da7a8f37b6c26d180d6b7ca2d3e8e52`. |
 | `B0_COMPANY_EMAIL_POLICY` | `PENDING` | Producto + Seguridad | I1-H03 | Revisión V1 completada; falta aprobar/publicar la versión inicial, revisar cobertura, ejercitar actualización/rollback y probar política, MX, `INDETERMINATE` y no enumeración. |
 | `P0_PRIVACY` | `PENDING` | Producto + Privacidad/Legal + Seguridad | I1-H03 e I1-H06 con datos reales | ML-15, finalidad, campos, evidencia, base jurídica, derechos y retención aprobados. |
 | `S0_PUBLIC_ENDPOINTS` | `PENDING` | Seguridad + Operaciones | Exposición pública de I1-H02 a I1-H06 | Límites por operación, claves pseudonimizadas, TTL, fail-closed, métricas, alertas y pruebas `429`/`Retry-After`. |
 | `E0_EMAIL` | `PENDING` | Arquitectura + Operaciones + Seguridad + Privacidad/Legal | I1-H04 con correo real | Adapter, remitente/dominio, templates i18n, TTL, métricas, runbook, rol contractual, región, subencargados, retención/borrado, redacción e incident response aprobados. |
 | `CL0_CLOUD_STAGING` | `PENDING` | Producto + Arquitectura + Operaciones + Seguridad | Primer despliegue AWS de H05 y releases posteriores | Alcanzar `READY_FOR_APPLICATION` con cuenta, coste, OpenTofu, OIDC, SSM, ECR, secretos y la fixture sintética exclusiva de staging; cerrar solo después de desplegar/verificar H05, rollback y backup/restore. |
 
-Los gates son decisiones/evidencias y no historias de implementación. H01 está `DONE / ACCEPTED` por su aceptación local y no necesita desplegarse en AWS. H02 permanece `BLOCKED`: con H01 terminada y `F0_CLIENT_BASELINE` cerrado, todavía requiere cerrar `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS`. Ninguna nueva historia está autorizada; los siguientes trabajos autorizados son únicamente cerrar esos dos gates. `B0`, `P0`, `E0` y `CL0` permanecen pendientes y no constituyen trabajo actualmente autorizado. `CL0` solo se cierra tras desplegar y verificar H05. Cerrar D0 o aceptar los ADR no habilita datos reales, correo real ni endpoints públicos mientras sus gates permanezcan pendientes.
+Los gates son decisiones/evidencias y no historias de implementación. H01 está `DONE / ACCEPTED` por su aceptación local y no necesita desplegarse en AWS. `C0_CATALOG` está `CLOSED` por aprobación expresa del Product Owner el 2026-09-21 sobre el commit `e98e11655da7a8f37b6c26d180d6b7ca2d3e8e52`. H02 permanece `BLOCKED` únicamente hasta el cierre de `S0_PUBLIC_ENDPOINTS`. Ninguna nueva historia está autorizada; el siguiente trabajo autorizado es únicamente cerrar `S0_PUBLIC_ENDPOINTS`. `B0`, `P0`, `E0` y `CL0` permanecen pendientes y no constituyen trabajo actualmente autorizado. `CL0` solo se cierra tras desplegar y verificar H05. Cerrar D0 o aceptar los ADR no habilita datos reales, correo real ni endpoints públicos mientras sus gates permanezcan pendientes.
 
 ### Baseline F0 aprobada
 
@@ -150,8 +150,8 @@ Las flechas van del consumidor al proveedor de un contrato público o capacidad;
 | Student | `student_profile` | Identidad funcional del estudiante asociada a `UserId`. |
 | Student | `student_onboarding` | Process manager y referencia autoritativa del aviso resuelta por servidor. |
 | Student | `student_academic_declaration` | Institución seleccionada/opcional y titulación declarada. |
-| Academic Institution | `academicinstitution_institution` | Universidad catalogada y fuente. |
-| Academic Institution | `academicinstitution_catalog_import` | Versión, fuente, hash y resultado de importación. |
+| Academic Institution | `academicinstitution_institution` | Universidad catalogada con `AcademicInstitutionId` interno UUID v4 y referencia externa `sourceSystem` + `sourceRecordId`. |
+| Academic Institution | `academicinstitution_catalog_import` | `sourceUrl`, `retrievedAt`, `sourceAttribution`, `artifactHash`, `sourceDownloadHash` opcional y resultado de importación. |
 | Compliance | `compliance_privacy_notice` | Aviso, finalidad, versión, vigencia y aprobación. |
 | Platform | `platform_outbox_event` | Efectos durables. |
 | Platform | `platform_event_consumption` | Deduplicación de consumidores. |
@@ -236,35 +236,42 @@ La matriz identifica adopción documental. La conformidad de cada ADR se demuest
 
 ### I1-H02 — Catálogo institucional consultable
 
-**Estado:** `BLOCKED`. No está `READY`; permanecen pendientes `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS`.
+**Estado:** `BLOCKED`. No está `READY`; `C0_CATALOG` está `CLOSED` y el único gate pendiente es `S0_PUBLIC_ENDPOINTS`.
 
 **Actor y valor:** visitante/estudiante; encuentra una universidad española sin que esta se registre.
 
-**Contexto propietario:** `academicinstitution`. Owners del dato: Producto + Datos + Legal/licencias mediante `C0_CATALOG`.
+**Contexto propietario:** `academicinstitution`. Owners del dato: Producto + Datos mediante `C0_CATALOG`.
 
-**Precondición:** H01 terminada y `C0_CATALOG`, `F0_CLIENT_BASELINE` y `S0_PUBLIC_ENDPOINTS` cerrados.
+**Precondición:** H01 terminada, `F0_CLIENT_BASELINE` y `C0_CATALOG` cerrados, y `S0_PUBLIC_ENDPOINTS` cerrado. La única precondición pendiente es `S0_PUBLIC_ENDPOINTS`.
 
 **Estado inicial/final:** importación gobernada publicada → resultados públicos paginados; el catálogo no crea afiliación ni elegibilidad.
 
 **Contrato:**
 
 - `GET /api/v1/academic-institutions?query=&cursor=&limit=`;
-- puerto administrativo `PublishInstitutionCatalog` que recibe un artefacto CSV UTF-8 con esquema versionado, identificador de fuente, licencia/permiso, fecha efectiva y hash;
-- la publicación es atómica; volver atrás significa republicar una versión anterior como nueva decisión auditada, nunca editar una importación histórica;
+- cada `AcademicInstitution` usa un `AcademicInstitutionId` interno UUID v4 conforme a ADR-004; la identidad de dominio no se deriva de RUCT;
+- `sourceSystem` y `sourceRecordId` forman la referencia externa; para RUCT, `sourceSystem=RUCT` y `sourceRecordId=<clave registral>`;
+- puerto administrativo `PublishInstitutionCatalog` que recibe un CSV UTF-8 versionado con cabecera exacta `sourceSystem,sourceRecordId,officialName,countryCode,sourceStatus`; `sourceStatus` es opcional y no se infiere;
+- metadatos de importación: `sourceUrl`, `retrievedAt`, `sourceAttribution` y `artifactHash` SHA-256 del CSV exacto importado; si se conserva el hash del fichero original descargado, se registra aparte como `sourceDownloadHash`;
+- no se requieren aliases; las filas agregadas o ambiguas se omiten;
+- la publicación es atómica y un fallo conserva la última versión válida; el rollback se realiza manualmente republicando un artefacto anterior;
+- “no encontrada” crea una entrada manual separada y pendiente de verificación, nunca una fila automática del catálogo;
 - OpenAPI design-first y cliente TypeScript generado;
 - UI de búsqueda reutilizable, estados vacío/error/loading, ES/EN.
 
-**Invariantes:** fuente, versión, fecha y hash de importación; nombres alternativos controlados; solo importaciones publicadas son consultables; “no encontrada” permanece disponible.
+**Invariantes:** identidad interna UUID v4 independiente de la referencia externa; metadatos mínimos completos; `artifactHash` corresponde al CSV exacto importado; solo una versión publicada es consultable; una publicación fallida no reemplaza la última versión válida; “no encontrada” permanece separada del catálogo. No se exige alias ni se infiere `sourceStatus`.
 
-**Errores:** formato o licencia ausente, identificador duplicado/ambiguo, publicación concurrente, validación, rate limit configurado y fallo de catálogo sin exponer SQL.
+**Errores:** formato básico inválido, metadatos mínimos ausentes, referencia externa duplicada dentro del artefacto, publicación concurrente, validación, rate limit configurado y fallo de catálogo sin exponer SQL. Una fila agregada o ambigua se omite y no invalida las demás filas correctas.
 
 **Eventos:** `InstitutionCatalogPublished` solo si una importación cambia la versión publicada.
 
-**Migraciones:** institution e import metadata. Sin tabla de titulaciones.
+**Migraciones:** institution e import metadata. Sin tabla de titulaciones ni gobierno avanzado de catálogo.
 
-**Criterios:** dado un artefacto válido y C0 aprobado, al publicarlo todas las consultas observan una sola versión; dado un artefacto inválido, la versión anterior permanece disponible; una institución no encontrada puede declararse como texto posteriormente.
+**Criterios:** dado un artefacto válido y C0 aprobado por el Product Owner, al publicarlo todas las consultas observan una sola versión; dado un artefacto inválido, la versión anterior permanece disponible; una institución no encontrada se registra mediante la entrada manual separada y pendiente de verificación.
 
-**Pruebas:** dominio/importación, rollback de publicación fallida, persistencia, paginación, OpenAPI, UI ES/EN, accesibilidad, paridad i18n, consulta sin crear usuarios y `429` con `Retry-After` según S0.
+**Definition of Done específica:** crear, validar y publicar el primer snapshot real con sus metadatos mínimos forma parte de I1-H02; no es una precondición para autorizar su implementación. La actualización permanece manual en el MVP.
+
+**Pruebas:** UUID interno y referencia externa, esquema CSV mínimo, metadatos y hashes diferenciados, omisión de filas agregadas o ambiguas, entrada manual separada, publicación atómica, conservación de la última versión válida, persistencia, paginación, OpenAPI, UI ES/EN, accesibilidad, paridad i18n, consulta sin crear usuarios y `429` con `Retry-After` según S0.
 
 ### I1-H03 — Registrar empresa y primer administrador
 
@@ -490,9 +497,9 @@ git status --short
 - Release identificada por SHA/digest, desplegada en AWS `staging` mediante aprobación, con rollback y restauración de backup probados.
 - ADR reflejan la implementación; repositorio sin secretos ni artefactos locales.
 
-## 10. Gates externos aún pendientes
+## 10. Estado de gates externos y decisiones abiertas
 
-- `C0_CATALOG`: fuente definitiva, licencia y fixture antes de I1-H02.
+- `C0_CATALOG`: `CLOSED` por aprobación expresa del Product Owner el 2026-09-21 sobre el commit `e98e11655da7a8f37b6c26d180d6b7ca2d3e8e52`.
 - `B0_COMPANY_EMAIL_POLICY`: el código y la lista de V1 ya fueron contrastados; falta revisar cobertura, aprobar/publicar la versión inicial y demostrar actualización, rollback, política determinista, MX principal, `INDETERMINATE` no bloqueante y tests sin DNS real antes de I1-H03.
 - `P0_PRIVACY`: finalidad, datos, base jurídica, evidencia, derechos y retención ML-15 antes de I1-H03/I1-H06 con datos reales.
 - `S0_PUBLIC_ENDPOINTS`: límites, pseudonimización, TTL, fail-closed, métricas, alertas y pruebas antes de exponer cualquier endpoint público de I1-H02 a I1-H06.
@@ -506,11 +513,11 @@ git status --short
 La revisión 7 conserva resueltos BF-01 a BF-04, acepta ADR-009 revisión 3, ADR-011 revisión 1 y ADR-012 revisión 1, y mantiene `D0_DECISIONS` cerrado. Tras la aceptación documental de H01:
 
 - I1-H01 está `DONE / ACCEPTED` y no debe volver a implementarse;
-- I1-H02 permanece `BLOCKED` y no debe marcarse `READY` mientras `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS` sigan pendientes;
+- I1-H02 permanece `BLOCKED` y no debe marcarse `READY` hasta el cierre de `S0_PUBLIC_ENDPOINTS`, su único gate pendiente;
 - ninguna nueva historia está autorizada todavía;
-- los siguientes trabajos autorizados son únicamente cerrar `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS`;
+- el siguiente trabajo autorizado es únicamente cerrar `S0_PUBLIC_ENDPOINTS`;
 - I1-H03 a I1-H06 permanecen bloqueadas por los gates y predecesoras indicados en la matriz;
 - I1-H07 permanece bloqueada por sus predecesoras;
 - `CL0_CLOUD_STAGING` permanece `PENDING`, no se declara `staging` desplegado y ninguna mutación AWS se ejecuta sin autorización explícita;
-- aceptar el plan no aprueba ML-15, licencias, valores de rate limiting, proveedor de correo ni verificación empresarial;
+- aceptar el plan no aprueba ML-15, valores de rate limiting, proveedor de correo ni verificación empresarial;
 - ninguna historia puede omitir sus pruebas de conformidad por el hecho de que su ADR esté aceptado.
