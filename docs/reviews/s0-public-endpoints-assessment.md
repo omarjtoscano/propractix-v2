@@ -27,17 +27,17 @@ propiedad `platform.ratelimit`, configuración versionada, Problem Details,
 | Identificador estable | `searchAcademicInstitutions`, reservado también como futuro `operationId` OpenAPI de H02. |
 | Límite y ventana | 60/60 s y regla adicional 15/10 s para ráfagas. |
 | Ráfagas | Sin crédito acumulable; la petición debe superar ambas ventanas. |
-| Pseudonimización | HMAC-SHA-256 con separación de dominio y clave externa. |
-| Proxies | Cabeceras solo desde CIDR confiables; un único modo por entorno. |
+| Pseudonimización | HMAC-SHA-256 con separación de dominio y clave externa; identificador seudonimizado, no dato anónimo. |
+| Proxies | Confianza conjunta en CIDR y saneamiento probado de Caddy; local usa `REMOTE_ADDRESS` y Caddy selecciona exactamente una cabecera. |
 | IPv4/IPv6 | IPv4 `/32`, IPv6 `/64`, IPv4-mapped tratada como IPv4. |
 | Rotación | Lectura multiversión, escritura nueva y solapamiento mínimo de 180 s. |
-| TTL | 70 s para ráfaga y 120 s para sostenida; expiradas no cuentan. |
+| TTL | Expiración lógica a 70/120 s, borrado físico en el siguiente ciclo normal y alerta+incidencia por umbral. |
 | Fail-closed | `503 rate_limiter_unavailable`; el caso de uso no se invoca. |
 | Respuesta de límite | `429 application/problem+json`, `rate_limited`, `correlationId` y `Retry-After`. |
 | Configuración | Artefacto YAML tipado/versionado; sin límites en Java/TypeScript. |
 | Propiedad | `platform.ratelimit`, tabla propia y acceso detrás de puerto técnico. |
 | Persistencia | PostgreSQL 16; Redis, terceros y AWS excluidos. |
-| Métricas | Allowed, rejected y adapter errors; allowlist de labels sin PII/fingerprint. |
+| Métricas | Allowed, rejected y adapter errors con allowlist específica por métrica, sin PII/fingerprint. |
 | Alertas/runbook | Umbrales absolutos+ratio y runbook de triage, rotación y recuperación. |
 | Pruebas | Matriz completa definida en el plan S0 para ejecución dentro de H02. |
 
@@ -59,12 +59,36 @@ después de una exposición autorizada; no se autoajustan.
 - No se almacena la IP ni su forma normalizada.
 - El HMAC usa secreto externo y separación de dominio; un hash sin clave queda
   expresamente prohibido.
+- El fingerprint continúa siendo un identificador seudonimizado sujeto a
+  protección; no se declara anónimo ni fuera del ámbito de privacidad.
+- Su finalidad exclusiva es prevención de abuso y se prohíbe reutilizarlo para
+  cualquier otra finalidad o correlacionarlo con otros datos.
 - La política no contiene material criptográfico, credenciales ni datos reales.
-- Los headers del cliente no alteran la identidad si el peer no es confiable.
+- Los headers del cliente no alteran la identidad: Caddy elimina ambas
+  cabeceras de entrada y reconstruye solo la configurada a partir del salto de
+  red observado. El CIDR de Caddy sin saneamiento probado no confiere confianza.
 - La indisponibilidad nunca convierte una petición en admitida.
 - Métricas y alertas no permiten consultar sujetos concretos.
 - La rotación conserva cuota durante el solapamiento y no necesita backfill de
   datos efímeros.
+- La expiración lógica ocurre a 70/120 segundos y el borrado físico en el
+  siguiente ciclo normal; superar 10 000 filas expiradas o 15 minutos de
+  antigüedad genera alerta e incidencia, no ampliación de retención.
+- Una revisión de privacidad precede la exposición productiva pública, pero no
+  bloquea la aceptación local de H02.
+
+## Evidencia obligatoria de proxy
+
+H02 debe probar antes de exposición:
+
+1. conexión directa local con `REMOTE_ADDRESS` e ignorado de ambas cabeceras;
+2. perfil Caddy con exactamente una de `FORWARDED` o `X_FORWARDED_FOR`;
+3. cliente externo que envía `X-Forwarded-For` falsificado a Caddy;
+4. eliminación de ambas cabeceras recibidas y reconstrucción de la seleccionada;
+5. IP efectiva procedente del salto observado por Caddy;
+6. cadena con varios proxies confiables resuelta de derecha a izquierda;
+7. cadena malformada con fallo cerrado;
+8. cabecera enviada directamente a un peer no confiable e ignorada.
 
 ## Coherencia de estados
 
@@ -92,6 +116,9 @@ nuevo deberá incorporar y aprobar su propia política antes de exposición.
    sin exigir un algoritmo más complejo.
 5. Los valores son iniciales y necesitarán evidencia operativa antes de una
    futura revisión, siempre mediante versión y aprobación.
+6. La seudonimización reduce exposición, pero no elimina obligaciones de
+   privacidad; la revisión previa a exposición productiva conserva ese control
+   sin convertirlo en gate de aceptación local.
 
 Estos riesgos son explícitos, reversibles mediante una política posterior y
 proporcionales al MVP.

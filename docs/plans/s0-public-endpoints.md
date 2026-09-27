@@ -86,26 +86,55 @@ Normalización obligatoria:
 - Una IPv4 mapeada en IPv6 se trata como IPv4 `/32`.
 - La entrada canónica incluye la familia para impedir colisiones entre formatos.
 
-El `/64` de IPv6 y el `/32` de IPv4 son sujetos técnicos, no identificadores de
-persona. No se exponen en respuestas, métricas, trazas ni logs.
+El resultado HMAC es un **identificador seudonimizado**, no un dato anónimo ni
+un dato automáticamente excluido de protección de datos. El `/64` de IPv6 y el
+`/32` de IPv4 son sujetos técnicos utilizados exclusivamente para prevención de
+abuso. Se prohíbe reutilizar el fingerprint para analítica de usuarios,
+autenticación, autorización, personalización, publicidad, enriquecimiento,
+correlación entre finalidades o listas permanentes. No se expone en respuestas,
+métricas, trazas ni logs.
+
+Antes de una exposición productiva pública deberá realizarse una revisión de
+privacidad que confirme finalidad, minimización, acceso, retención y operación
+de derechos aplicables. Esta revisión no bloquea el desarrollo ni la aceptación
+local de H02 con datos sintéticos y sin exposición pública.
 
 ### Proxies confiables
 
-La dirección del socket es autoritativa salvo que pertenezca a un CIDR de proxy
-configurado explícitamente como confiable. Solo en ese caso se puede interpretar
-`Forwarded` o `X-Forwarded-For`.
+La confianza requiere dos condiciones simultáneas: la dirección del socket
+pertenece a un CIDR configurado como proxy confiable **y** el proxy de borde
+aplica un contrato de saneamiento configurado y probado. Llegar desde el CIDR
+de Caddy no basta por sí solo para confiar en `Forwarded` o
+`X-Forwarded-For`.
 
-Cada entorno selecciona mediante configuración tipada exactamente un modo:
-`REMOTE_ADDRESS`, `FORWARDED` o `X_FORWARDED_FOR`. No se mezclan cabeceras ni se
-aplica precedencia implícita. En modo proxy, la cadena se recorre de derecha a
-izquierda, se eliminan únicamente saltos que pertenezcan a los CIDR confiables y
-el primer salto no confiable es la IP efectiva.
+Modos previstos:
 
-- Cabeceras enviadas por un peer no confiable se ignoran.
+| Perfil | Modo | Contrato |
+|---|---|---|
+| Conexión directa local | `REMOTE_ADDRESS` | La dirección del socket es la IP efectiva; se ignoran `Forwarded` y `X-Forwarded-For`. |
+| Detrás de Caddy | exactamente uno entre `FORWARDED` o `X_FORWARDED_FOR` | La selección es configuración tipada explícita; no existe precedencia implícita. |
+
+En el perfil detrás de Caddy, el proxy de borde debe eliminar **ambas**
+cabeceras recibidas del cliente. Después reconstruye únicamente la cabecera
+seleccionada a partir del salto observado en la conexión de red y elimina la no
+seleccionada. Nunca reenvía como origen confiable una cadena aportada por el
+cliente.
+
+Si existen varios proxies confiables, el proxy de borde sanea el origen y cada
+salto confiable posterior añade el peer que observó directamente. El servidor
+recorre la cadena de derecha a izquierda, elimina solo saltos incluidos en la
+allowlist de proxies confiables y toma como IP efectiva el primer salto no
+confiable. Todos los proxies de la cadena y su comportamiento de append deben
+estar configurados y probados; un CIDR sin esa evidencia no se declara
+confiable.
+
+- Cabeceras enviadas directamente a un peer no confiable se ignoran.
 - Una cadena ausente, malformada o sin cliente resoluble desde un proxy
   confiable falla de forma cerrada.
-- La lista de CIDR es configuración validada por entorno; no se acepta `0.0.0.0/0`
-  ni `::/0`.
+- La lista de CIDR es configuración validada por entorno; no se acepta
+  `0.0.0.0/0` ni `::/0`.
+- Confiar simultáneamente en `Forwarded` y `X-Forwarded-For` es un error de
+  configuración que impide exponer la operación.
 
 ### Versionado y rotación HMAC
 
@@ -147,10 +176,16 @@ todas las versiones HMAC activas se reclaman como una unidad. Dos peticiones
 concurrentes no pueden observar la misma última plaza como disponible. Una
 transacción rechazada no consume parcialmente otra regla o versión.
 
-Las filas expiradas dejan de participar en decisiones aunque el job de limpieza
-aún no las haya borrado. `expiresAt` es el final de la ventana más 60 segundos:
-de ahí los TTL de 70 y 120 segundos. La limpieza es idempotente, por lotes y no
-forma parte del camino crítico.
+Las filas tienen expiración lógica a los 70 o 120 segundos, según la regla, y
+desde ese instante dejan de participar en decisiones aunque aún no se hayan
+borrado. La eliminación física ocurre en el siguiente ciclo normal de limpieza,
+configurado cada minuto. La limpieza es idempotente, por lotes y no forma parte
+del camino crítico.
+
+Si existen más de 10 000 filas expiradas o la más antigua lleva más de 15
+minutos expirada, se genera alerta y se abre incidencia de limpieza. El
+fingerprint no se reutiliza ni se conserva más tiempo para investigar abuso;
+la evidencia del incidente usa únicamente agregados y metadatos técnicos.
 
 ### Fallo cerrado y respuestas
 
@@ -240,11 +275,21 @@ H02 no podrá exponer el endpoint hasta demostrar:
 6. caída, timeout o error del adapter produce `503 rate_limiter_unavailable` y
    no invoca el caso de uso;
 7. durante rotación HMAC no se reinicia ni duplica de forma permisiva la cuota;
-8. cabeceras de proxy falsificadas desde peers no confiables se ignoran, y una
-   cadena inválida desde proxy confiable falla cerrada;
-9. BD, logs, trazas, errores y métricas no contienen la IP normalizada ni sin
+8. un cliente externo que envía `X-Forwarded-For` falsificado a Caddy no puede
+   seleccionar la IP efectiva;
+9. Caddy elimina `Forwarded` y `X-Forwarded-For` recibidas del cliente y
+   reconstruye solo la cabecera configurada desde el salto de red observado;
+10. la IP efectiva procede de ese salto observado y no del valor falsificado;
+11. una cadena con varios proxies confiables se resuelve de derecha a izquierda
+    hasta el primer salto no confiable;
+12. una cadena malformada desde un proxy confiable falla cerrada;
+13. una cabecera enviada directamente a un peer no confiable se ignora;
+14. BD, logs, trazas, errores y métricas no contienen la IP normalizada ni sin
    normalizar, y las métricas no contienen fingerprints como labels;
-10. códigos estables y sus claves de presentación tienen paridad ES/EN.
+15. códigos estables y sus claves de presentación tienen paridad ES/EN;
+16. al alcanzar 70/120 segundos el contador expira lógicamente y se elimina en
+    el siguiente ciclo normal; superar el umbral de filas expiradas genera
+    alerta e incidencia sin ampliar la retención.
 
 Se añaden además casos de IPv4, IPv4 mapeada en IPv6, IPv6 comprimida y dos
 direcciones IPv6 del mismo `/64` para probar el tratamiento consistente.

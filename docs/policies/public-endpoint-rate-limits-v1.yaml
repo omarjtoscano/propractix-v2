@@ -27,6 +27,13 @@ spec:
       retryAfterSeconds: 1
   subject:
     type: CLIENT_IP_HMAC
+    privacy:
+      classification: PSEUDONYMIZED_IDENTIFIER
+      anonymousData: false
+      purpose: ABUSE_PREVENTION_ONLY
+      reuseForOtherPurposes: PROHIBITED
+      productionPublicExposurePrivacyReviewRequired: true
+      localH02AcceptanceBlockedByPrivacyReview: false
     hmac:
       algorithm: HMAC-SHA-256
       purpose: RATE_LIMIT_CLIENT_IP
@@ -43,15 +50,28 @@ spec:
       zoneIdentifier: REMOVE_BEFORE_CANONICALIZATION
       ambiguousAddressSyntax: REJECT
   clientIpResolution:
-    modeFromTypedEnvironmentConfiguration: true
-    allowedModes:
-      - REMOTE_ADDRESS
-      - FORWARDED
-      - X_FORWARDED_FOR
-    simultaneousForwardingHeaders: REJECT_CONFIGURATION
+    deploymentModes:
+      directLocal:
+        mode: REMOTE_ADDRESS
+        forwardingHeaders: IGNORE
+      behindCaddy:
+        modeFromTypedEnvironmentConfiguration: true
+        exactlyOneAllowedModeRequired: true
+        allowedModes:
+          - FORWARDED
+          - X_FORWARDED_FOR
+        simultaneousForwardingHeaders: REJECT_CONFIGURATION
+        trustRequires:
+          - IMMEDIATE_PEER_IN_CONFIGURED_TRUSTED_PROXY_CIDR
+          - CADDY_SANITIZATION_CONFIGURED_AND_TESTED
+        clientSuppliedForwardingHeadersAtEdge: REMOVE_FORWARDED_AND_X_FORWARDED_FOR
+        selectedHeader: REBUILD_FROM_OBSERVED_NETWORK_HOP
+        unselectedHeader: REMOVE
     forwardedHeadersTrustedOnlyFromConfiguredProxyCidrs: true
+    trustedProxyCidrAloneIsSufficient: false
     untrustedPeerForwardingHeaders: IGNORE
     trustedProxyChainTraversal: RIGHT_TO_LEFT_FIRST_UNTRUSTED
+    trustedIntermediaryBehavior: APPEND_DIRECTLY_OBSERVED_PEER
     missingOrMalformedTrustedProxyChain: FAIL_CLOSED
     forbiddenTrustedProxyCidrs:
       - 0.0.0.0/0
@@ -65,16 +85,33 @@ spec:
     cleanup:
       mode: IDEMPOTENT_BATCH
       interval: PT1M
+      logicalExpiration:
+        burst: PT70S
+        sustained: PT120S
+      physicalDeletion: NEXT_NORMAL_CLEANUP_CYCLE
+      expiredRowsIncidentThresholds:
+        rowCountGreaterThan: 10000
+        oldestExpiredAgeGreaterThan: PT15M
+        action: ALERT_AND_OPEN_INCIDENT
   observability:
     metrics:
-      allowed: propractix_rate_limit_allowed_total
-      rejected: propractix_rate_limit_rejected_total
-      adapterErrors: propractix_rate_limit_adapter_errors_total
-    allowedLabels:
-      - operation_id
-      - policy_version
-      - rule_id
-      - error_class
+      allowed:
+        name: propractix_rate_limit_allowed_total
+        allowedLabels:
+          - operation_id
+          - policy_version
+      rejected:
+        name: propractix_rate_limit_rejected_total
+        allowedLabels:
+          - operation_id
+          - policy_version
+          - rule_id
+      adapterErrors:
+        name: propractix_rate_limit_adapter_errors_total
+        allowedLabels:
+          - operation_id
+          - policy_version
+          - error_class
     forbiddenLabels:
       - ip
       - ip_fingerprint

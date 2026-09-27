@@ -11,6 +11,12 @@ ejecución de H02.
 El mecanismo pertenece a `platform.ratelimit`, usa PostgreSQL 16 y falla
 cerrado. No se habilita un bypass para recuperar disponibilidad.
 
+El fingerprint HMAC es un identificador seudonimizado sujeto a protección, no
+un dato anónimo. Su única finalidad es prevenir abuso de la operación pública.
+No se reutiliza para identificar usuarios, analítica, autenticación,
+autorización, personalización, publicidad, enriquecimiento o correlación con
+otros datos.
+
 ## Señales
 
 | Señal | Interpretación | Umbral |
@@ -34,9 +40,13 @@ de clave, query, cursor, User-Agent o correlation ID como labels.
 4. Confirmar que la versión de política cargada es la aprobada, que existe una
    única entrada de operación y que todas las claves HMAC activas están
    disponibles. No imprimir ni copiar el material secreto.
-5. Revisar despliegues y cambios de configuración recientes. No inspeccionar
+5. Si el perfil está detrás de Caddy, verificar las dos condiciones de
+   confianza: peer inmediato dentro del CIDR permitido y evidencia vigente de
+   que Caddy elimina las cabeceras aportadas por el cliente y reconstruye solo
+   la seleccionada desde el salto de red observado.
+6. Revisar despliegues y cambios de configuración recientes. No inspeccionar
    queries de usuario ni intentar identificar personas a partir de contadores.
-6. Conservar `correlationId`, instante, versión de release, código técnico
+7. Conservar `correlationId`, instante, versión de release, código técnico
    acotado y resultado. No conservar IP ni fingerprint en el ticket.
 
 ## Respuesta a una alerta de rechazos
@@ -87,9 +97,16 @@ Las consultas operativas deben devolver solo agregados y metadatos técnicos:
 - conflictos o reintentos de la operación atómica.
 
 No se selecciona ni exporta la columna de fingerprint. No se vuelcan tablas,
-parámetros ni logs de sentencias con valores. Si hay más de 10 000 filas
-expiradas o la más antigua supera 15 minutos, se abre incidencia de limpieza;
-esto no justifica borrar filas activas ni truncar la tabla.
+parámetros ni logs de sentencias con valores. La expiración lógica ocurre a los
+70 segundos para `burst` y a los 120 segundos para `sustained`; desde entonces
+la fila no participa en decisiones. La eliminación física debe ocurrir en el
+siguiente ciclo normal de limpieza, ejecutado cada minuto.
+
+Si hay más de 10 000 filas expiradas o la más antigua supera 15 minutos, se
+genera alerta y se abre incidencia de limpieza. Se comprueba el último ciclo,
+locks, transacciones y capacidad, y se recupera el job sin ampliar la retención
+ni reutilizar fingerprints. El umbral no justifica borrar filas activas,
+truncar la tabla o exportar identificadores.
 
 ## Rotación de clave HMAC
 
@@ -115,15 +132,39 @@ restaurar el conjunto anterior completo. No retirar primero la clave antigua.
 
 ## Incidente de proxies o cabeceras falsificadas
 
-1. Confirmar si el peer del socket pertenece realmente a un CIDR confiable.
-2. Para peers no confiables, verificar que `Forwarded` y `X-Forwarded-For` se
-   ignoran y que cambiar esas cabeceras no cambia el sujeto.
-3. Para proxy confiable, comprobar que solo está habilitado el header elegido y
-   que la cadena se recorre de derecha a izquierda.
-4. Una cadena ausente o malformada debe producir fallo cerrado; no usar la
-   primera IP proporcionada por el cliente como fallback.
-5. Corregir la configuración tipada mediante revisión. No añadir CIDR amplios o
-   autodetectados durante el incidente.
+1. Identificar el modo configurado. La conexión directa local usa
+   `REMOTE_ADDRESS` e ignora ambas cabeceras. El perfil detrás de Caddy elige
+   explícitamente exactamente uno entre `FORWARDED` y `X_FORWARDED_FOR`.
+2. Rechazar como inválida cualquier configuración que confíe simultáneamente en
+   ambas cabeceras.
+3. Confirmar si el peer inmediato del socket pertenece realmente a un CIDR
+   confiable. Esto es necesario, pero no suficiente.
+4. Verificar mediante prueba de borde que un cliente externo puede enviar un
+   `X-Forwarded-For` falsificado a Caddy, pero Caddy elimina tanto esa cabecera
+   como `Forwarded` antes de reconstruir únicamente la cabecera seleccionada.
+5. Confirmar que el primer valor reconstruido procede de la IP observada por
+   Caddy en la conexión de red y no del contenido enviado por el cliente.
+6. Para una cadena con varios proxies confiables, comprobar que cada proxy
+   intermedio añade el peer observado directamente y que el servidor recorre de
+   derecha a izquierda hasta el primer salto no confiable.
+7. Enviar una cadena malformada desde un proxy confiable y confirmar respuesta
+   fail-closed `503 rate_limiter_unavailable`; no usar el primer valor como
+   fallback.
+8. Enviar las cabeceras directamente a un peer no confiable y confirmar que se
+   ignoran y no cambian el sujeto.
+9. Corregir configuración y evidencia de Caddy mediante revisión. No añadir
+   CIDR amplios o autodetectados durante el incidente.
+
+Una prueba del CIDR sin prueba del saneamiento de Caddy no restablece la
+confianza ni permite cerrar el incidente.
+
+## Revisión de privacidad antes de exposición productiva
+
+Antes de habilitar acceso productivo público, Privacidad y Seguridad revisan la
+finalidad exclusiva de prevención de abuso, minimización, acceso, expiración
+lógica, eliminación física e incident response. La evidencia no incluye IP ni
+fingerprint. Esta revisión es requisito de exposición productiva pública, pero
+no bloquea la aceptación local de H02 con datos sintéticos y sin exposición.
 
 ## Cierre y evidencia
 
@@ -136,6 +177,8 @@ Antes de cerrar una incidencia:
 - `Retry-After`, `correlationId` y códigos estables son correctos;
 - no se habilitó bypass ni se añadieron servicios externos;
 - la evidencia no contiene IP, fingerprint, secreto, query ni datos personales;
+- las filas expiradas se eliminaron en el ciclo normal o existe una incidencia
+  abierta dentro del umbral definido;
 - cualquier cambio permanente está en una nueva versión revisada y aprobada.
 
 ## Escalado
