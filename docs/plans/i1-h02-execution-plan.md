@@ -1,6 +1,9 @@
 # Plan de ejecución — I1-H02 Catálogo institucional consultable
 
-- Estado del plan: `PROPOSED_FOR_APPROVAL`
+- Estado del plan: `APPROVED`
+- Aprobación: Product Owner, 2026-09-27
+- Commit aprobado: `5f64aeb9e4ef4fd1c0deae845b0607407fe9133b`
+- Autorización de ejecución: después del merge de la PR documental, únicamente `E1 — Dominio e invariantes`
 - Historia: `I1-H02`
 - Estado de la historia: `READY`; no iniciada ni implementada por este documento
 - Rama prevista: `feature/i1-h02-academic-institution-catalog`
@@ -968,8 +971,9 @@ capturas o trazas E2E sin PII y riesgos residuales.
 
 ## 20. Decisiones aceptadas para la ejecución
 
-Estas decisiones forman parte de la corrección aprobada del plan, pero no
-cambian su estado `PROPOSED_FOR_APPROVAL` ni marcan I1-H02 como iniciada:
+Estas decisiones forman parte del plan aprobado. La aprobación no inicia
+I1-H02: la historia permanece `READY` hasta el merge de la PR documental y,
+después de ese merge, solo queda autorizada `E1 — Dominio e invariantes`:
 
 | Decisión aceptada | Aplicación |
 |---|---|
@@ -986,6 +990,7 @@ cambian su estado `PROPOSED_FOR_APPROVAL` ni marcan I1-H02 como iniciada:
 | Librería CSV, si se propone una en implementación | Solo se aceptará una utilidad fijada, con licencia/dependencias revisadas; no puede cambiar el contrato ni convertirse en librería estructural. Un parser propio estricto es la alternativa. | Revisión técnica ordinaria; no ADR salvo cambio estructural. |
 | Deriva del formato RUCT real | El procedimiento aceptado de doble revisión detecta cambios; un mapeo ambiguo bloquea esa publicación sin alterar el snapshot vigente. | Producto + Datos resuelven la ambigüedad concreta antes de publicar; no reabre C0. |
 
-No hay contradicción que obligue a crear un ADR. Las decisiones aceptadas no
-autorizan código antes de que este plan completo sea aprobado, ni autorizan
-AWS, otro endpoint o una ampliación funcional de H02.
+No hay contradicción que obligue a crear un ADR. La aprobación del plan no
+autoriza código antes del merge de la PR documental. Después de ese merge solo
+se autoriza `E1 — Dominio e invariantes`; no se autoriza AWS, otro endpoint ni
+una ampliación funcional de H02.
