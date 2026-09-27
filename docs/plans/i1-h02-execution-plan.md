@@ -109,8 +109,8 @@ de rate limiting.
 | Tipo | Nombre | Responsabilidad e invariantes |
 |---|---|---|
 | Aggregate root | `AcademicInstitution` | Conserva `AcademicInstitutionId`, referencia externa, denominación oficial, país, estado de fuente opcional y snapshot publicado. Solo se crea/actualiza mediante publicación gobernada. |
-| Aggregate root | `CatalogImport` | Conserva identidad de importación, versión de esquema, metadatos, hashes, resultado, recuentos y estado `PUBLISHED`, `SUPERSEDED` o `REJECTED`. Solo una importación puede estar publicada. |
-| Domain event | `InstitutionCatalogPublished` | Se registra solo cuando cambia el snapshot publicado. H02 no lo convierte aún en evento de integración ni crea outbox porque no existe consumidor cross-context o efecto externo. |
+| Aggregate root | `CatalogImport` | Conserva identidad de importación, versión de esquema, metadatos, hashes, resultado, recuentos y estado `PUBLISHED`, `SUPERSEDED` o `REJECTED`. Solo una importación puede estar publicada. Repetir el artefacto activo no crea otro aggregate; republicar uno `SUPERSEDED` sí crea una importación nueva y trazable. |
+| Domain event | `InstitutionCatalogPublished` | Se registra solo cuando cambia el snapshot publicado, incluida la republicación de un artefacto `SUPERSEDED`; repetir el artefacto activo no lo emite. H02 no lo convierte aún en evento de integración ni crea outbox porque no existe consumidor cross-context o efecto externo. |
 | Value object | `AcademicInstitutionId` | UUID v4 generado por la aplicación; es la única identidad pública de dominio. |
 | Value object | `CatalogImportId` | UUID v4 de cada intento trazable de importación. |
 | Value object | `ExternalInstitutionReference` | Par opaco `(sourceSystem, sourceRecordId)`; sirve para procedencia y reconciliación, nunca como identidad de dominio. |
@@ -146,10 +146,15 @@ buckets técnicos se manejan mediante un record JDBC interno de
 7. Una publicación fallida o concurrente no altera la versión anterior.
 8. Una institución ausente del snapshot nuevo deja de ser seleccionable, pero
    su ID se conserva para futuras referencias históricas de H07.
-9. Republicar un artefacto anterior es un nuevo acto trazable de publicación;
-   no es una down migration ni reescribe el historial.
-10. `sourceStatus` solo se conserva si llega explícitamente; nunca se infiere.
-11. El catálogo no produce ninguna decisión legal o de elegibilidad.
+9. Publicar nuevamente el artefacto que ya está activo es idempotente: devuelve
+   el snapshot vigente sin crear `CatalogImport`, emitir
+   `InstitutionCatalogPublished`, cambiar el snapshot ni invalidar cursores.
+10. Republicar un artefacto anteriormente `SUPERSEDED` es un nuevo acto
+    trazable: crea otro `CatalogImport`, cambia el snapshot, emite
+    `InstitutionCatalogPublished` e invalida los cursores anteriores; no es una
+    down migration ni reescribe el historial.
+11. `sourceStatus` solo se conserva si llega explícitamente; nunca se infiere.
+12. El catálogo no produce ninguna decisión legal o de elegibilidad.
 
 ## 5. Paquetes DDD y hexagonales
 
@@ -269,7 +274,9 @@ Columnas mínimas:
 
 Un índice parcial único sobre el estado publicado impide dos snapshots
 consultables. `artifact_hash` se indexa, pero no es único: un rollback manual
-puede republicar el mismo artefacto como un acto nuevo y trazable.
+puede republicar un artefacto `SUPERSEDED` como un acto nuevo y trazable. Una
+coincidencia con el artefacto actualmente `PUBLISHED` se resuelve como no-op
+idempotente antes de insertar otra importación.
 
 ### 7.2 `academicinstitution_institution`
 
@@ -316,8 +323,11 @@ borrado ya la fila.
 
 El adapter obtiene un lock transaccional no bloqueante y específico del
 catálogo. Si otro publicador lo posee, el puerto devuelve el resultado estable
-`catalog_publication_in_progress` y el adapter CLI termina sin publicar. En una
-sola transacción:
+`catalog_publication_in_progress` y el adapter CLI termina sin publicar. Tras
+adquirir el lock, compara el hash con la importación activa. Si coincide,
+devuelve el resultado idempotente con el mismo snapshot y finaliza sin escritura,
+sin `CatalogImport` nuevo y sin evento. En otro caso, incluida la coincidencia
+con una importación `SUPERSEDED`, ejecuta en una sola transacción:
 
 1. registra el intento válido;
 2. reutiliza IDs por referencia externa y genera UUID v4 solo para nuevas
@@ -326,7 +336,7 @@ sola transacción:
 4. despublica ausentes sin borrar su identidad;
 5. marca la importación anterior como `SUPERSEDED`;
 6. marca la nueva como `PUBLISHED`;
-7. registra `InstitutionCatalogPublished` si cambió la versión.
+7. registra `InstitutionCatalogPublished` con el nuevo snapshot.
 
 Un error revierte los siete pasos. Una validación fallida puede conservar un
 registro `REJECTED` mínimo en una transacción separada, sin filas fuente ni
@@ -415,9 +425,9 @@ ligado a otra consulta produce `400 validation_error`. Si el catálogo cambió
 entre páginas, devuelve `409 catalog_snapshot_changed`; el cliente reinicia la
 búsqueda para no mezclar snapshots.
 
-Tamaño por defecto propuesto: 20; máximo propuesto: 50. Ambos valores viven en
+La paginación aceptada usa `default=20` y `max=50`. Ambos valores viven en
 configuración tipada backend/frontend y en restricciones OpenAPI, no como
-constantes dispersas. Su ratificación figura en decisiones pendientes.
+constantes dispersas.
 
 ## 10. Contrato OpenAPI
 
@@ -518,8 +528,8 @@ Modo `REMOTE_ADDRESS`: se usa la dirección del socket y se ignoran siempre
 
 ### 12.2 Detrás de Caddy
 
-Se propone seleccionar explícitamente `X_FORWARDED_FOR`, uno de los dos modos
-permitidos por S0:
+Se adopta `X_FORWARDED_FOR` como único modo detrás de Caddy, condicionado a que
+el saneamiento y las pruebas de borde siguientes estén aprobados:
 
 1. Caddy elimina tanto `Forwarded` como `X-Forwarded-For` recibidos del cliente.
 2. Reconstruye únicamente `X-Forwarded-For` desde `{remote_host}`, el salto de
@@ -624,7 +634,10 @@ alerta/incidencia sin ampliar retención ni exportar fingerprints.
 - `sourceStatus` ausente y no inferido.
 - metadatos obligatorios y separación de hashes;
 - duplicado de referencia dentro del artefacto;
-- artefacto idéntico sin evento de cambio;
+- repetición del artefacto activo sin `CatalogImport`, evento, nuevo snapshot
+  ni invalidación de cursores;
+- republicación de un artefacto `SUPERSEDED` con nueva importación, evento,
+  snapshot e invalidación de cursores anteriores;
 - publicación válida, inválida y concurrente;
 - fallo que conserva la publicación anterior;
 - retirada y reaparición que conservan el UUID;
@@ -652,6 +665,8 @@ alerta/incidencia sin ampliar retención ni exportar fingerprints.
 - unicidad de referencia externa y de publicación activa;
 - publicación transaccional y rollback por fallo inyectado;
 - dos publicadores concurrentes: uno publica y otro recibe conflicto;
+- artefacto activo repetido sin inserciones y artefacto `SUPERSEDED` republicado
+  con un `catalog_import_id` nuevo;
 - keyset estable, `limit + 1`, cursor obsoleto y fila despublicada;
 - ausencia de titulaciones, cuentas, tenants o FKs cross-context.
 
@@ -659,7 +674,9 @@ alerta/incidencia sin ampliar retención ni exportar fingerprints.
 
 - `200` con orden, cursor, atribución y solo campos públicos;
 - validaciones de query/cursor/limit;
-- `409 catalog_snapshot_changed`;
+- repetir el artefacto activo conserva la validez del cursor;
+- republicar un artefacto `SUPERSEDED` hace que el cursor anterior obtenga
+  `409 catalog_snapshot_changed`;
 - catálogo ausente/fallo como `503` sin SQL;
 - `X-Correlation-ID` válido en éxito y error y mismo valor en Problem Details;
 - método/ruta exactos y operación OpenAPI única;
@@ -775,20 +792,47 @@ Archivos previstos:
   sin cambiar sus bytes;
 - tests de contrato CSV y verificación de su hash aprobado.
 
-### E5 — Rate limiting, secretos sintéticos e IP
+### E5A — Policy loader, configuración, IP, HMAC y secretos
 
 Archivos previstos:
 
-- `server/src/main/resources/db/migration/V2__create_public_endpoint_rate_limit_buckets.sql`
-- árbol `server/src/main/java/com/propractix/platform/ratelimit/**` con puertos,
-  servicio, filtro HTTP, resolver IP, HMAC, adapter JDBC, policy loader, job de
-  limpieza, health/readiness y métricas;
+- puertos y modelo técnico bajo
+  `server/src/main/java/com/propractix/platform/ratelimit/application/**`;
+- policy loader, propiedades tipadas, `ClientIpResolver` y adapter HMAC bajo
+  `server/src/main/java/com/propractix/platform/ratelimit/configuration/**` y
+  `.../adapter/out/crypto/**`;
 - `server/pom.xml` para empaquetar la política canónica sin duplicarla;
 - `server/src/main/resources/application.yaml` y perfiles aplicables;
 - `infra/local/templates/rate-limit-hmac-rl-ip-v1.example`;
 - `scripts/prepare-local-secrets.sh` y `scripts/check-local-baseline.sh`;
-- `client/Caddyfile` para saneamiento y reconstrucción de una sola cabecera;
-- tests unitarios, PostgreSQL concurrentes y prueba de borde con Caddy.
+- tests unitarios del loader, configuración, normalización IP, HMAC y ausencia
+  de material secreto en errores/logs.
+
+### E5B — Persistencia PostgreSQL y operación del rate limiter
+
+Archivos previstos:
+
+- `server/src/main/resources/db/migration/V2__create_public_endpoint_rate_limit_buckets.sql`;
+- adapter JDBC y servicio atómico bajo
+  `server/src/main/java/com/propractix/platform/ratelimit/adapter/out/persistence/**`;
+- componentes de rotación, limpieza, health/readiness y métricas bajo
+  `server/src/main/java/com/propractix/platform/ratelimit/**`;
+- tests Testcontainers de migración, atomicidad de ambas ventanas, rotación,
+  expiración/limpieza, métricas y concurrencia PostgreSQL.
+
+### E5C — Filtro HTTP, seguridad y borde Caddy
+
+Archivos previstos:
+
+- filtro HTTP y Problem Details técnicos bajo
+  `server/src/main/java/com/propractix/platform/ratelimit/adapter/in/http/**`;
+- integración exacta en
+  `server/src/main/java/com/propractix/configuration/security/FoundationSecurityConfiguration.java`;
+- `client/Caddyfile` para eliminar ambas familias recibidas y reconstruir solo
+  `X-Forwarded-For`;
+- tests de integración de seguridad, spoofing directo y detrás de Caddy,
+  cadena confiable/no confiable y fail-closed por cabecera, proxy, política,
+  secreto o persistencia inválidos.
 
 No se modifica el estado ni la checklist de `CL0_CLOUD_STAGING`, no se ejecuta
 AWS y no se añade secreto operativo al repositorio.
@@ -802,8 +846,6 @@ Archivos previstos:
 - DTO/mappers REST en ese mismo adapter;
 - utilidades/handler comunes de Problem Details bajo
   `com.propractix.platform.web`;
-- actualización exacta de
-  `server/src/main/java/com/propractix/configuration/security/FoundationSecurityConfiguration.java`;
 - tests MockMvc/contrato/correlación;
 - ninguna ruta adicional.
 
@@ -832,8 +874,8 @@ Archivos previstos:
 - `client/playwright.config.ts`;
 - `client/e2e/academic-institution-search.spec.ts`;
 - script de orquestación local H02 bajo `scripts/`;
-- pruebas de métricas/redacción y actualización del runbook para reflejar el
-  estado S0 `CLOSED`, sin cambiar la política aprobada;
+- pruebas de métricas/redacción y comprobación de que el runbook permanece
+  alineado con S0 `CLOSED`, sin cambiar la política aprobada;
 - scripts raíz `client:generate`, `client:e2e` y checks de cliente generado.
 
 ### E9 — Primer snapshot real y evidencia de aceptación
@@ -900,6 +942,8 @@ H02 estará técnicamente terminada cuando exista evidencia de que:
 - el primer snapshot real fue adquirido, revisado, hasheado, publicado y puede
   reproducirse desde su CSV/manifest;
 - la publicación es atómica y la última versión válida sobrevive a fallos;
+- repetir el artefacto activo es un no-op completo y republicar uno
+  `SUPERSEDED` crea importación, snapshot y evento nuevos e invalida cursores;
 - búsqueda, normalización, cursor y paginación cumplen el contrato;
 - OpenAPI, servidor y cliente generado están sincronizados;
 - rate limiting cumple exactamente S0, falla cerrado y resiste concurrencia,
@@ -922,17 +966,26 @@ resultados, versión de PostgreSQL, IDs/hashes no sensibles del snapshot,
 recuentos, extracto de OpenAPI lint, resultados de concurrencia/spoofing,
 capturas o trazas E2E sin PII y riesgos residuales.
 
-## 20. Riesgos y decisiones pendientes reales
+## 20. Decisiones aceptadas para la ejecución
+
+Estas decisiones forman parte de la corrección aprobada del plan, pero no
+cambian su estado `PROPOSED_FOR_APPROVAL` ni marcan I1-H02 como iniciada:
+
+| Decisión aceptada | Aplicación |
+|---|---|
+| Paginación `default=20`, `max=50` | Configuración tipada compartida por contrato, servidor y cliente; OpenAPI declara ambos límites. |
+| `409 catalog_snapshot_changed` | Un cursor de otro snapshot se rechaza y el cliente reinicia la búsqueda. |
+| `X_FORWARDED_FOR` como único modo detrás de Caddy | Solo puede activarse tras aprobar el saneamiento de ambas familias de cabeceras y las pruebas de spoofing/fail-closed; local directo continúa en `REMOTE_ADDRESS`. |
+| Procedimiento de revisión del mapeo RUCT | El manifest documenta columnas, omisiones y decisiones; una segunda persona revisa recuentos, duplicados y muestra contra la fuente antes de publicar. No se introducen heurísticas silenciosas. |
+| Revisión de privacidad del fingerprint HMAC | Es obligatoria antes de exposición productiva pública. No bloquea implementación ni aceptación local con secretos y datos sintéticos. |
+
+## 21. Riesgos y decisiones realmente pendientes
 
 | Elemento | Tratamiento | Aprobación necesaria |
 |---|---|---|
-| Valores de paginación propuestos `default=20`, `max=50` y reinicio con `409` al cambiar snapshot | Son reversibles, configurados y explícitos en OpenAPI. Deben confirmarse antes de congelar el contrato. | Producto + Arquitectura/API al aprobar este plan. |
-| Selección de `X_FORWARDED_FOR` como único modo detrás de Caddy | Está dentro de las opciones ya aprobadas por S0; se demostrará saneamiento real y fail-closed. | Seguridad + Operaciones al revisar la entrega E5; no reabre S0. |
-| Mapeo de columnas y omisiones del fichero RUCT real | El formato real puede cambiar y no debe resolverse con heurísticas. Se documenta en el manifest y se revisa con doble control. | Producto + Datos antes de publicar el primer snapshot; no reabre C0. |
 | Librería CSV, si se propone una en implementación | Solo se aceptará una utilidad fijada, con licencia/dependencias revisadas; no puede cambiar el contrato ni convertirse en librería estructural. Un parser propio estricto es la alternativa. | Revisión técnica ordinaria; no ADR salvo cambio estructural. |
-| Fingerprint HMAC seudonimizado | Su revisión de privacidad productiva sigue pendiente, pero no bloquea desarrollo/aceptación local sintética. | Privacidad + Seguridad antes de exposición productiva pública. |
-| Runbook aún describe el estado previo `READY_FOR_OWNER_APPROVAL` | Es drift documental; E8 lo corrige a `CLOSED` sin cambiar límites, política o alcance. | No requiere decisión nueva. |
+| Deriva del formato RUCT real | El procedimiento aceptado de doble revisión detecta cambios; un mapeo ambiguo bloquea esa publicación sin alterar el snapshot vigente. | Producto + Datos resuelven la ambigüedad concreta antes de publicar; no reabre C0. |
 
-No hay contradicción que obligue a crear un ADR. Ninguna de estas decisiones
-autoriza código antes de que este plan sea revisado, ni autoriza AWS, otro
-endpoint o una ampliación funcional de H02.
+No hay contradicción que obligue a crear un ADR. Las decisiones aceptadas no
+autorizan código antes de que este plan completo sea aprobado, ni autorizan
+AWS, otro endpoint o una ampliación funcional de H02.

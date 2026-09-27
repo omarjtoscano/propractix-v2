@@ -2,11 +2,12 @@
 
 ## Alcance y estado
 
-Este runbook opera la baseline propuesta en
+Este runbook opera la baseline aprobada en
 [`public-endpoint-rate-limits-v1.yaml`](../policies/public-endpoint-rate-limits-v1.yaml).
-Solo contiene la operación `searchAcademicInstitutions`. Mientras
-`S0_PUBLIC_ENDPOINTS` esté `READY_FOR_OWNER_APPROVAL`, no autoriza exposición ni
-ejecución de H02.
+Solo contiene la operación `searchAcademicInstitutions`.
+`S0_PUBLIC_ENDPOINTS` está `CLOSED` e I1-H02 está `READY`, pero todavía no se ha
+iniciado ni implementado. El cierre de S0 no autoriza por sí solo la exposición
+ni amplía la política o el alcance de H02.
 
 El mecanismo pertenece a `platform.ratelimit`, usa PostgreSQL 16 y falla
 cerrado. No se habilita un bypass para recuperar disponibilidad.
