@@ -6,16 +6,18 @@
 |---|---|
 | Gate | `S0_PUBLIC_ENDPOINTS` |
 | Fecha de evaluación | 2026-09-21 |
-| Estado | **`READY_FOR_OWNER_APPROVAL`** |
+| Fecha de aprobación | 2026-09-27 |
+| Commit aprobado | `fec3b2ed3a5afa04d1c079bda4f2d8981efd5920` |
+| Estado | **`CLOSED`** |
 | Owners técnicos | Seguridad + Operaciones |
-| Aprobación pendiente | Product Owner sobre un commit concreto |
+| Aprobación | Expresa del Product Owner |
 | Operación evaluada | `searchAcademicInstitutions` |
 | Endpoint | `GET /api/v1/academic-institutions?query=&cursor=&limit=` |
-| `I1-H02` | **`BLOCKED`** |
+| `I1-H02` | **`READY`**, no iniciada ni implementada |
 | `C0_CATALOG` | **`CLOSED`** |
 | Código implementado | Ninguno |
 
-La propuesta es coherente con ADR-001, ADR-004, ADR-006, ADR-007, ADR-008 y
+La decisión es coherente con ADR-001, ADR-004, ADR-006, ADR-007, ADR-008 y
 ADR-012. No fue necesario modificar ADR-007 ni ADR-008: ambos ya exigen la
 propiedad `platform.ratelimit`, configuración versionada, Problem Details,
 `rate_limited`, `correlationId`, PostgreSQL y cierre del gate por operación.
@@ -92,19 +94,19 @@ H02 debe probar antes de exposición:
 
 ## Coherencia de estados
 
-| Elemento | Estado tras esta propuesta | Motivo |
+| Elemento | Estado tras la aprobación | Motivo |
 |---|---|---|
-| `S0_PUBLIC_ENDPOINTS` | `READY_FOR_OWNER_APPROVAL` | La decisión y evidencia documental están preparadas, pero falta aprobación expresa. |
+| `S0_PUBLIC_ENDPOINTS` | `CLOSED` | El Product Owner aprobó expresamente el commit indicado el 2026-09-27. |
 | `I1-H01` | `DONE / ACCEPTED` | No se modifica ni reimplementa. |
 | `C0_CATALOG` | `CLOSED` | Se conserva la aprobación previa. |
-| `I1-H02` | `BLOCKED` | S0 aún no está `CLOSED`; no se ha implementado ninguna prueba ni endpoint. |
+| `I1-H02` | `READY` | Todos sus gates y predecesoras están cerrados; todavía no se ha iniciado ni implementado. |
 | H03-H06 | Sin autorización nueva | No tienen entradas de política ni valores aprobados. |
 
-El cierre futuro de S0 no será una autorización general. Solo permitirá que H02
-implemente y pruebe `searchAcademicInstitutions` con esta entrada. Cada endpoint
+El cierre de S0 no es una autorización general. Solo permite que H02 implemente
+y pruebe `searchAcademicInstitutions` con esta entrada. Cada endpoint
 nuevo deberá incorporar y aprobar su propia política antes de exposición.
 
-## Riesgos residuales y aceptación requerida
+## Riesgos residuales aceptados
 
 1. NAT compartido puede agrupar personas bajo una IPv4; se acepta inicialmente
    por no introducir tracking adicional.
@@ -123,22 +125,23 @@ nuevo deberá incorporar y aprobar su propia política antes de exposición.
 Estos riesgos son explícitos, reversibles mediante una política posterior y
 proporcionales al MVP.
 
-## Verificaciones documentales requeridas
+## Verificaciones documentales de cierre
 
-Antes de solicitar aprobación se debe demostrar:
+Para registrar el cierre se demuestra:
 
 - YAML válido y sin alias/configuración ambigua;
 - enlaces locales resolubles;
 - ausencia de secretos y datos personales;
 - diff limitado a documentación autorizada;
-- estados exactamente `READY_FOR_OWNER_APPROVAL`, `BLOCKED` y `CLOSED`;
+- estados exactamente `CLOSED`, `READY` y `CLOSED` para S0, I1-H02 y
+  C0_CATALOG, respectivamente;
 - ninguna modificación de Java, TypeScript, OpenAPI, migraciones, Docker,
   workflows o infraestructura.
 
 ## Conclusión
 
-Seguridad y Operaciones pueden elevar esta propuesta al Product Owner. El gate
-queda **`READY_FOR_OWNER_APPROVAL`**, no `CLOSED`. La aprobación debe referirse a
-un commit concreto y registrarse después; hasta entonces I1-H02 continúa
-**`BLOCKED`**. No se implementa código, no se inicia la historia y no se realiza
-ninguna operación AWS.
+El Product Owner aprobó expresamente la política documentada en el commit
+`fec3b2ed3a5afa04d1c079bda4f2d8981efd5920` el 2026-09-27. El gate queda
+**`CLOSED`** e I1-H02 pasa a **`READY`**, sin iniciarse ni implementarse en este
+cambio. La aprobación se limita a `searchAcademicInstitutions`; no autoriza
+endpoints posteriores. No se realiza ninguna operación AWS.

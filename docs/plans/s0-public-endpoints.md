@@ -1,23 +1,24 @@
-# Decisión propuesta — S0_PUBLIC_ENDPOINTS
+# Decisión aprobada — S0_PUBLIC_ENDPOINTS
 
 ## Estado y alcance
 
 | Campo | Valor |
 |---|---|
 | Gate | `S0_PUBLIC_ENDPOINTS` |
-| Fecha | 2026-09-21 |
-| Estado | `READY_FOR_OWNER_APPROVAL` |
+| Fecha de preparación | 2026-09-21 |
+| Estado | `CLOSED` |
 | Owners | Seguridad + Operaciones |
-| Aprobación pendiente | Product Owner sobre un commit concreto |
+| Aprobación | Product Owner, 2026-09-27 |
+| Commit aprobado | `fec3b2ed3a5afa04d1c079bda4f2d8981efd5920` |
 | Endpoint incluido | `GET /api/v1/academic-institutions?query=&cursor=&limit=` |
-| Historia afectada | `I1-H02`, que permanece `BLOCKED` |
+| Historia afectada | `I1-H02`, que pasa a `READY` sin iniciarse |
 | Implementación | Fuera de esta decisión documental |
 
-Esta propuesta materializa el gate exigido por ADR-007 para el único endpoint
+Esta decisión materializa el gate exigido por ADR-007 para el único endpoint
 público de H02. No implementa H02, no modifica OpenAPI y no autoriza ningún
 endpoint de H03-H06.
 
-El cierre futuro de S0 solo aprobará la baseline técnica y las entradas que
+El cierre de S0 solo aprueba la baseline técnica y las entradas que
 figuren expresamente en la política vigente. Cada historia posterior deberá
 añadir, revisar y aprobar su propia entrada antes de exponer una operación
 pública. La ausencia de una entrada exacta es denegación, no herencia de un
@@ -55,7 +56,7 @@ No existe capacidad de ráfaga adicional ni crédito acumulable. Al finalizar un
 ventana, la cuota de esa regla vuelve a estar disponible; una petición solo se
 admite si ambas reglas disponen de capacidad.
 
-Los valores son una propuesta de MVP y quedan versionados en
+Los valores aprobados para el MVP quedan versionados en
 [`public-endpoint-rate-limits-v1.yaml`](../policies/public-endpoint-rate-limits-v1.yaml).
 Cambiar un límite, ventana, TTL, algoritmo o identidad de sujeto requiere una
 nueva versión de política, revisión de Seguridad y Operaciones y aprobación
@@ -297,16 +298,17 @@ direcciones IPv6 del mismo `/64` para probar el tratamiento consistente.
 ## Fuera de alcance
 
 - implementar Java, TypeScript, OpenAPI, migraciones, Docker o workflows;
-- iniciar I1-H02;
+- iniciar o implementar I1-H02 dentro de este cambio documental;
 - asignar valores a endpoints de H03-H06;
 - rate limiting distribuido, Redis, servicios gestionados o infraestructura AWS;
 - fingerprinting de navegador, cookies de tracking, device ID o CAPTCHA;
 - listas de bloqueo dinámicas, reputación externa o administración en caliente.
 
-## Condición de cierre
+## Registro de cierre
 
-Esta rama deja S0 en `READY_FOR_OWNER_APPROVAL`, no en `CLOSED`. El Product Owner
-deberá aprobar expresamente un commit concreto. Solo después se actualizará el
-gate a `CLOSED`; esa aprobación habilitará únicamente la entrada H02 aquí
-definida. Hasta entonces `I1-H02` permanece `BLOCKED` y no se inicia ninguna
-historia.
+El Product Owner aprobó expresamente esta política el 2026-09-27 sobre el commit
+`fec3b2ed3a5afa04d1c079bda4f2d8981efd5920`. El gate queda `CLOSED` e I1-H02
+pasa a `READY`, sin que este cambio documental inicie o implemente la historia.
+La aprobación habilita únicamente la entrada `searchAcademicInstitutions` aquí
+definida. No autoriza endpoints posteriores ni permite heredar límites: cada
+nueva operación pública requiere su propia entrada revisada y aprobada.

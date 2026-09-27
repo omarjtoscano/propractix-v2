@@ -15,9 +15,9 @@ Si dos documentos se contradicen, detente y solicita una decisión. Un ADR acept
 
 - Trabaja únicamente en el Incremento 1 y en una historia autorizada cada vez.
 - ADR-001, ADR-002 y ADR-004 a ADR-008 están aceptados en revisión 4; ADR-003 en revisión 5; ADR-009 en revisión 3; ADR-011 y ADR-012 en revisión 1; ADR-010 está reservado para policy packs. El plan está aprobado en revisión 7. I1-H01 está `DONE / ACCEPTED` y no debe volver a implementarse.
-- `C0_CATALOG` está `CLOSED` por aprobación expresa del Product Owner el 2026-09-21 sobre el commit `e98e11655da7a8f37b6c26d180d6b7ca2d3e8e52`. `S0_PUBLIC_ENDPOINTS` está `READY_FOR_OWNER_APPROVAL`, no `CLOSED`; I1-H02 permanece `BLOCKED` únicamente por ese gate y ninguna nueva historia está autorizada todavía.
-- El siguiente trabajo autorizado es únicamente obtener la aprobación expresa del Product Owner y cerrar `S0_PUBLIC_ENDPOINTS`; no implementes I1-H02 mientras tanto.
-- La política S0 preparada solo incluye `GET /api/v1/academic-institutions`. Cada historia posterior debe añadir y aprobar su propia entrada antes de exponer otro endpoint; cerrar S0 no concede una autorización general.
+- `C0_CATALOG` está `CLOSED` por aprobación expresa del Product Owner el 2026-09-21 sobre el commit `e98e11655da7a8f37b6c26d180d6b7ca2d3e8e52`. `S0_PUBLIC_ENDPOINTS` está `CLOSED` por aprobación expresa del Product Owner el 2026-09-27 sobre el commit `fec3b2ed3a5afa04d1c079bda4f2d8981efd5920`; I1-H02 está `READY`, pero aún no se ha iniciado ni implementado.
+- El siguiente trabajo que puede autorizarse como historia separada es I1-H02. El cambio documental que registra S0 no inicia su implementación.
+- La política S0 aprobada solo incluye `GET /api/v1/academic-institutions`, con el identificador `searchAcademicInstitutions`. Cada historia posterior debe añadir y aprobar su propia entrada antes de exponer otro endpoint; el cierre de S0 no concede una autorización general.
 - No inicies I1-H02 ni historias posteriores hasta que sus gates y predecesoras figuren cerrados en el plan.
 - No implementes ofertas, candidaturas, prevalidación, formalización, prácticas ni documentos todavía.
 - La empresa es el tenant principal.

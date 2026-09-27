@@ -42,11 +42,11 @@ No se inicia implementación no desechable hasta que los ADR aplicables estén e
 | `C0_CATALOG` | `CLOSED` | Producto + Datos | I1-H02 | Alcance aprobado expresamente por el Product Owner el 2026-09-21 sobre el commit `e98e11655da7a8f37b6c26d180d6b7ca2d3e8e52`. |
 | `B0_COMPANY_EMAIL_POLICY` | `PENDING` | Producto + Seguridad | I1-H03 | Revisión V1 completada; falta aprobar/publicar la versión inicial, revisar cobertura, ejercitar actualización/rollback y probar política, MX, `INDETERMINATE` y no enumeración. |
 | `P0_PRIVACY` | `PENDING` | Producto + Privacidad/Legal + Seguridad | I1-H03 e I1-H06 con datos reales | ML-15, finalidad, campos, evidencia, base jurídica, derechos y retención aprobados. |
-| `S0_PUBLIC_ENDPOINTS` | `READY_FOR_OWNER_APPROVAL` | Seguridad + Operaciones | Exposición pública de I1-H02 a I1-H06 | [Propuesta S0](s0-public-endpoints.md) preparada para aprobación: baseline reutilizable y entrada exclusiva de `searchAcademicInstitutions`; todavía no autoriza implementación ni exposición. |
+| `S0_PUBLIC_ENDPOINTS` | `CLOSED` | Seguridad + Operaciones | I1-H02; cada endpoint público posterior hasta aprobar su propia entrada | [Decisión S0](s0-public-endpoints.md) aprobada expresamente por el Product Owner el 2026-09-27 sobre el commit `fec3b2ed3a5afa04d1c079bda4f2d8981efd5920`: baseline reutilizable y entrada exclusiva de `searchAcademicInstitutions`. |
 | `E0_EMAIL` | `PENDING` | Arquitectura + Operaciones + Seguridad + Privacidad/Legal | I1-H04 con correo real | Adapter, remitente/dominio, templates i18n, TTL, métricas, runbook, rol contractual, región, subencargados, retención/borrado, redacción e incident response aprobados. |
 | `CL0_CLOUD_STAGING` | `PENDING` | Producto + Arquitectura + Operaciones + Seguridad | Primer despliegue AWS de H05 y releases posteriores | Alcanzar `READY_FOR_APPLICATION` con cuenta, coste, OpenTofu, OIDC, SSM, ECR, secretos y la fixture sintética exclusiva de staging; cerrar solo después de desplegar/verificar H05, rollback y backup/restore. |
 
-Los gates son decisiones/evidencias y no historias de implementación. H01 está `DONE / ACCEPTED` por su aceptación local y no necesita desplegarse en AWS. `C0_CATALOG` está `CLOSED` por aprobación expresa del Product Owner el 2026-09-21 sobre el commit `e98e11655da7a8f37b6c26d180d6b7ca2d3e8e52`. S0 está `READY_FOR_OWNER_APPROVAL`, no `CLOSED`; H02 permanece `BLOCKED` únicamente hasta su cierre expreso. Ninguna nueva historia está autorizada; el siguiente trabajo autorizado es únicamente obtener la aprobación del Product Owner y cerrar `S0_PUBLIC_ENDPOINTS`. `B0`, `P0`, `E0` y `CL0` permanecen pendientes y no constituyen trabajo actualmente autorizado. `CL0` solo se cierra tras desplegar y verificar H05. Cerrar D0 o aceptar los ADR no habilita datos reales, correo real ni endpoints públicos mientras sus gates permanezcan pendientes.
+Los gates son decisiones/evidencias y no historias de implementación. H01 está `DONE / ACCEPTED` por su aceptación local y no necesita desplegarse en AWS. `C0_CATALOG` está `CLOSED` por aprobación expresa del Product Owner el 2026-09-21 sobre el commit `e98e11655da7a8f37b6c26d180d6b7ca2d3e8e52`. `S0_PUBLIC_ENDPOINTS` está `CLOSED` por aprobación expresa del Product Owner el 2026-09-27 sobre el commit `fec3b2ed3a5afa04d1c079bda4f2d8981efd5920`; I1-H02 pasa a `READY`, sin quedar iniciada ni implementada por este registro documental. I1-H03 y posteriores conservan sus gates y predecesoras, y cada endpoint público nuevo necesita una entrada de política propia revisada y aprobada. `B0`, `P0`, `E0` y `CL0` permanecen pendientes y no constituyen trabajo actualmente autorizado. `CL0` solo se cierra tras desplegar y verificar H05. Cerrar D0 o aceptar los ADR no habilita datos reales, correo real ni endpoints públicos mientras sus gates permanezcan pendientes.
 
 ### Baseline F0 aprobada
 
@@ -75,7 +75,7 @@ Antes de exponer una operación pública, Seguridad y Operaciones registran por 
 - métricas, umbrales, alertas y runbook sin PII;
 - pruebas de límite, recuperación, concurrencia y caída del adapter.
 
-La propuesta preparada para aprobación se documenta en
+La decisión aprobada se documenta en
 [`s0-public-endpoints.md`](s0-public-endpoints.md), se materializa como
 configuración en
 [`public-endpoint-rate-limits-v1.yaml`](../policies/public-endpoint-rate-limits-v1.yaml)
@@ -202,10 +202,10 @@ Si el correo ya pertenece a una cuenta, la respuesta continúa siendo genérica 
 |---|---|---|
 | I1-H01 | ADR-001, ADR-002, ADR-006, ADR-007, ADR-008, ADR-009 y ADR-012 | `D0_DECISIONS` cerrado. ADR-004 se difiere hasta la primera historia que use IDs, reloj o concurrencia. `CL0_CLOUD_STAGING` no bloquea el inicio ni el cierre local. |
 | I1-H02 | ADR-001, ADR-002, ADR-004, ADR-005, ADR-006, ADR-007, ADR-008, ADR-009 y ADR-012 | H01 + `C0_CATALOG` + `F0_CLIENT_BASELINE` + `S0_PUBLIC_ENDPOINTS`. |
-| I1-H03 | ADR-001 a ADR-009 y ADR-012 | H01 + `B0_COMPANY_EMAIL_POLICY` + `P0_PRIVACY` + `S0_PUBLIC_ENDPOINTS`. |
-| I1-H04 | ADR-001 a ADR-009 y ADR-012 | H03 + `E0_EMAIL` + `S0_PUBLIC_ENDPOINTS`. |
-| I1-H05 | ADR-001 a ADR-009 y ADR-012 | H04 + `S0_PUBLIC_ENDPOINTS`. |
-| I1-H06 | ADR-001 a ADR-009 | H04 + H05 + `P0_PRIVACY` + `S0_PUBLIC_ENDPOINTS`. |
+| I1-H03 | ADR-001 a ADR-009 y ADR-012 | H01 + `B0_COMPANY_EMAIL_POLICY` + `P0_PRIVACY` + entrada propia de rate limiting revisada y aprobada. |
+| I1-H04 | ADR-001 a ADR-009 y ADR-012 | H03 + `E0_EMAIL` + entradas propias de rate limiting revisadas y aprobadas. |
+| I1-H05 | ADR-001 a ADR-009 y ADR-012 | H04 + entradas propias de rate limiting revisadas y aprobadas. |
+| I1-H06 | ADR-001 a ADR-009 | H04 + H05 + `P0_PRIVACY` + entrada propia de rate limiting revisada y aprobada. |
 | I1-H07 | ADR-001 a ADR-009 | H02 + H06. |
 
 La matriz identifica adopción documental. La conformidad de cada ADR se demuestra en las pruebas y evidencias de la historia; aceptar un ADR no da por ejecutadas esas pruebas.
@@ -247,13 +247,13 @@ La matriz identifica adopción documental. La conformidad de cada ADR se demuest
 
 ### I1-H02 — Catálogo institucional consultable
 
-**Estado:** `BLOCKED`. No está `READY`; `C0_CATALOG` está `CLOSED` y el único gate pendiente es `S0_PUBLIC_ENDPOINTS`.
+**Estado:** `READY`. Todavía no iniciada ni implementada. H01 está `DONE / ACCEPTED`, y `F0_CLIENT_BASELINE`, `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS` están `CLOSED`.
 
 **Actor y valor:** visitante/estudiante; encuentra una universidad española sin que esta se registre.
 
 **Contexto propietario:** `academicinstitution`. Owners del dato: Producto + Datos mediante `C0_CATALOG`.
 
-**Precondición:** H01 terminada, `F0_CLIENT_BASELINE` y `C0_CATALOG` cerrados, y `S0_PUBLIC_ENDPOINTS` cerrado. La única precondición pendiente es `S0_PUBLIC_ENDPOINTS`.
+**Precondición:** H01 terminada, `F0_CLIENT_BASELINE`, `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS` cerrados. Las precondiciones para iniciar H02 están satisfechas; su implementación requiere un cambio posterior separado.
 
 **Estado inicial/final:** importación gobernada publicada → resultados públicos paginados; el catálogo no crea afiliación ni elegibilidad.
 
@@ -290,7 +290,7 @@ La matriz identifica adopción documental. La conformidad de cada ADR se demuest
 
 **Propietario del proceso:** `organization.CompanyOnboarding`; un handler durable invoca el puerto idempotente de `identity` fuera de la transacción de `organization`, y los resultados regresan mediante eventos.
 
-**Precondición:** H01 terminada; `B0_COMPANY_EMAIL_POLICY`, `P0_PRIVACY` y `S0_PUBLIC_ENDPOINTS` cerrados antes de usar datos reales o exponer el endpoint; rate limiting e idempotencia operativos.
+**Precondición:** H01 terminada; `B0_COMPANY_EMAIL_POLICY` y `P0_PRIVACY` cerrados, y entrada propia de rate limiting revisada y aprobada antes de usar datos reales o exponer el endpoint; rate limiting e idempotencia operativos. El cierre de S0 para H02 no satisface esta entrada.
 
 **Estado final:** onboarding `EMAIL_PENDING` o estado recuperable. Una solicitud que supera guards y validaciones devuelve `202` genérico sin confirmar existencia del correo o de la empresa; las políticas indisponibles, el aviso obsoleto y las violaciones de entrada conservan sus códigos estables.
 
@@ -330,7 +330,7 @@ Después, `EmailDomainRoutingVerificationPort` actúa como comprobación técnic
 
 **Contextos:** `identity`, `notifications` y reacción de `organization`.
 
-**Precondición:** H03 terminada y `E0_EMAIL` y `S0_PUBLIC_ENDPOINTS` cerrados antes de exponer verificación/reenvío o enviar correo real.
+**Precondición:** H03 terminada, `E0_EMAIL` cerrado y entradas propias de rate limiting revisadas y aprobadas antes de exponer verificación/reenvío o enviar correo real. El cierre de S0 para H02 no satisface estas entradas.
 
 **Estado inicial/final:** cuenta `PENDING_EMAIL` → `ACTIVE`; onboarding `EMAIL_PENDING` → `READY`; membership activa; empresa continúa `SELF_DECLARED`.
 
@@ -361,7 +361,7 @@ Después, `EmailDomainRoutingVerificationPort` actúa como comprobación técnic
 
 **Contextos:** `identity` y `organization` mediante contratos públicos.
 
-**Precondición:** H04 terminada y `S0_PUBLIC_ENDPOINTS` cerrado antes de exponer login, refresh o selección de tenant.
+**Precondición:** H04 terminada y entradas propias de rate limiting revisadas y aprobadas antes de exponer login, refresh o selección de tenant. El cierre de S0 para H02 no satisface estas entradas.
 
 **Estado final:** sesión refresh activa, access token en memoria y tenant autorizado seleccionado.
 
@@ -406,7 +406,7 @@ Después, `EmailDomainRoutingVerificationPort` actúa como comprobación técnic
 - responde `202` genérico y reutiliza creación inicial de credencial/reenvío sin mezclar formularios;
 - formulario y confirmación de estudiante con textos i18n.
 
-**Precondición:** H04 y H05 terminadas; `P0_PRIVACY` y `S0_PUBLIC_ENDPOINTS` cerrados antes de usar datos reales o exponer el endpoint.
+**Precondición:** H04 y H05 terminadas; `P0_PRIVACY` cerrado y entrada propia de rate limiting revisada y aprobada antes de usar datos reales o exponer el endpoint. El cierre de S0 para H02 no satisface esta entrada.
 
 **Invariantes:** correo único global; cuenta nueva usa `INITIAL_CREDENTIAL_SETUP`; cuenta existente usa `ONBOARDING_CONTINUATION` y exige autenticación/reautenticación; no se crea duplicado ni se enlaza silenciosamente; email institucional es indicio, no elegibilidad.
 
@@ -513,7 +513,7 @@ git status --short
 - `C0_CATALOG`: `CLOSED` por aprobación expresa del Product Owner el 2026-09-21 sobre el commit `e98e11655da7a8f37b6c26d180d6b7ca2d3e8e52`.
 - `B0_COMPANY_EMAIL_POLICY`: el código y la lista de V1 ya fueron contrastados; falta revisar cobertura, aprobar/publicar la versión inicial y demostrar actualización, rollback, política determinista, MX principal, `INDETERMINATE` no bloqueante y tests sin DNS real antes de I1-H03.
 - `P0_PRIVACY`: finalidad, datos, base jurídica, evidencia, derechos y retención ML-15 antes de I1-H03/I1-H06 con datos reales.
-- `S0_PUBLIC_ENDPOINTS`: `READY_FOR_OWNER_APPROVAL`; la [propuesta](s0-public-endpoints.md) define la baseline y únicamente `searchAcademicInstitutions`. Sigue sin estar `CLOSED`, no autoriza endpoints de H03-H06 y mantiene H02 bloqueada hasta aprobación expresa.
+- `S0_PUBLIC_ENDPOINTS`: `CLOSED` por aprobación expresa del Product Owner el 2026-09-27 sobre el commit `fec3b2ed3a5afa04d1c079bda4f2d8981efd5920`; la [decisión](s0-public-endpoints.md) define la baseline y autoriza únicamente `searchAcademicInstitutions`. No autoriza endpoints de H03-H06.
 - `E0_EMAIL`: proveedor, remitente, templates i18n, rol contractual, región/subencargados, retención/borrado, redacción, incident response y configuración operativa antes de I1-H04 con correo real.
 - `CL0_CLOUD_STAGING`: permanece `PENDING`; debe alcanzar `READY_FOR_APPLICATION` con los controles de `cl0-cloud-staging-checklist.md` y solo pasa a `CLOSED` tras desplegar y verificar H05. No bloquea el cierre local de H01–H05.
 - Verificación empresarial: se diseñará antes de `G1_PUBLICATION` en el Incremento 2.
@@ -524,10 +524,10 @@ git status --short
 La revisión 7 conserva resueltos BF-01 a BF-04, acepta ADR-009 revisión 3, ADR-011 revisión 1 y ADR-012 revisión 1, y mantiene `D0_DECISIONS` cerrado. Tras la aceptación documental de H01:
 
 - I1-H01 está `DONE / ACCEPTED` y no debe volver a implementarse;
-- `S0_PUBLIC_ENDPOINTS` está `READY_FOR_OWNER_APPROVAL`, no `CLOSED`; la aprobación debe referirse a un commit concreto;
-- I1-H02 permanece `BLOCKED` y no debe marcarse `READY` hasta el cierre expreso de `S0_PUBLIC_ENDPOINTS`, su único gate pendiente;
-- ninguna nueva historia está autorizada todavía;
-- el siguiente trabajo autorizado es únicamente obtener la aprobación y cerrar `S0_PUBLIC_ENDPOINTS`;
+- `S0_PUBLIC_ENDPOINTS` está `CLOSED` por aprobación expresa del Product Owner el 2026-09-27 sobre el commit `fec3b2ed3a5afa04d1c079bda4f2d8981efd5920`;
+- I1-H02 está `READY`; este registro documental no inicia ni implementa la historia;
+- el siguiente trabajo que puede autorizarse como cambio separado es I1-H02;
+- la aprobación S0 autoriza únicamente `searchAcademicInstitutions`; no autoriza endpoints de I1-H03 a I1-H06, que requieren entradas de política propias revisadas y aprobadas;
 - I1-H03 a I1-H06 permanecen bloqueadas por los gates y predecesoras indicados en la matriz;
 - I1-H07 permanece bloqueada por sus predecesoras;
 - `CL0_CLOUD_STAGING` permanece `PENDING`, no se declara `staging` desplegado y ninguna mutación AWS se ejecuta sin autorización explícita;

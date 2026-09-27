@@ -3,8 +3,11 @@ kind: PublicEndpointRateLimitPolicy
 metadata:
   policyId: public-endpoint-rate-limits
   version: 1
-  status: READY_FOR_OWNER_APPROVAL
+  status: CLOSED
   preparedAt: 2026-09-21
+  approvedAt: 2026-09-27
+  approvedCommit: fec3b2ed3a5afa04d1c079bda4f2d8981efd5920
+  approvedBy: PRODUCT_OWNER
   owners:
     - SECURITY
     - OPERATIONS
