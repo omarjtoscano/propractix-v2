@@ -48,8 +48,7 @@ public final class CatalogImport {
         this.createdAt = Objects.requireNonNull(createdAt, "createdAt must not be null");
         this.publishedAt = Objects.requireNonNull(publishedAt, "publishedAt must not be null");
         this.supersededAt = Objects.requireNonNull(supersededAt, "supersededAt must not be null");
-        this.previousPublishedImportId = Objects.requireNonNull(
-                previousPublishedImportId, "previousPublishedImportId must not be null");
+        this.previousPublishedImportId = requirePreviousPublishedImportId(id, previousPublishedImportId);
         this.failureCode = Objects.requireNonNull(failureCode, "failureCode must not be null");
     }
 
@@ -172,6 +171,15 @@ public final class CatalogImport {
             throw new IllegalArgumentException(fieldName + " must not be negative");
         }
         return value;
+    }
+
+    private static Optional<CatalogImportId> requirePreviousPublishedImportId(
+            CatalogImportId id, Optional<CatalogImportId> previousPublishedImportId) {
+        Objects.requireNonNull(previousPublishedImportId, "previousPublishedImportId must not be null");
+        if (previousPublishedImportId.filter(id::equals).isPresent()) {
+            throw new IllegalArgumentException("previousPublishedImportId must differ from id");
+        }
+        return previousPublishedImportId;
     }
 
     private static String requireNonBlank(String value, String fieldName) {

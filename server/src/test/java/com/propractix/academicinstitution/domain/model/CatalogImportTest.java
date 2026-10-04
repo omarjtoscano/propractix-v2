@@ -73,6 +73,41 @@ class CatalogImportTest {
                         Optional.empty()));
     }
 
+    @Test
+    void previousPublishedImportCannotReferenceTheImportItself() {
+        CatalogImportId id = CatalogImportId.from("223e4567-e89b-42d3-a456-426614174000");
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> CatalogImport.published(
+                        id,
+                        "academic-institution-catalog/v1",
+                        metadata("a".repeat(64)),
+                        3,
+                        2,
+                        1,
+                        PUBLISHED_AT,
+                        Optional.of(id)));
+    }
+
+    @Test
+    void previousPublishedImportMayBeAbsentOrReferenceAnotherImport() {
+        CatalogImport withoutPrevious = publishedImport("a".repeat(64));
+        CatalogImportId previousId = CatalogImportId.from("223e4567-e89b-42d3-a456-426614174001");
+        CatalogImport withPrevious = CatalogImport.published(
+                CatalogImportId.from("223e4567-e89b-42d3-a456-426614174000"),
+                "academic-institution-catalog/v1",
+                metadata("b".repeat(64)),
+                3,
+                2,
+                1,
+                PUBLISHED_AT,
+                Optional.of(previousId));
+
+        assertEquals(Optional.empty(), withoutPrevious.previousPublishedImportId());
+        assertEquals(Optional.of(previousId), withPrevious.previousPublishedImportId());
+    }
+
     private static CatalogImport publishedImport(String hash) {
         return CatalogImport.published(
                 CatalogImportId.from("223e4567-e89b-42d3-a456-426614174000"),
