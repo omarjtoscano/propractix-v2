@@ -247,13 +247,13 @@ La matriz identifica adopción documental. La conformidad de cada ADR se demuest
 
 ### I1-H02 — Catálogo institucional consultable
 
-**Estado:** `READY`. Todavía no iniciada ni implementada. H01 está `DONE / ACCEPTED`, y `F0_CLIENT_BASELINE`, `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS` están `CLOSED`.
+**Estado:** `IN_PROGRESS`. Únicamente `E1 — Dominio e invariantes` está autorizada y en ejecución; no está `ACCEPTED`. H01 está `DONE / ACCEPTED`, y `F0_CLIENT_BASELINE`, `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS` están `CLOSED`.
 
 **Actor y valor:** visitante/estudiante; encuentra una universidad española sin que esta se registre.
 
 **Contexto propietario:** `academicinstitution`. Owners del dato: Producto + Datos mediante `C0_CATALOG`.
 
-**Precondición:** H01 terminada, `F0_CLIENT_BASELINE`, `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS` cerrados. Las precondiciones para iniciar H02 están satisfechas; su implementación requiere un cambio posterior separado.
+**Precondición:** H01 terminada, `F0_CLIENT_BASELINE`, `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS` cerrados. Las precondiciones están satisfechas y se ha autorizado E1 como cambio separado; E2 y las entregas posteriores continúan sin autorización.
 
 **Estado inicial/final:** importación gobernada publicada → resultados públicos paginados; el catálogo no crea afiliación ni elegibilidad.
 
@@ -525,8 +525,8 @@ La revisión 7 conserva resueltos BF-01 a BF-04, acepta ADR-009 revisión 3, ADR
 
 - I1-H01 está `DONE / ACCEPTED` y no debe volver a implementarse;
 - `S0_PUBLIC_ENDPOINTS` está `CLOSED` por aprobación expresa del Product Owner el 2026-09-27 sobre el commit `fec3b2ed3a5afa04d1c079bda4f2d8981efd5920`;
-- I1-H02 está `READY`; este registro documental no inicia ni implementa la historia;
-- el siguiente trabajo que puede autorizarse como cambio separado es I1-H02;
+- I1-H02 está `IN_PROGRESS`; únicamente E1 está autorizada y permanece pendiente de aceptación;
+- E2 y las entregas posteriores requieren una autorización separada;
 - la aprobación S0 autoriza únicamente `searchAcademicInstitutions`; no autoriza endpoints de I1-H03 a I1-H06, que requieren entradas de política propias revisadas y aprobadas;
 - I1-H03 a I1-H06 permanecen bloqueadas por los gates y predecesoras indicados en la matriz;
 - I1-H07 permanece bloqueada por sus predecesoras;

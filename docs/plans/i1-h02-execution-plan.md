@@ -5,16 +5,16 @@
 - Commit aprobado: `5f64aeb9e4ef4fd1c0deae845b0607407fe9133b`
 - Autorización de ejecución: después del merge de la PR documental, únicamente `E1 — Dominio e invariantes`
 - Historia: `I1-H02`
-- Estado de la historia: `READY`; no iniciada ni implementada por este documento
-- Rama prevista: `feature/i1-h02-academic-institution-catalog`
+- Estado de la historia: `IN_PROGRESS`; únicamente E1 está en ejecución y no está aceptada
+- Rama de ejecución de E1: `feature/i1-h02-e1-domain`
 - Contexto propietario: `academicinstitution`
 - Endpoint autorizado: `GET /api/v1/academic-institutions`
 - `operationId`: `searchAcademicInstitutions`
 - Gates de entrada: H01 `DONE / ACCEPTED`; `F0_CLIENT_BASELINE`,
   `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS` `CLOSED`
 
-Este documento concreta la ejecución técnica de H02. No reabre C0 ni S0, no
-implementa la historia, no modifica `CL0_CLOUD_STAGING` y no autoriza ningún
+Este documento concreta la ejecución técnica de H02. El inicio de E1 no reabre
+C0 ni S0, no modifica `CL0_CLOUD_STAGING`, no autoriza E2 ni expone ningún
 endpoint adicional.
 
 ## 1. Fuentes y decisiones aplicables
@@ -738,6 +738,8 @@ clase son previstos; podrán ajustarse sin cambiar los límites descritos.
 
 ### E1 — Dominio e invariantes
 
+Estado: `IN_PROGRESS`; única entrega autorizada. No está `ACCEPTED`.
+
 Archivos previstos:
 
 - `server/src/main/java/com/propractix/academicinstitution/domain/model/AcademicInstitution.java`
@@ -971,9 +973,9 @@ capturas o trazas E2E sin PII y riesgos residuales.
 
 ## 20. Decisiones aceptadas para la ejecución
 
-Estas decisiones forman parte del plan aprobado. La aprobación no inicia
-I1-H02: la historia permanece `READY` hasta el merge de la PR documental y,
-después de ese merge, solo queda autorizada `E1 — Dominio e invariantes`:
+Estas decisiones forman parte del plan aprobado. Tras el merge de la PR
+documental, I1-H02 está `IN_PROGRESS` y solo está autorizada
+`E1 — Dominio e invariantes`, que permanece pendiente de aceptación:
 
 | Decisión aceptada | Aplicación |
 |---|---|
