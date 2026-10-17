@@ -3,19 +3,22 @@
 - Estado del plan: `APPROVED`
 - Aprobación: Product Owner, 2026-09-27
 - Commit aprobado: `5f64aeb9e4ef4fd1c0deae845b0607407fe9133b`
-- Autorización de ejecución: después del merge de la PR documental, únicamente `E1 — Dominio e invariantes`
+- Autorización vigente: `E1 — Dominio e invariantes` está `ACCEPTED`; E2 y las entregas posteriores no están autorizadas
 - Historia: `I1-H02`
-- Estado de la historia: `READY`; no iniciada ni implementada por este documento
-- Rama prevista: `feature/i1-h02-academic-institution-catalog`
+- Estado de la historia: `IN_PROGRESS`; E1 está `ACCEPTED` y no se ha autorizado la siguiente entrega
+- Rama de ejecución de E1: `feature/i1-h02-e1-domain`
+- Aprobación de E1: Product Owner, 2026-10-17
+- Commit funcional aprobado de E1: `ff7567a3bed1cd4465925f983f58fcaf09c7c1f1`
+- Evidencias sobre el commit funcional aprobado: [CI #22](https://github.com/omarjtoscano/propractix-v2/actions/runs/39019138180) y [Build OCI release candidate #5](https://github.com/omarjtoscano/propractix-v2/actions/runs/39019138091), ambos correctos; `dependency-and-filesystem-scan`, incluido Trivy, en verde
 - Contexto propietario: `academicinstitution`
 - Endpoint autorizado: `GET /api/v1/academic-institutions`
 - `operationId`: `searchAcademicInstitutions`
 - Gates de entrada: H01 `DONE / ACCEPTED`; `F0_CLIENT_BASELINE`,
   `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS` `CLOSED`
 
-Este documento concreta la ejecución técnica de H02. No reabre C0 ni S0, no
-implementa la historia, no modifica `CL0_CLOUD_STAGING` y no autoriza ningún
-endpoint adicional.
+Este documento concreta la ejecución técnica de H02. La aceptación de E1 no
+reabre C0 ni S0, no modifica `CL0_CLOUD_STAGING`, no autoriza E2 ni expone
+ningún endpoint adicional.
 
 ## 1. Fuentes y decisiones aplicables
 
@@ -738,6 +741,14 @@ clase son previstos; podrán ajustarse sin cambiar los límites descritos.
 
 ### E1 — Dominio e invariantes
 
+Estado: `ACCEPTED`. El Product Owner aprobó E1 el 2026-10-17 sobre el commit
+funcional `ff7567a3bed1cd4465925f983f58fcaf09c7c1f1`. La evidencia asociada es
+[CI #22](https://github.com/omarjtoscano/propractix-v2/actions/runs/39019138180)
+y [Build OCI release candidate #5](https://github.com/omarjtoscano/propractix-v2/actions/runs/39019138091),
+ambos correctos; `dependency-and-filesystem-scan`, incluido Trivy, está en
+verde. Esta aceptación parcial mantiene I1-H02 `IN_PROGRESS`, no autoriza E2
+ni entregas posteriores y no modifica `CL0_CLOUD_STAGING`.
+
 Archivos previstos:
 
 - `server/src/main/java/com/propractix/academicinstitution/domain/model/AcademicInstitution.java`
@@ -971,9 +982,9 @@ capturas o trazas E2E sin PII y riesgos residuales.
 
 ## 20. Decisiones aceptadas para la ejecución
 
-Estas decisiones forman parte del plan aprobado. La aprobación no inicia
-I1-H02: la historia permanece `READY` hasta el merge de la PR documental y,
-después de ese merge, solo queda autorizada `E1 — Dominio e invariantes`:
+Estas decisiones forman parte del plan aprobado. I1-H02 permanece
+`IN_PROGRESS`; `E1 — Dominio e invariantes` está `ACCEPTED` por el Product
+Owner desde el 2026-10-17 y E2 y las entregas posteriores no están autorizadas:
 
 | Decisión aceptada | Aplicación |
 |---|---|
@@ -990,7 +1001,6 @@ después de ese merge, solo queda autorizada `E1 — Dominio e invariantes`:
 | Librería CSV, si se propone una en implementación | Solo se aceptará una utilidad fijada, con licencia/dependencias revisadas; no puede cambiar el contrato ni convertirse en librería estructural. Un parser propio estricto es la alternativa. | Revisión técnica ordinaria; no ADR salvo cambio estructural. |
 | Deriva del formato RUCT real | El procedimiento aceptado de doble revisión detecta cambios; un mapeo ambiguo bloquea esa publicación sin alterar el snapshot vigente. | Producto + Datos resuelven la ambigüedad concreta antes de publicar; no reabre C0. |
 
-No hay contradicción que obligue a crear un ADR. La aprobación del plan no
-autoriza código antes del merge de la PR documental. Después de ese merge solo
-se autoriza `E1 — Dominio e invariantes`; no se autoriza AWS, otro endpoint ni
-una ampliación funcional de H02.
+No hay contradicción que obligue a crear un ADR. La aceptación de E1 no
+autoriza E2 ni entregas posteriores, AWS, otro endpoint ni una ampliación
+funcional de H02. `CL0_CLOUD_STAGING` permanece sin cambios.
