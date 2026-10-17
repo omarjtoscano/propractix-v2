@@ -46,7 +46,7 @@ No se inicia implementación no desechable hasta que los ADR aplicables estén e
 | `E0_EMAIL` | `PENDING` | Arquitectura + Operaciones + Seguridad + Privacidad/Legal | I1-H04 con correo real | Adapter, remitente/dominio, templates i18n, TTL, métricas, runbook, rol contractual, región, subencargados, retención/borrado, redacción e incident response aprobados. |
 | `CL0_CLOUD_STAGING` | `PENDING` | Producto + Arquitectura + Operaciones + Seguridad | Primer despliegue AWS de H05 y releases posteriores | Alcanzar `READY_FOR_APPLICATION` con cuenta, coste, OpenTofu, OIDC, SSM, ECR, secretos y la fixture sintética exclusiva de staging; cerrar solo después de desplegar/verificar H05, rollback y backup/restore. |
 
-Los gates son decisiones/evidencias y no historias de implementación. H01 está `DONE / ACCEPTED` por su aceptación local y no necesita desplegarse en AWS. `C0_CATALOG` está `CLOSED` por aprobación expresa del Product Owner el 2026-09-21 sobre el commit `e98e11655da7a8f37b6c26d180d6b7ca2d3e8e52`. `S0_PUBLIC_ENDPOINTS` está `CLOSED` por aprobación expresa del Product Owner el 2026-09-27 sobre el commit `fec3b2ed3a5afa04d1c079bda4f2d8981efd5920`; tras ese cierre, I1-H02 pasó a `READY`. Actualmente I1-H02 está `IN_PROGRESS` únicamente con `E1 — Dominio e invariantes` autorizada y pendiente de aceptación; E2 no está autorizada. I1-H03 y posteriores conservan sus gates y predecesoras, y cada endpoint público nuevo necesita una entrada de política propia revisada y aprobada. `B0`, `P0`, `E0` y `CL0` permanecen pendientes y no constituyen trabajo actualmente autorizado. `CL0` solo se cierra tras desplegar y verificar H05. Cerrar D0 o aceptar los ADR no habilita datos reales, correo real ni endpoints públicos mientras sus gates permanezcan pendientes.
+Los gates son decisiones/evidencias y no historias de implementación. H01 está `DONE / ACCEPTED` por su aceptación local y no necesita desplegarse en AWS. `C0_CATALOG` está `CLOSED` por aprobación expresa del Product Owner el 2026-09-21 sobre el commit `e98e11655da7a8f37b6c26d180d6b7ca2d3e8e52`. `S0_PUBLIC_ENDPOINTS` está `CLOSED` por aprobación expresa del Product Owner el 2026-09-27 sobre el commit `fec3b2ed3a5afa04d1c079bda4f2d8981efd5920`; tras ese cierre, I1-H02 pasó a `READY`. Actualmente I1-H02 permanece `IN_PROGRESS` y `E1 — Dominio e invariantes` está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-17 sobre el commit funcional `ff7567a3bed1cd4465925f983f58fcaf09c7c1f1`; E2 y las entregas posteriores no están autorizadas. I1-H03 y posteriores conservan sus gates y predecesoras, y cada endpoint público nuevo necesita una entrada de política propia revisada y aprobada. `B0`, `P0`, `E0` y `CL0` permanecen pendientes y no constituyen trabajo actualmente autorizado. `CL0` no cambia y solo se cierra tras desplegar y verificar H05. Cerrar D0 o aceptar los ADR no habilita datos reales, correo real ni endpoints públicos mientras sus gates permanezcan pendientes.
 
 ### Baseline F0 aprobada
 
@@ -247,13 +247,15 @@ La matriz identifica adopción documental. La conformidad de cada ADR se demuest
 
 ### I1-H02 — Catálogo institucional consultable
 
-**Estado:** `IN_PROGRESS`. Únicamente `E1 — Dominio e invariantes` está autorizada y en ejecución; no está `ACCEPTED`. H01 está `DONE / ACCEPTED`, y `F0_CLIENT_BASELINE`, `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS` están `CLOSED`.
+**Estado:** `IN_PROGRESS`. `E1 — Dominio e invariantes` está `ACCEPTED`; E2 y las entregas posteriores no están autorizadas. H01 está `DONE / ACCEPTED`, y `F0_CLIENT_BASELINE`, `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS` están `CLOSED`.
+
+**Aceptación de E1:** el Product Owner aprobó E1 el 2026-10-17 sobre el commit funcional `ff7567a3bed1cd4465925f983f58fcaf09c7c1f1`. [CI #22](https://github.com/omarjtoscano/propractix-v2/actions/runs/39019138180) y [Build OCI release candidate #5](https://github.com/omarjtoscano/propractix-v2/actions/runs/39019138091) terminaron correctamente; `dependency-and-filesystem-scan`, incluido Trivy, está en verde. Esta aceptación parcial no cierra I1-H02 ni modifica `CL0_CLOUD_STAGING`.
 
 **Actor y valor:** visitante/estudiante; encuentra una universidad española sin que esta se registre.
 
 **Contexto propietario:** `academicinstitution`. Owners del dato: Producto + Datos mediante `C0_CATALOG`.
 
-**Precondición:** H01 terminada, `F0_CLIENT_BASELINE`, `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS` cerrados. Las precondiciones están satisfechas y se ha autorizado E1 como cambio separado; E2 y las entregas posteriores continúan sin autorización.
+**Precondición:** H01 terminada, `F0_CLIENT_BASELINE`, `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS` cerrados. Las precondiciones están satisfechas y E1 ha sido aceptada como cambio separado; E2 y las entregas posteriores continúan sin autorización.
 
 **Estado inicial/final:** importación gobernada publicada → resultados públicos paginados; el catálogo no crea afiliación ni elegibilidad.
 
@@ -525,7 +527,7 @@ La revisión 7 conserva resueltos BF-01 a BF-04, acepta ADR-009 revisión 3, ADR
 
 - I1-H01 está `DONE / ACCEPTED` y no debe volver a implementarse;
 - `S0_PUBLIC_ENDPOINTS` está `CLOSED` por aprobación expresa del Product Owner el 2026-09-27 sobre el commit `fec3b2ed3a5afa04d1c079bda4f2d8981efd5920`;
-- I1-H02 está `IN_PROGRESS`; únicamente E1 está autorizada y permanece pendiente de aceptación;
+- I1-H02 permanece `IN_PROGRESS`; E1 está `ACCEPTED` por el Product Owner desde el 2026-10-17 sobre el commit funcional `ff7567a3bed1cd4465925f983f58fcaf09c7c1f1`;
 - E2 y las entregas posteriores requieren una autorización separada;
 - la aprobación S0 autoriza únicamente `searchAcademicInstitutions`; no autoriza endpoints de I1-H03 a I1-H06, que requieren entradas de política propias revisadas y aprobadas;
 - I1-H03 a I1-H06 permanecen bloqueadas por los gates y predecesoras indicados en la matriz;
