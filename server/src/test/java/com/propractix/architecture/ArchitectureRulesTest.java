@@ -55,6 +55,15 @@ class ArchitectureRulesTest {
             .allowEmptyShould(true);
 
     @ArchTest
+    static final ArchRule academic_institution_application_is_framework_free = noClasses()
+            .that().resideInAPackage("com.propractix.academicinstitution.application..")
+            .should().dependOnClassesThat().resideInAnyPackage(
+                    "org.springframework..", "jakarta.persistence..", "com.fasterxml.jackson..",
+                    "jakarta.servlet..", "io.micrometer..", "software.amazon.awssdk..",
+                    "com.amazonaws..")
+            .allowEmptyShould(true);
+
+    @ArchTest
     static final ArchRule rest_adapters_are_not_consumed_inward = noClasses()
             .that().resideInAnyPackage("..domain..", "..application..")
             .should().dependOnClassesThat().resideInAPackage("..adapter.in.rest..")
