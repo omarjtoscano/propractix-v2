@@ -3,22 +3,22 @@ import { initReactI18next } from 'react-i18next';
 import { productCatalog } from '../../configuration/productCatalog';
 import en from './locales/en.json';
 import es from './locales/es.json';
+import { readLocalePreference, resolveLocale } from './locale';
 
 const resources = {
   en: { translation: en },
   es: { translation: es },
 };
-const requestedLocale = globalThis.navigator?.language?.split('-')[0];
-const browserLocale = requestedLocale !== undefined
-    && productCatalog.supportedLocales.includes(requestedLocale)
-  ? requestedLocale
-  : productCatalog.fallbackLocale;
+const initialLocale = resolveLocale({
+  userLocale: readLocalePreference(),
+  browserLocales: globalThis.navigator?.languages,
+});
 
 void i18n.use(initReactI18next).init({
   resources,
   supportedLngs: productCatalog.supportedLocales,
   fallbackLng: productCatalog.fallbackLocale,
-  lng: browserLocale,
+  lng: initialLocale,
   interpolation: {
     escapeValue: false,
   },

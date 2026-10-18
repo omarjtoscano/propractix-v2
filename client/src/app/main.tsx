@@ -1,10 +1,12 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import i18n from '../shared/i18n';
+import { syncDocumentLanguage } from '../shared/i18n/documentLanguage';
 import { App } from './App';
+import { AppErrorBoundary } from './AppErrorBoundary';
 
-document.documentElement.lang = i18n.resolvedLanguage ?? 'es';
-document.title = i18n.t('foundation.title');
+syncDocumentLanguage();
+i18n.on('languageChanged', syncDocumentLanguage);
 
 const root = document.getElementById('root');
 if (root === null) {
@@ -13,6 +15,8 @@ if (root === null) {
 
 createRoot(root).render(
   <StrictMode>
-    <App />
+    <AppErrorBoundary>
+      <App />
+    </AppErrorBoundary>
   </StrictMode>,
 );

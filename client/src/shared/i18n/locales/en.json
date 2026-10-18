@@ -2,5 +2,21 @@
   "foundation": {
     "title": "ProPractix",
     "description": "Technical foundation ready"
+  },
+  "actions": {
+    "retry": "Try again"
+  },
+  "locales": {
+    "label": "Language",
+    "es": "Spanish",
+    "en": "English"
+  },
+  "errors": {
+    "unexpected_error": "The operation could not be completed. Please try again.",
+    "validation_error": "Check the information you entered.",
+    "catalog_snapshot_changed": "The catalog has been updated. Run your search again.",
+    "rate_limited": "You have made too many requests. Wait before trying again.",
+    "rate_limiter_unavailable": "The service is temporarily unavailable. Please try again later.",
+    "academic_institution_catalog_unavailable": "The university catalog is temporarily unavailable."
   }
 }

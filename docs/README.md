@@ -34,6 +34,7 @@
 30. [Runbook de rate limiting](operations/rate-limiting-runbook.md).
 31. [Evaluación de S0_PUBLIC_ENDPOINTS](reviews/s0-public-endpoints-assessment.md).
 32. [Plan de ejecución de I1-H02 — Catálogo institucional consultable](plans/i1-h02-execution-plan.md).
+33. [Internacionalización y presentación de errores ES/EN](development/i18n-and-errors.md).
 
 ## Estado de decisión
 

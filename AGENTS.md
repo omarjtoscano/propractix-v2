@@ -48,6 +48,9 @@ Si dos documentos se contradicen, detente y solicita una decisión. Un ADR acept
 - La política ausente sí mantiene H03 cerrada; no confundas esa configuración obligatoria con un fallo transitorio de DNS.
 - Toda etiqueta, acción, estado, ayuda, validación o error visible usa una clave i18n; no incrustes textos de presentación en Java, TypeScript o JSX.
 - API, dominio y persistencia conservan códigos estables independientes del idioma.
+- La UI presenta errores mediante `ErrorMessage` y su código público registrado en los catálogos. Nunca renderiza directamente `Error.message`, `ProblemDetail.title`, `detail` o prosa de `violations`; un código desconocido usa el error genérico traducido.
+- Los mensajes de excepciones de programación, configuración y logs son diagnósticos internos; no necesitan traducción de presentación y no deben exponerse al usuario. La salida administrativa por códigos conserva su contrato independiente del idioma.
+- La corrección i18n solicitada por el Product Owner el 2026-10-18 se revisa en `feature/i1-h02-i18n-errors`, basada en E4. Incluye errores ES/EN, selector/preferencia, resolución de locale y controles del cliente; no inicia E5A ni acepta E4. Consulta [la guía i18n](docs/development/i18n-and-errors.md).
 - Los textos legales se versionan separadamente de los catálogos generales de traducción.
 - Las invariantes técnicas permanecen tipadas en código; no se convierten en configuración libre para aparentar flexibilidad.
 
