@@ -1,15 +1,18 @@
 # Evidencia de implementación de I1-H02 E3
 
 - Entrega: `E3 — Esquema y persistencia del catálogo`
-- Estado: `IN_PROGRESS`
+- Estado: `ACCEPTED`
 - Rama: `feature/i1-h02-e3-catalog-persistence`
 - Base integrada de E2: `51e2fdf47841cce78a30a0189c3da3e3feff0c5c`
+- Aprobación: Product Owner, 2026-10-18
+- Commit funcional aprobado: `56e2949523f6e4a6dedf76ac448d2cf60263e7d1`
 - Fecha de validación local: 2026-10-18
 - Base de datos de integración: PostgreSQL 16.15 mediante Testcontainers
 
-Este registro reúne la evidencia técnica previa a solicitar aceptación. No
-declara E3 `ACCEPTED`, no cierra I1-H02 y no autoriza E4 ni entregas
-posteriores.
+Este registro reúne la evidencia técnica aceptada expresamente por el Product
+Owner, incluida la corrección del tratamiento de `TransactionException`. La
+aceptación de E3 no cierra I1-H02, que permanece `IN_PROGRESS`, y no autoriza E4
+ni entregas posteriores.
 
 ## Alcance verificado
 
@@ -94,5 +97,12 @@ comparar el artefacto activo.
 | `npm run check` | Correcto; baseline, gate de despliegue, OpenAPI, servidor y cliente |
 | `git diff --check` | Correcto |
 
-Las comprobaciones remotas de CI, Trivy y Build OCI se registrarán en la Draft
-PR cuando GitHub Actions termine sobre el commit de E3.
+## Evidencia remota aceptada
+
+- [CI #28](https://github.com/omarjtoscano/propractix-v2/actions/runs/39129965336): correcto.
+- `dependency-and-filesystem-scan`, incluido Trivy: correcto.
+- [Build OCI release candidate #11](https://github.com/omarjtoscano/propractix-v2/actions/runs/39129965191): correcto.
+
+La aceptación corresponde al commit funcional indicado. El commit documental
+que registra esta decisión debe superar nuevamente CI, Trivy y Build OCI antes
+de considerar completado el registro, sin fusionar la Draft PR.
