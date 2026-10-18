@@ -24,6 +24,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.JdbcTransactionManager;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Component
@@ -64,7 +65,10 @@ public final class PostgresCatalogPublicationAdapter implements CatalogPublicati
         } catch (ReconciliationConflictException | DuplicateKeyException exception) {
             LOGGER.warn("Catalog publication rejected with category=reconciliation_conflict");
             return new Rejected(Failure.RECONCILIATION_CONFLICT);
-        } catch (DataAccessException | PersistenceMappingException | IllegalArgumentException exception) {
+        } catch (DataAccessException
+                | TransactionException
+                | PersistenceMappingException
+                | IllegalArgumentException exception) {
             LOGGER.error("Catalog publication rejected with category=storage_failure");
             return new Rejected(Failure.STORAGE_FAILURE);
         }

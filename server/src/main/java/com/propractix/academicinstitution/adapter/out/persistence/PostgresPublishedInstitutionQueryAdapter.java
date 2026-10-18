@@ -14,6 +14,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.JdbcTransactionManager;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Component
@@ -39,7 +40,10 @@ public final class PostgresPublishedInstitutionQueryAdapter implements Published
         try {
             SearchOutcome outcome = transactionTemplate.execute(status -> searchConsistentSnapshot(request));
             return Objects.requireNonNull(outcome, "search transaction returned no outcome");
-        } catch (DataAccessException | PersistenceMappingException | IllegalArgumentException exception) {
+        } catch (DataAccessException
+                | TransactionException
+                | PersistenceMappingException
+                | IllegalArgumentException exception) {
             LOGGER.error("Academic institution catalog query failed with category=storage_failure");
             return new CatalogUnavailable(Failure.READ_FAILED);
         }

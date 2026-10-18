@@ -30,8 +30,10 @@ posteriores.
 
 ## Pruebas PostgreSQL 16
 
-`CatalogPersistenceIntegrationTest` ejecuta nueve pruebas sobre una instancia
-real `postgres:16-alpine` y cubre:
+`CatalogPersistenceIntegrationTest` ejecuta once pruebas; las pruebas de
+persistencia usan una instancia real `postgres:16-alpine` y las de apertura de
+transacción usan un `DataSource` controlado incapaz de obtener una conexión. El
+conjunto cubre:
 
 1. migración Flyway desde esquema vacío y constraints de UUID v4, snapshot
    publicado único y referencia externa única;
@@ -46,7 +48,22 @@ real `postgres:16-alpine` y cubre:
 7. búsqueda filtrada y paginación keyset sin cargar el catálogo completo;
 8. rechazo consistente de un cursor ligado a un snapshot anterior;
 9. competencia real entre dos publicadores, donde el segundo no espera el lock
-   y devuelve `PublicationInProgress` antes de dos segundos.
+   y devuelve `PublicationInProgress` antes de dos segundos;
+10. indisponibilidad al abrir la transacción de publicación, convertida en
+    `Rejected(STORAGE_FAILURE)` sin propagar `TransactionException`;
+11. indisponibilidad al abrir la transacción de consulta, convertida en
+    `CatalogUnavailable(READ_FAILED)` sin propagar `TransactionException`.
+
+## Fallo al abrir la transacción y sanitización
+
+Las pruebas `publicationMapsTransactionOpeningFailureToSanitizedStorageFailure`
+y `queryMapsTransactionOpeningFailureToSanitizedReadFailure` usan un
+`DataSource` que rechaza toda conexión con una `SQLException` cuyo mensaje de
+prueba contiene una URL JDBC, usuario, contraseña, SQL y un detalle interno.
+`JdbcTransactionManager` la convierte en una `TransactionException`. Se
+verifica que ninguno de los dos puertos propaga la excepción, que cada adapter
+devuelve su fallo tipado y que ni el resultado ni el evento capturado de Logback
+contienen ninguno de esos datos o un throwable asociado.
 
 ## Atomicidad y rollback
 
@@ -72,8 +89,8 @@ comparar el artefacto activo.
 | Comando | Resultado |
 |---|---|
 | `npm run infra:up` | Correcto; PostgreSQL y Mailpit saludables |
-| `npm run server:test` | Correcto; 94 pruebas, 0 fallos, 0 errores, 1 benchmark omitido |
-| `npm run server:verify` | Correcto; 94 pruebas y empaquetado completado |
+| `npm run server:test` | Correcto; 96 pruebas, 0 fallos, 0 errores, 1 benchmark omitido |
+| `npm run server:verify` | Correcto; 96 pruebas y empaquetado completado |
 | `npm run check` | Correcto; baseline, gate de despliegue, OpenAPI, servidor y cliente |
 | `git diff --check` | Correcto |
 

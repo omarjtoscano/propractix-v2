@@ -1,5 +1,6 @@
 package com.propractix.academicinstitution.adapter.out.persistence;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -7,6 +8,9 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.propractix.academicinstitution.application.port.in.SearchPublishedInstitutionsResult;
 import com.propractix.academicinstitution.application.port.out.CatalogInstitutionCandidate;
 import com.propractix.academicinstitution.application.port.out.CatalogPublicationRepository;
@@ -25,6 +29,8 @@ import com.propractix.academicinstitution.domain.model.ExternalInstitutionRefere
 import com.propractix.academicinstitution.domain.model.OfficialInstitutionName;
 import com.propractix.academicinstitution.domain.service.CatalogPublicationPolicy;
 import java.net.URI;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
@@ -36,13 +42,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import javax.sql.DataSource;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.AbstractDataSource;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -55,6 +64,9 @@ class CatalogPersistenceIntegrationTest {
     private static final Instant FIRST_PUBLICATION = Instant.parse("2026-10-17T10:00:00Z");
     private static final Instant SECOND_PUBLICATION = Instant.parse("2026-10-17T11:00:00Z");
     private static final URI SOURCE_URL = URI.create("https://example.test/catalog.csv");
+    private static final String SENSITIVE_TRANSACTION_FAILURE =
+            "jdbc:postgresql://private-db.invalid/catalog user=secret-user password=secret-password "
+                    + "SQL=SELECT secret_catalog internal=socket-failure";
 
     @Container
     private static final PostgreSQLContainer POSTGRES =
@@ -355,6 +367,44 @@ class CatalogPersistenceIntegrationTest {
     }
 
     @Test
+    void publicationMapsTransactionOpeningFailureToSanitizedStorageFailure() {
+        PostgresCatalogPublicationAdapter unavailableAdapter =
+                new PostgresCatalogPublicationAdapter(new UnavailableDataSource(), new CatalogPublicationPolicy());
+
+        Captured<CatalogPublicationRepository.PublicationOutcome> captured = assertDoesNotThrow(() -> captureLogs(
+                PostgresCatalogPublicationAdapter.class,
+                () -> unavailableAdapter.publishAtomically(
+                        request("a", candidate("0001", "Universidad Alfa")), resources(FIRST_PUBLICATION))));
+        CatalogPublicationRepository.Rejected rejected =
+                assertInstanceOf(CatalogPublicationRepository.Rejected.class, captured.result());
+
+        assertEquals(CatalogPublicationRepository.Failure.STORAGE_FAILURE, rejected.failure());
+        assertEquals(
+                List.of("Catalog publication rejected with category=storage_failure"),
+                captured.events().stream().map(ILoggingEvent::getFormattedMessage).toList());
+        assertSanitized(captured);
+    }
+
+    @Test
+    void queryMapsTransactionOpeningFailureToSanitizedReadFailure() {
+        PostgresPublishedInstitutionQueryAdapter unavailableAdapter =
+                new PostgresPublishedInstitutionQueryAdapter(new UnavailableDataSource());
+
+        Captured<PublishedInstitutionQueryRepository.SearchOutcome> captured = assertDoesNotThrow(() -> captureLogs(
+                PostgresPublishedInstitutionQueryAdapter.class,
+                () -> unavailableAdapter.search(new PublishedInstitutionQueryRepository.SearchRequest(
+                        Optional.empty(), Optional.empty(), 2))));
+        PublishedInstitutionQueryRepository.CatalogUnavailable unavailable = assertInstanceOf(
+                PublishedInstitutionQueryRepository.CatalogUnavailable.class, captured.result());
+
+        assertEquals(PublishedInstitutionQueryRepository.Failure.READ_FAILED, unavailable.failure());
+        assertEquals(
+                List.of("Academic institution catalog query failed with category=storage_failure"),
+                captured.events().stream().map(ILoggingEvent::getFormattedMessage).toList());
+        assertSanitized(captured);
+    }
+
+    @Test
     void aConcurrentPublisherFailsFastWhileTheLockHolderPublishes() throws Exception {
         CountDownLatch lockAcquired = new CountDownLatch(1);
         CountDownLatch releasePublisher = new CountDownLatch(1);
@@ -423,6 +473,47 @@ class CatalogPersistenceIntegrationTest {
         assertTrue(table.equals("academicinstitution_catalog_import")
                 || table.equals("academicinstitution_institution"));
         return jdbcTemplate.queryForObject("SELECT count(*) FROM " + table, Integer.class);
+    }
+
+    private static <T> Captured<T> captureLogs(Class<?> source, Supplier<T> operation) {
+        Logger logger = (Logger) LoggerFactory.getLogger(source);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            return new Captured<>(operation.get(), List.copyOf(appender.list));
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
+    }
+
+    private static void assertSanitized(Captured<?> captured) {
+        String observableText = captured.result().toString()
+                + captured.events().stream()
+                        .map(event -> event.getFormattedMessage() + String.valueOf(event.getThrowableProxy()))
+                        .reduce("", String::concat);
+        assertFalse(observableText.contains("jdbc:postgresql://private-db.invalid/catalog"));
+        assertFalse(observableText.contains("secret-user"));
+        assertFalse(observableText.contains("secret-password"));
+        assertFalse(observableText.contains("SELECT secret_catalog"));
+        assertFalse(observableText.contains("socket-failure"));
+        assertTrue(captured.events().stream().allMatch(event -> event.getThrowableProxy() == null));
+    }
+
+    private record Captured<T>(T result, List<ILoggingEvent> events) {}
+
+    private static final class UnavailableDataSource extends AbstractDataSource {
+
+        @Override
+        public Connection getConnection() throws SQLException {
+            throw new SQLException(SENSITIVE_TRANSACTION_FAILURE);
+        }
+
+        @Override
+        public Connection getConnection(String username, String password) throws SQLException {
+            throw new SQLException(SENSITIVE_TRANSACTION_FAILURE);
+        }
     }
 
     private static class TrackingResources implements CatalogPublicationRepository.PublicationResources {
