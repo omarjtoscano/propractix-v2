@@ -2,5 +2,21 @@
   "foundation": {
     "title": "ProPractix",
     "description": "Base técnica preparada"
+  },
+  "actions": {
+    "retry": "Volver a intentar"
+  },
+  "locales": {
+    "label": "Idioma",
+    "es": "Español",
+    "en": "Inglés"
+  },
+  "errors": {
+    "unexpected_error": "No se ha podido completar la operación. Vuelve a intentarlo.",
+    "validation_error": "Revisa los datos introducidos.",
+    "catalog_snapshot_changed": "El catálogo se ha actualizado. Repite la búsqueda.",
+    "rate_limited": "Has realizado demasiadas solicitudes. Espera antes de volver a intentarlo.",
+    "rate_limiter_unavailable": "El servicio no está disponible temporalmente. Vuelve a intentarlo más tarde.",
+    "academic_institution_catalog_unavailable": "El catálogo de universidades no está disponible temporalmente."
   }
 }

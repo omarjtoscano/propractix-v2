@@ -841,6 +841,12 @@ Archivos previstos:
 
 ### E4 — Parser e importación administrativa
 
+Corrección transversal solicitada por el Product Owner el 2026-10-18:
+reforzar i18n ES/EN y la presentación de errores del shell en una rama
+correctiva basada en E4. El alcance y la evidencia están en la
+[guía de i18n y errores](../development/i18n-and-errors.md).
+Esta corrección no acepta E4 ni inicia E5A.
+
 Estado: `IN_PROGRESS`. El Product Owner autorizó expresamente E4 el 2026-10-18
 sobre la integración aceptada de E3
 `1549a4be80c87a1f7639a05ae66cda93efd10f3e`, para ejecutarse exclusivamente en

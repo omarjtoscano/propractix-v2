@@ -10,7 +10,7 @@
   "scripts": {
     "lint": "node scripts/check-visible-text.mjs && node scripts/check-i18n-parity.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "node --test scripts/*.node.mjs && vitest run",
     "build": "tsc --noEmit && vite build"
   },
   "dependencies": {
@@ -26,6 +26,7 @@
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.1",
     "jsdom": "29.1.1",
+    "rolldown": "1.2.8",
     "typescript": "7.0.2",
     "vite": "8.3.0",
     "vitest": "5.0.0"
