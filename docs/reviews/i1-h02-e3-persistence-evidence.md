@@ -11,8 +11,9 @@
 
 Este registro reúne la evidencia técnica aceptada expresamente por el Product
 Owner, incluida la corrección del tratamiento de `TransactionException`. La
-aceptación de E3 no cierra I1-H02, que permanece `IN_PROGRESS`, y no autoriza E4
-ni entregas posteriores.
+aceptación de E3 no cierra I1-H02, que permanece `IN_PROGRESS`. E4 fue
+autorizada posteriormente, el 2026-10-18, sobre la integración aceptada de E3;
+E5A y las entregas posteriores siguen sin autorización.
 
 ## Alcance verificado
 
