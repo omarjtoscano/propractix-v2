@@ -3,14 +3,17 @@
 - Estado del plan: `APPROVED`
 - Aprobación: Product Owner, 2026-09-27
 - Commit aprobado: `5f64aeb9e4ef4fd1c0deae845b0607407fe9133b`
-- Autorización vigente: `E1 — Dominio e invariantes` y `E2 — Casos de uso y puertos` están `ACCEPTED`; E3 y las entregas posteriores no están autorizadas
+- Autorización vigente: `E1 — Dominio e invariantes` y `E2 — Casos de uso y puertos` están `ACCEPTED`; `E3 — Esquema y persistencia del catálogo` está autorizado y `IN_PROGRESS`; E4 y las entregas posteriores no están autorizadas
 - Historia: `I1-H02`
-- Estado de la historia: `IN_PROGRESS`; E1 y E2 están `ACCEPTED`
+- Estado de la historia: `IN_PROGRESS`; E1 y E2 están `ACCEPTED`, E3 está `IN_PROGRESS`
 - Rama de ejecución de E1: `feature/i1-h02-e1-domain`
 - Rama de ejecución de E2: `feature/i1-h02-e2-application-ports`
+- Rama de ejecución de E3: `feature/i1-h02-e3-catalog-persistence`
 - Autorización de E2: Product Owner, 2026-10-17
 - Aprobación de E2: Product Owner, 2026-10-17
 - Commit funcional aprobado de E2: `da90f183b6d41ca7ef152eb8004637839a206638`
+- Commit de integración aprobado de E2: `51e2fdf47841cce78a30a0189c3da3e3feff0c5c`
+- Autorización de E3: Product Owner, 2026-10-17
 - Evidencias sobre el commit funcional aprobado de E2: [CI #25](https://github.com/omarjtoscano/propractix-v2/actions/runs/39041561127) y [Build OCI release candidate #8](https://github.com/omarjtoscano/propractix-v2/actions/runs/39041561164), ambos correctos; `dependency-and-filesystem-scan`, incluido Trivy, en verde
 - Aprobación de E1: Product Owner, 2026-10-17
 - Commit funcional aprobado de E1: `ff7567a3bed1cd4465925f983f58fcaf09c7c1f1`
@@ -21,9 +24,10 @@
 - Gates de entrada: H01 `DONE / ACCEPTED`; `F0_CLIENT_BASELINE`,
   `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS` `CLOSED`
 
-Este documento concreta la ejecución técnica de H02. La aceptación de E2 no
-reabre C0 ni S0, no modifica `CL0_CLOUD_STAGING`, no autoriza E3 ni entregas
-posteriores y no expone ningún endpoint adicional.
+Este documento concreta la ejecución técnica de H02. La aceptación integrada
+de E2 autoriza exclusivamente E3; no reabre C0 ni S0, no modifica
+`CL0_CLOUD_STAGING`, no autoriza E4 ni entregas posteriores y no expone ningún
+endpoint adicional.
 
 ## 1. Fuentes y decisiones aplicables
 
@@ -752,8 +756,9 @@ funcional `ff7567a3bed1cd4465925f983f58fcaf09c7c1f1`. La evidencia asociada es
 y [Build OCI release candidate #5](https://github.com/omarjtoscano/propractix-v2/actions/runs/39019138091),
 ambos correctos; `dependency-and-filesystem-scan`, incluido Trivy, está en
 verde. Esta aceptación parcial mantiene I1-H02 `IN_PROGRESS`; E2 fue autorizada
-y aceptada separadamente el 2026-10-17, mientras E3 y las entregas posteriores
-siguen sin autorización y `CL0_CLOUD_STAGING` no cambia.
+y aceptada separadamente el 2026-10-17, E3 está autorizado y `IN_PROGRESS`, y
+E4 y las entregas posteriores siguen sin autorización. `CL0_CLOUD_STAGING` no
+cambia.
 
 Archivos previstos:
 
@@ -777,8 +782,10 @@ funcional `da90f183b6d41ca7ef152eb8004637839a206638`, implementado en
 [CI #25](https://github.com/omarjtoscano/propractix-v2/actions/runs/39041561127)
 y [Build OCI release candidate #8](https://github.com/omarjtoscano/propractix-v2/actions/runs/39041561164),
 ambos correctos; `dependency-and-filesystem-scan`, incluido Trivy, está en
-verde. Esta aceptación mantiene I1-H02 `IN_PROGRESS` y no autoriza E3,
-adapters, endpoints, AWS ni cambios de `CL0_CLOUD_STAGING`.
+verde. La integración aceptada mediante
+`51e2fdf47841cce78a30a0189c3da3e3feff0c5c` mantiene I1-H02 `IN_PROGRESS` y
+autoriza exclusivamente los adapters de persistencia de E3; no autoriza E4,
+endpoints, AWS ni cambios de `CL0_CLOUD_STAGING`.
 
 Archivos previstos:
 
@@ -798,6 +805,15 @@ Archivos previstos:
 - tests de aplicación con fakes bajo el mismo contexto.
 
 ### E3 — Esquema y persistencia del catálogo
+
+Estado: `IN_PROGRESS`. Autorizado por el Product Owner el 2026-10-17 sobre la
+integración de E2 `51e2fdf47841cce78a30a0189c3da3e3feff0c5c`, para ejecución
+exclusiva en `feature/i1-h02-e3-catalog-persistence`. Esta autorización no
+incluye parser CSV, adapter CLI, publicación de snapshot real, REST/OpenAPI,
+frontend, rate limiting, AWS ni E4 o entregas posteriores.
+
+Evidencia técnica local: [migración, atomicidad, rollback, keyset y
+concurrencia](../reviews/i1-h02-e3-persistence-evidence.md).
 
 Archivos previstos:
 
@@ -1000,8 +1016,8 @@ capturas o trazas E2E sin PII y riesgos residuales.
 
 Estas decisiones forman parte del plan aprobado. I1-H02 permanece
 `IN_PROGRESS`; `E1 — Dominio e invariantes` y `E2 — Casos de uso y puertos`
-están `ACCEPTED` por el Product Owner desde el 2026-10-17, y E3 y las entregas
-posteriores no están autorizadas:
+están `ACCEPTED` por el Product Owner desde el 2026-10-17, E3 está autorizado y
+`IN_PROGRESS`, y E4 y las entregas posteriores no están autorizadas:
 
 | Decisión aceptada | Aplicación |
 |---|---|
