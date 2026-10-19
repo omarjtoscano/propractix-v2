@@ -55,6 +55,9 @@ public final class StrictCsvCatalogArtifactParser implements CatalogArtifactPars
         if (headerEnd < 0 || !EXACT_HEADER.equals(csv.substring(0, headerEnd))) {
             return rejected(Failure.INVALID_SCHEMA);
         }
+        if (headerEnd == csv.length() - 1) {
+            return rejected(Failure.INVALID_SCHEMA);
+        }
 
         String data = csv.substring(headerEnd + 1, csv.length() - 1);
         List<List<String>> records;

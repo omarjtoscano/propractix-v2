@@ -11,6 +11,7 @@ import com.propractix.academicinstitution.adapter.out.artifact.StrictCsvCatalogA
 import com.propractix.academicinstitution.application.command.PublishInstitutionCatalogCommand;
 import com.propractix.academicinstitution.application.port.in.CatalogPublicationResult;
 import com.propractix.academicinstitution.application.port.in.PublishInstitutionCatalog;
+import com.propractix.academicinstitution.application.service.PublishInstitutionCatalogService;
 import com.propractix.academicinstitution.domain.model.CatalogArtifactHash;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -63,6 +64,39 @@ class CatalogImportCommandLineAdapterTest {
         assertTrue(captured.output().contains("code=catalog_artifact_valid"));
         assertTrue(captured.output().contains("total_rows=1 published_rows=1 omitted_rows=0"));
         assertSanitized(captured);
+    }
+
+    @Test
+    void headerOnlyIsRejectedInBothModesWithoutPublicationResources() throws IOException {
+        byte[] headerOnly = "sourceSystem,sourceRecordId,officialName,countryCode,sourceStatus\n"
+                .getBytes(StandardCharsets.UTF_8);
+        Path artifact = write("header-only.csv", headerOnly);
+        var parser = new StrictCsvCatalogArtifactParser(Set.of("SYNTHETIC"), Set.of("ES"));
+        PublishInstitutionCatalog publisher = new PublishInstitutionCatalogService(
+                parser,
+                (request, resources) -> {
+                    throw new AssertionError("invalid artifact must not access persistence");
+                },
+                () -> {
+                    throw new AssertionError("invalid artifact must not use the clock");
+                },
+                () -> {
+                    throw new AssertionError("invalid artifact must not consume institution UUIDs");
+                },
+                () -> {
+                    throw new AssertionError("invalid artifact must not consume import UUIDs");
+                });
+        var adapter = adapter(artifact, hashOf(headerOnly), publisher);
+
+        CapturedExecution dryRun = capture(adapter, CatalogImportCommandLineAdapter.Operation.DRY_RUN);
+        CapturedExecution publication = capture(adapter, CatalogImportCommandLineAdapter.Operation.PUBLISH);
+
+        assertEquals(4, dryRun.exitCode());
+        assertTrue(dryRun.output().contains("code=catalog_artifact_rejected reason=invalid_schema"));
+        assertEquals(6, publication.exitCode());
+        assertTrue(publication.output().contains("code=catalog_publication_rejected reason=artifact_invalid"));
+        assertSanitized(dryRun);
+        assertSanitized(publication);
     }
 
     @Test

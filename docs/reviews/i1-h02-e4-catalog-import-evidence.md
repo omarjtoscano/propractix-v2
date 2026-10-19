@@ -5,7 +5,8 @@
 - Rama: `feature/i1-h02-e4-catalog-import`
 - Base integrada y aceptada de E3: `1549a4be80c87a1f7639a05ae66cda93efd10f3e`
 - Autorización: Product Owner, 2026-10-18
-- Fecha de validación local: 2026-10-18
+- Fecha de validación local de la corrección de revisión: 2026-10-19
+- Commit revisado, con PR #11 integrada: `f23abe0d8cfcb5139ba00ab385a41b4f93d4f744`
 - Fixture reutilizada sin modificación:
   `docs/catalog/fixtures/academic-institutions-es-synthetic-v1.csv`
 - SHA-256 exacto:
@@ -13,6 +14,39 @@
 
 E4 permanece `IN_PROGRESS`: este documento no registra aceptación, no cierra
 I1-H02 y no autoriza E5A ni ninguna entrega posterior.
+
+## Correcciones de revisión del 2026-10-19
+
+- El CSV que contiene únicamente la cabecera exacta y su LF final se rechaza
+  explícitamente como `RejectedArtifact(INVALID_SCHEMA)`, antes de extraer los
+  registros. No lanza `StringIndexOutOfBoundsException` ni se confunde con un
+  error de configuración.
+- Las pruebas cubren parser, dry run a través del arranque Boot y adapter CLI,
+  y publicación mediante el caso de uso E2. Verifican códigos de rechazo,
+  ausencia de llamadas a persistencia, reloj y generadores UUID durante el
+  rechazo de aplicación, y conservación de todas las columnas de ambas tablas
+  del snapshot anterior en PostgreSQL 16.
+- Ambos modos arrancan mediante el mismo `SpringApplicationBuilder` y usan la
+  misma configuración tipada y el mismo bean de parser. Se elimina la carga
+  manual de YAML del dry run. Los argumentos CLI se propagan desde ambas
+  entradas; Boot resuelve perfiles, configuración externa e imports.
+- Una prueba con `spring.config.additional-location` y `spring.config.import`
+  sobrescribe `artifact-path`, `artifact-hash`, metadatos y fuentes/países
+  permitidos. Compara las propiedades de ambos modos, valida las listas en ambos
+  parsers, ejecuta el dry run y la publicación y contrasta los metadatos
+  persistidos con la configuración externa.
+- El contexto de dry run solo registra propiedades y parser, sin
+  autoconfiguración. La prueba comprueba ausencia de DataSource, Flyway, JPA,
+  transacciones, repositorios, publicación y generadores UUID. Tras ejecutarlo,
+  PostgreSQL aún no tiene tablas del catálogo ni historial Flyway.
+
+La [PR #11](https://github.com/omarjtoscano/propractix-v2/pull/11) ya está
+integrada en esta rama mediante `f23abe0d8cfcb5139ba00ab385a41b4f93d4f744`.
+Por tanto, el diff acumulado de la PR #10 **sí contiene cambios frontend**:
+errores ES/EN por códigos, `ErrorMessage`, límite de errores del shell,
+selector/preferencia de idioma, resolución de locale y controles del cliente.
+Véase la [guía i18n](../development/i18n-and-errors.md). Esta integración no
+acepta E4 ni inicia E5A; esta corrección de revisión no añade cambios frontend.
 
 ## Alcance verificado
 
@@ -58,7 +92,7 @@ repetición idempotente sin nuevos UUID ni importaciones, artefacto inválido qu
 conserva el snapshot anterior, rollback ante fallo de almacenamiento y wiring
 real del contexto administrativo E4 con el caso de uso E2 y los adapters E3.
 
-## Evidencia manual local
+## Evidencia manual local histórica del 2026-10-18
 
 El dry run terminó con código 0 y emitió únicamente:
 
@@ -87,7 +121,7 @@ un único snapshot `PUBLISHED`, el hash esperado, `sourceDownloadHash` ausente y
 coincidencia exacta de URL, fecha de recuperación y atribución configuradas.
 No se consultaron ni mostraron nombres o referencias individuales.
 
-## Validaciones
+## Validaciones históricas del 2026-10-18
 
 | Comando | Resultado |
 |---|---|
@@ -100,15 +134,35 @@ No se consultaron ni mostraron nombres o referencias individuales.
 | `npm run check` | Correcto; baseline, gate de despliegue, OpenAPI, servidor y cliente |
 | `git diff --check` | Correcto |
 
+## Validaciones de la corrección del 2026-10-19
+
+Entorno: Java 21.0.12.1, Node 24.12.0, Docker 29.8.0 y PostgreSQL 16.15
+mediante Testcontainers. `check` se ejecutó con la versión fijada npm 11.9.0
+(`npx --yes npm@11.9.0 run check`).
+
+| Comando | Resultado |
+|---|---|
+| `npm run infra:up` | Correcto; PostgreSQL y Mailpit saludables |
+| Pruebas dirigidas de parser, CLI, integración y configuración E4 | 26 pruebas correctas |
+| `npm run catalog:dry-run` | Código 0; 3 filas válidas y hash aprobado |
+| `npm run server:test` | 126 pruebas, 0 fallos, 0 errores, 1 benchmark omitido |
+| `npm run server:verify` | Mismas 126 pruebas; empaquetado correcto |
+| `npm run check` | Correcto; baseline, gate, OpenAPI, servidor, lint i18n, 6 pruebas del guard, 45 Vitest y build/typecheck del cliente |
+| `git diff --check` | Correcto |
+| Hash de la fixture | `612b46e73d3fa6843e79b0efd2b0f253326803b976de5627a58daf6d416cc89a`, sin cambios |
+
 ## Fuera de alcance preservado
 
 No se obtuvo, transformó ni publicó RUCT real; no se creó documentación bajo
-`docs/catalog/snapshots/`; no se añadió REST, OpenAPI, frontend, rate limiting,
-AWS ni cambios de `CL0_CLOUD_STAGING`; no se inició E5A. La fixture sintética
-existente se reutilizó sin modificar sus bytes.
+`docs/catalog/snapshots/`; no se añadió REST, OpenAPI, rate limiting,
+AWS ni cambios de `CL0_CLOUD_STAGING`; no se inició E5A. Los cambios frontend
+del diff acumulado proceden de la corrección i18n integrada de la PR #11.
+La fixture sintética existente se reutilizó sin modificar sus bytes.
 
 ## Evidencia remota
 
-La Draft PR debe permanecer abierta y sin merge. CI, el job
-`dependency-and-filesystem-scan` con Trivy y Build OCI se documentarán aquí
-cuando terminen; E4 no se marcará `ACCEPTED` como parte de esta implementación.
+La Draft PR #10 permanece abierta y sin merge. La evidencia histórica de
+`ffb7f537125072b77666d34813a2ea94b7d6425d` no valida esta corrección.
+El SHA funcional corregido y sus ejecuciones CI, `dependency-and-filesystem-scan`
+con Trivy y Build OCI se registran tras el push, junto con las comprobaciones
+locales actuales; E4 e I1-H02 siguen `IN_PROGRESS`.

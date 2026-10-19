@@ -2,8 +2,9 @@
 
 Fecha: 2026-10-18. Corrección solicitada por el Product Owner durante E4.
 Base: `ffb7f537125072b77666d34813a2ea94b7d6425d`.
-Rama: `feature/i1-h02-i18n-errors`, para integrar mediante PR en
-`feature/i1-h02-e4-catalog-import`.
+Rama original: `feature/i1-h02-i18n-errors`. La [PR #11](https://github.com/omarjtoscano/propractix-v2/pull/11)
+ya está integrada en `feature/i1-h02-e4-catalog-import` mediante
+`f23abe0d8cfcb5139ba00ab385a41b4f93d4f744`.
 I1-H02 y E4 continúan `IN_PROGRESS`. No se inicia E5A.
 
 ## Qué se traduce
@@ -82,8 +83,9 @@ El parser AST reutiliza `rolldown` 1.2.8, licencia MIT, ya presente en el lockfi
 por Vite. Se declara como dependencia de desarrollo directa, sin añadir una
 dependencia de runtime ni cambiar la baseline de Vite/TypeScript.
 
-La copia local dispone de Java 17 y carece de Docker; por ello no se ejecutaron
+En el entorno original de la corrección i18n solo había Java 17 y no había Docker; por ello no se ejecutaron
 `infra:up`, `server:test`, `server:verify` ni el `check` completo en este entorno.
 No se modificó Java, configuración backend, migraciones ni contratos. CI de la
-PR debe validar backend, infraestructura, secretos, Trivy y Build OCI sobre el
-commit resultante antes de integrar.
+PR debía validar backend, infraestructura, secretos, Trivy y Build OCI sobre el
+commit resultante antes de integrar. La validación posterior de E4 con Java 21 y
+Docker se registra en la [evidencia E4](../reviews/i1-h02-e4-catalog-import-evidence.md).

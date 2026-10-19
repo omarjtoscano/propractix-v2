@@ -7,6 +7,6 @@ public final class CatalogImportDryRunApplication {
     private CatalogImportDryRunApplication() {}
 
     public static void main(String[] args) {
-        CatalogImportCommandLineApplication.run(Operation.DRY_RUN);
+        CatalogImportCommandLineApplication.run(Operation.DRY_RUN, args);
     }
 }

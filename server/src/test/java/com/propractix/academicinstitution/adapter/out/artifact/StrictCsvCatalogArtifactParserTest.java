@@ -102,6 +102,11 @@ class StrictCsvCatalogArtifactParserTest {
     }
 
     @Test
+    void rejectsHeaderOnlyWithItsFinalLfAsATypedArtifactFailure() {
+        assertRejected(bytes(HEADER + "\n"), CatalogArtifactParser.Failure.INVALID_SCHEMA);
+    }
+
+    @Test
     void rejectsIncorrectOrReorderedHeader() {
         assertRejected(
                 bytes("sourceRecordId,sourceSystem,officialName,countryCode,sourceStatus\n"

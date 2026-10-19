@@ -845,7 +845,9 @@ Corrección transversal solicitada por el Product Owner el 2026-10-18:
 reforzar i18n ES/EN y la presentación de errores del shell en una rama
 correctiva basada en E4. El alcance y la evidencia están en la
 [guía de i18n y errores](../development/i18n-and-errors.md).
-Esta corrección no acepta E4 ni inicia E5A.
+La PR #11 ya está integrada en E4 mediante
+`f23abe0d8cfcb5139ba00ab385a41b4f93d4f744`, incluidos los cambios frontend
+correctivos i18n del shell. Esta corrección no acepta E4 ni inicia E5A.
 
 Estado: `IN_PROGRESS`. El Product Owner autorizó expresamente E4 el 2026-10-18
 sobre la integración aceptada de E3

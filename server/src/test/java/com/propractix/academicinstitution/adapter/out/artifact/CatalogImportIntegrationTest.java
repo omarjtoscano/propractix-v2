@@ -169,6 +169,31 @@ class CatalogImportIntegrationTest {
     }
 
     @Test
+    void headerOnlyDoesNotChangeAnyPublishedSnapshotDataOrConsumeUuids() throws IOException {
+        service.publish(command(readFixture(), new CatalogArtifactHash(FIXTURE_HASH)));
+        var importsBefore = jdbcTemplate.queryForList(
+                "SELECT * FROM academicinstitution_catalog_import ORDER BY catalog_import_id");
+        var institutionsBefore = jdbcTemplate.queryForList(
+                "SELECT * FROM academicinstitution_institution ORDER BY institution_id");
+        int institutionIdsBefore = institutionIds.get();
+        int importIdsBefore = importIds.get();
+        byte[] headerOnly = (StrictCsvCatalogArtifactParser.EXACT_HEADER + "\n")
+                .getBytes(StandardCharsets.UTF_8);
+
+        CatalogPublicationResult.Rejected rejected = assertInstanceOf(
+                CatalogPublicationResult.Rejected.class,
+                service.publish(command(headerOnly, hashOf(headerOnly))));
+
+        assertEquals(CatalogPublicationResult.Failure.ARTIFACT_INVALID, rejected.failure());
+        assertEquals(importsBefore, jdbcTemplate.queryForList(
+                "SELECT * FROM academicinstitution_catalog_import ORDER BY catalog_import_id"));
+        assertEquals(institutionsBefore, jdbcTemplate.queryForList(
+                "SELECT * FROM academicinstitution_institution ORDER BY institution_id"));
+        assertEquals(institutionIdsBefore, institutionIds.get());
+        assertEquals(importIdsBefore, importIds.get());
+    }
+
+    @Test
     void storageFailureThroughTheE2UseCaseRollsBackAndPreservesThePreviousSnapshot() throws IOException {
         byte[] fixture = readFixture();
         CatalogPublicationResult.Published first = assertInstanceOf(

@@ -1,6 +1,5 @@
 package com.propractix.academicinstitution.configuration;
 
-import com.propractix.academicinstitution.adapter.out.artifact.StrictCsvCatalogArtifactParser;
 import com.propractix.academicinstitution.application.port.in.PublishInstitutionCatalog;
 import com.propractix.academicinstitution.application.port.out.AcademicInstitutionIdGenerator;
 import com.propractix.academicinstitution.application.port.out.ApplicationClock;
@@ -15,19 +14,15 @@ import java.time.Instant;
 import java.util.UUID;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 @Configuration(proxyBeanMethods = false)
+@Import(CatalogImportConfiguration.class)
 public class AcademicInstitutionConfiguration {
 
     @Bean
     CatalogPublicationPolicy catalogPublicationPolicy() {
         return new CatalogPublicationPolicy();
-    }
-
-    @Bean
-    CatalogArtifactParser catalogArtifactParser(CatalogImportProperties properties) {
-        return new StrictCsvCatalogArtifactParser(
-                properties.allowedSourceSystems(), properties.allowedCountries());
     }
 
     @Bean
