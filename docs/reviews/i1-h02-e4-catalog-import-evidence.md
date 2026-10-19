@@ -7,6 +7,7 @@
 - Autorización: Product Owner, 2026-10-18
 - Fecha de validación local de la corrección de revisión: 2026-10-19
 - Commit revisado, con PR #11 integrada: `f23abe0d8cfcb5139ba00ab385a41b4f93d4f744`
+- Commit funcional corregido y validado localmente: `cf23c1ebbd698e24bf8edb3472f492a366ded6bd`
 - Fixture reutilizada sin modificación:
   `docs/catalog/fixtures/academic-institutions-es-synthetic-v1.csv`
 - SHA-256 exacto:
@@ -163,6 +164,18 @@ La fixture sintética existente se reutilizó sin modificar sus bytes.
 
 La Draft PR #10 permanece abierta y sin merge. La evidencia histórica de
 `ffb7f537125072b77666d34813a2ea94b7d6425d` no valida esta corrección.
-El SHA funcional corregido y sus ejecuciones CI, `dependency-and-filesystem-scan`
-con Trivy y Build OCI se registran tras el push, junto con las comprobaciones
-locales actuales; E4 e I1-H02 siguen `IN_PROGRESS`.
+Las validaciones locales del 2026-10-19 corresponden al commit funcional
+`cf23c1ebbd698e24bf8edb3472f492a366ded6bd`, publicado en la misma rama y PR #10.
+GitHub ha creado estas ejecuciones para ese SHA:
+
+| Comprobación | Ejecución del SHA funcional corregido |
+|---|---|
+| CI | [CI #33](https://github.com/omarjtoscano/propractix-v2/actions/runs/39282326341) |
+| Dependencias y filesystem, incluido Trivy | [dependency-and-filesystem-scan](https://github.com/omarjtoscano/propractix-v2/actions/runs/39282326341/job/118158889001) |
+| Build OCI | [Build OCI release candidate #16](https://github.com/omarjtoscano/propractix-v2/actions/runs/39282326439) |
+
+Al registrar esta evidencia, las ejecuciones siguen en cola: no se atribuye
+un resultado verde antes de que terminen. El estado final y las ejecuciones
+del HEAD posterior que solo registra esta evidencia se mantienen en el
+[cuerpo de la PR #10](https://github.com/omarjtoscano/propractix-v2/pull/10),
+con su SHA exacto. E4 e I1-H02 siguen `IN_PROGRESS`.
