@@ -12,3 +12,10 @@ propractix:
   runtime:
     environment: production
     release-sha: ${PROPRACTIX_RELEASE_SHA}
+  academic-institution:
+    catalog-import:
+      enabled: false
+      allowed-source-systems:
+        - RUCT
+      allowed-countries:
+        - ES

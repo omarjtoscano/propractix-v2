@@ -3,12 +3,13 @@
 - Estado del plan: `APPROVED`
 - Aprobación: Product Owner, 2026-09-27
 - Commit aprobado: `5f64aeb9e4ef4fd1c0deae845b0607407fe9133b`
-- Autorización vigente: E1, E2 y `E3 — Esquema y persistencia del catálogo` están `ACCEPTED`; E4 y las entregas posteriores no están autorizadas
+- Autorización vigente: E1, E2, E3 y `E4 — Parser e importación administrativa` están `ACCEPTED`; E5A y las entregas posteriores no están autorizadas
 - Historia: `I1-H02`
-- Estado de la historia: `IN_PROGRESS`; E1, E2 y E3 están `ACCEPTED`
+- Estado de la historia: `IN_PROGRESS`; E1, E2, E3 y E4 están `ACCEPTED`
 - Rama de ejecución de E1: `feature/i1-h02-e1-domain`
 - Rama de ejecución de E2: `feature/i1-h02-e2-application-ports`
 - Rama de ejecución de E3: `feature/i1-h02-e3-catalog-persistence`
+- Rama de ejecución de E4: `feature/i1-h02-e4-catalog-import`
 - Autorización de E2: Product Owner, 2026-10-17
 - Aprobación de E2: Product Owner, 2026-10-17
 - Commit funcional aprobado de E2: `da90f183b6d41ca7ef152eb8004637839a206638`
@@ -16,6 +17,11 @@
 - Autorización de E3: Product Owner, 2026-10-17
 - Aprobación de E3: Product Owner, 2026-10-18
 - Commit funcional aprobado de E3: `56e2949523f6e4a6dedf76ac448d2cf60263e7d1`
+- Commit de integración aprobado de E3: `1549a4be80c87a1f7639a05ae66cda93efd10f3e`
+- Autorización de E4: Product Owner, 2026-10-18
+- Aprobación de E4: Product Owner, 2026-10-22
+- Commit revisado y aprobado de E4: `700ac21de60748dce3365ba9209288e8b5108926`
+- Evidencias sobre el commit aprobado de E4: [CI #34](https://github.com/omarjtoscano/propractix-v2/actions/runs/39282934222) y [Build OCI release candidate #17](https://github.com/omarjtoscano/propractix-v2/actions/runs/39282934186), ambos correctos; `dependency-and-filesystem-scan`, incluido Trivy, en verde
 - Evidencias sobre el commit funcional aprobado de E3: [CI #28](https://github.com/omarjtoscano/propractix-v2/actions/runs/39129965336) y [Build OCI release candidate #11](https://github.com/omarjtoscano/propractix-v2/actions/runs/39129965191), ambos correctos; `dependency-and-filesystem-scan`, incluido Trivy, en verde; 96 pruebas, 0 fallos y 1 benchmark omitido
 - Evidencias sobre el commit funcional aprobado de E2: [CI #25](https://github.com/omarjtoscano/propractix-v2/actions/runs/39041561127) y [Build OCI release candidate #8](https://github.com/omarjtoscano/propractix-v2/actions/runs/39041561164), ambos correctos; `dependency-and-filesystem-scan`, incluido Trivy, en verde
 - Aprobación de E1: Product Owner, 2026-10-17
@@ -27,9 +33,10 @@
 - Gates de entrada: H01 `DONE / ACCEPTED`; `F0_CLIENT_BASELINE`,
   `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS` `CLOSED`
 
-Este documento concreta la ejecución técnica de H02. La aceptación de E3 no
-reabre C0 ni S0, no modifica `CL0_CLOUD_STAGING`, no autoriza E4 ni entregas
-posteriores y no expone ningún endpoint adicional.
+Este documento concreta la ejecución técnica de H02. La aceptación e
+integración de E3 autoriza exclusivamente E4, no reabre C0 ni S0, no modifica
+`CL0_CLOUD_STAGING`, no autoriza E5A ni entregas posteriores y no expone ningún
+endpoint adicional.
 
 ## 1. Fuentes y decisiones aplicables
 
@@ -758,8 +765,9 @@ funcional `ff7567a3bed1cd4465925f983f58fcaf09c7c1f1`. La evidencia asociada es
 y [Build OCI release candidate #5](https://github.com/omarjtoscano/propractix-v2/actions/runs/39019138091),
 ambos correctos; `dependency-and-filesystem-scan`, incluido Trivy, está en
 verde. Esta aceptación parcial mantiene I1-H02 `IN_PROGRESS`; E2 fue autorizada
-y aceptada separadamente el 2026-10-17, E3 fue aceptada el 2026-10-18, y E4 y
-las entregas posteriores siguen sin autorización. `CL0_CLOUD_STAGING` no cambia.
+y aceptada separadamente el 2026-10-17, E3 fue aceptada el 2026-10-18 y E4 fue
+aceptada el 2026-10-22 sobre `700ac21de60748dce3365ba9209288e8b5108926`. E5A y las entregas
+posteriores siguen sin autorización. `CL0_CLOUD_STAGING` no cambia.
 
 Archivos previstos:
 
@@ -785,8 +793,9 @@ y [Build OCI release candidate #8](https://github.com/omarjtoscano/propractix-v2
 ambos correctos; `dependency-and-filesystem-scan`, incluido Trivy, está en
 verde. La integración aceptada mediante
 `51e2fdf47841cce78a30a0189c3da3e3feff0c5c` mantiene I1-H02 `IN_PROGRESS` y
-autoriza exclusivamente los adapters de persistencia de E3; no autoriza E4,
-endpoints, AWS ni cambios de `CL0_CLOUD_STAGING`.
+autorizó exclusivamente los adapters de persistencia de E3 en ese momento; E4
+fue autorizada después de aceptar e integrar E3. No autorizó endpoints, AWS ni
+cambios de `CL0_CLOUD_STAGING`.
 
 Archivos previstos:
 
@@ -813,10 +822,12 @@ tratamiento de `TransactionException` en los adapters de publicación y
 consulta. [CI #28](https://github.com/omarjtoscano/propractix-v2/actions/runs/39129965336)
 y [Build OCI release candidate #11](https://github.com/omarjtoscano/propractix-v2/actions/runs/39129965191)
 terminaron correctamente; `dependency-and-filesystem-scan`, incluido Trivy,
-está en verde, con 96 pruebas, 0 fallos y 1 benchmark omitido. Esta aceptación
-mantiene I1-H02 `IN_PROGRESS` y no autoriza parser CSV, adapter CLI, publicación
-de snapshot real, REST/OpenAPI, frontend, rate limiting, AWS, E4 ni entregas
-posteriores.
+está en verde, con 96 pruebas, 0 fallos y 1 benchmark omitido. Su integración
+en `increment/01-company-identity-catalog` fue aceptada mediante
+`1549a4be80c87a1f7639a05ae66cda93efd10f3e`. Esta aceptación mantiene I1-H02
+`IN_PROGRESS` y autoriza exclusivamente parser CSV, adapter CLI y configuración
+de E4; no autoriza publicación de snapshot real, REST/OpenAPI, frontend, rate
+limiting, AWS, E5A ni entregas posteriores.
 
 Evidencia técnica local: [migración, atomicidad, rollback, keyset y
 concurrencia](../reviews/i1-h02-e3-persistence-evidence.md).
@@ -832,6 +843,33 @@ Archivos previstos:
 - tests Testcontainers de migración, mapping, búsqueda y concurrencia.
 
 ### E4 — Parser e importación administrativa
+
+Corrección transversal solicitada por el Product Owner el 2026-10-18:
+reforzar i18n ES/EN y la presentación de errores del shell en una rama
+correctiva basada en E4. El alcance y la evidencia están en la
+[guía de i18n y errores](../development/i18n-and-errors.md).
+La PR #11 ya está integrada en E4 mediante
+`f23abe0d8cfcb5139ba00ab385a41b4f93d4f744`, incluidos los cambios frontend
+correctivos i18n del shell. Su integración no constituyó la aceptación de E4
+ni inició E5A; E4 se acepta por la aprobación posterior indicada a continuación.
+
+Estado: `ACCEPTED`. El Product Owner aprobó expresamente E4 el 2026-10-22
+sobre el commit revisado `700ac21de60748dce3365ba9209288e8b5108926` de
+`feature/i1-h02-e4-catalog-import`. La autorización original del 2026-10-18
+partía de la integración aceptada de E3
+`1549a4be80c87a1f7639a05ae66cda93efd10f3e`.
+
+[CI #34](https://github.com/omarjtoscano/propractix-v2/actions/runs/39282934222) y
+[Build OCI release candidate #17](https://github.com/omarjtoscano/propractix-v2/actions/runs/39282934186)
+terminaron correctamente sobre el commit aprobado; [dependency-and-filesystem-scan, incluido Trivy](https://github.com/omarjtoscano/propractix-v2/actions/runs/39282934222/job/118160825110)
+está en verde. La [evidencia E4](../reviews/i1-h02-e4-catalog-import-evidence.md)
+recoge la corrección del parser, la configuración común y la integración i18n.
+
+Esta aceptación parcial mantiene I1-H02 `IN_PROGRESS`; E5A y las entregas
+posteriores siguen sin autorización. La PR #10 permanece abierta y sin merge.
+No autoriza snapshot RUCT real, documentación bajo `docs/catalog/snapshots/`,
+REST/OpenAPI, nuevas funcionalidades frontend, rate limiting, AWS ni cambios
+de `CL0_CLOUD_STAGING`, que permanece `PENDING`.
 
 Archivos previstos:
 
@@ -1023,7 +1061,10 @@ capturas o trazas E2E sin PII y riesgos residuales.
 Estas decisiones forman parte del plan aprobado. I1-H02 permanece
 `IN_PROGRESS`; `E1 — Dominio e invariantes` y `E2 — Casos de uso y puertos`
 están `ACCEPTED` por el Product Owner desde el 2026-10-17, E3 está `ACCEPTED`
-desde el 2026-10-18, y E4 y las entregas posteriores no están autorizadas:
+desde el 2026-10-18 y su integración está aceptada mediante
+`1549a4be80c87a1f7639a05ae66cda93efd10f3e`; E4 está `ACCEPTED` desde el
+2026-10-22 sobre `700ac21de60748dce3365ba9209288e8b5108926`. E5A y las
+entregas posteriores no están autorizadas:
 
 | Decisión aceptada | Aplicación |
 |---|---|
@@ -1040,6 +1081,6 @@ desde el 2026-10-18, y E4 y las entregas posteriores no están autorizadas:
 | Librería CSV, si se propone una en implementación | Solo se aceptará una utilidad fijada, con licencia/dependencias revisadas; no puede cambiar el contrato ni convertirse en librería estructural. Un parser propio estricto es la alternativa. | Revisión técnica ordinaria; no ADR salvo cambio estructural. |
 | Deriva del formato RUCT real | El procedimiento aceptado de doble revisión detecta cambios; un mapeo ambiguo bloquea esa publicación sin alterar el snapshot vigente. | Producto + Datos resuelven la ambigüedad concreta antes de publicar; no reabre C0. |
 
-No hay contradicción que obligue a crear un ADR. La aceptación de E3 no autoriza
-E4 ni entregas posteriores, AWS, otro endpoint ni una ampliación funcional de
-H02. `CL0_CLOUD_STAGING` permanece sin cambios.
+No hay contradicción que obligue a crear un ADR. La aceptación de E4 no
+autoriza E5A ni entregas posteriores, AWS, otro endpoint ni una ampliación
+funcional de H02. `CL0_CLOUD_STAGING` permanece sin cambios.

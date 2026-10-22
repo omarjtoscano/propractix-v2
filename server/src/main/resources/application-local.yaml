@@ -19,3 +19,18 @@ spring:
           auth: false
           starttls:
             enable: false
+
+propractix:
+  academic-institution:
+    catalog-import:
+      enabled: true
+      allowed-source-systems:
+        - SYNTHETIC
+      allowed-countries:
+        - ES
+      artifact-path: docs/catalog/fixtures/academic-institutions-es-synthetic-v1.csv
+      schema-version: academic-institution-catalog/v1
+      source-url: https://example.invalid/propractix/academic-institutions-es-synthetic-v1.csv
+      retrieved-at: 2026-09-21T00:00:00Z
+      source-attribution: ProPractix synthetic academic institution fixture for local development only
+      artifact-hash: 612b46e73d3fa6843e79b0efd2b0f253326803b976de5627a58daf6d416cc89a

@@ -23,6 +23,8 @@
     "server:run": "npm run infra:prepare && SPRING_PROFILES_ACTIVE=local ./server/mvnw -f server/pom.xml spring-boot:run -Dspring-boot.run.workingDirectory=..",
     "server:test": "cd server && ./mvnw test",
     "server:verify": "cd server && ./mvnw verify",
+    "catalog:dry-run": "SPRING_PROFILES_ACTIVE=local ./server/mvnw -q -f server/pom.xml spring-boot:run -Dspring-boot.run.main-class=com.propractix.academicinstitution.configuration.CatalogImportDryRunApplication -Dspring-boot.run.workingDirectory=..",
+    "catalog:publish": "SPRING_PROFILES_ACTIVE=local ./server/mvnw -q -f server/pom.xml spring-boot:run -Dspring-boot.run.main-class=com.propractix.academicinstitution.configuration.CatalogImportPublicationApplication -Dspring-boot.run.workingDirectory=.. -Dspring-boot.run.jvmArguments='-Dspring.devtools.restart.enabled=false -Dspring.devtools.add-properties=false -Ddebug=false -Dlogging.config=classpath:logback-catalog-import.xml -Dlogging.level.root=OFF'",
     "client:lint": "npm run lint --workspace=client",
     "client:typecheck": "npm run typecheck --workspace=client",
     "client:test": "npm run test --workspace=client",
