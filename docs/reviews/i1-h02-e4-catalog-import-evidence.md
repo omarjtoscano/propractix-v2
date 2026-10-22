@@ -195,3 +195,94 @@ en el [cuerpo de la PR #10](https://github.com/omarjtoscano/propractix-v2/pull/1
 tras verificarlos, sin trasladar automáticamente el verde del commit aprobado.
 E4 está `ACCEPTED`; I1-H02 permanece `IN_PROGRESS`; E5A y las entregas
 posteriores siguen sin autorización. No se realiza el merge.
+
+## Aislamiento de logging entre pruebas — 2026-10-22
+
+Base de esta corrección técnica: `d0a422f8497b0bc8698936ed2df8d036419b4f5f`.
+E4 conserva su aceptación sobre `700ac21`; I1-H02 permanece `IN_PROGRESS`.
+E5A y las entregas posteriores siguen sin autorización. No se realiza merge.
+
+### Causa reproducida y corrección limitada a pruebas
+
+El arranque Boot de `CatalogImportApplicationIntegrationTest` cargaba
+`logback-catalog-import.xml`, que establece el logger raíz en `OFF` y
+reconfigura el `LoggerContext` compartido por toda la JVM. Cerrar el contexto
+Spring no recuperaba el logging previo. Si esa clase se ejecutaba antes de
+`CatalogPersistenceIntegrationTest`, los appenders de las dos pruebas de
+fallos de apertura transaccional capturaban listas vacías. Antes de corregirlo,
+el orden importación → persistencia reprodujo exactamente 2 fallos en 13
+pruebas, sin errores ni omisiones.
+
+El único archivo de código modificado es
+`server/src/test/java/com/propractix/academicinstitution/configuration/CatalogImportApplicationIntegrationTest.java`:
+
+- Antes de cada prueba selecciona temporalmente `LoggingSystem.NONE` mediante
+  `LoggingSystem.SYSTEM_PROPERTY`. Esto impide que Boot reconfigure el Logback
+  del runner; Logback continúa emitiendo eventos y las pruebas de sanitización
+  siguen capturándolos.
+- Después de cada prueba restaura el valor previo de esa propiedad, incluida
+  su ausencia, antes de cualquier aserción de limpieza. JUnit ejecuta esta
+  limpieza también cuando una prueba falla.
+- Comprueba que tanto el nivel raíz como las instancias y el orden de los
+  appenders raíz se conservan tras los contextos Boot.
+- `@Isolated` evita que otros tests de JUnit se ejecuten en paralelo mientras
+  esta clase usa la propiedad de alcance JVM.
+
+`CatalogPersistenceIntegrationTest`, su helper de captura y todas sus
+aserciones permanecen intactos: se exige el evento exacto, sin throwable ni
+URL JDBC privada, usuario, contraseña, SQL o detalle de socket. No se fuerza
+un nivel de logger en el consumidor para ocultar el fallo del productor.
+La configuración de logging de producción y del comando administrativo no
+cambia; tampoco cambian dependencias, plugins, migraciones, fixture,
+infraestructura, endpoints, dominio ni contratos de aplicación.
+
+### Ambos órdenes dentro de una misma JVM
+
+Las siguientes dos ejecuciones usan un único fork reutilizado para ambas
+clases. Se comprobó en sus logs el orden real de ejecución:
+
+```bash
+./server/mvnw -f server/pom.xml -Dtest=CatalogImportApplicationIntegrationTest,CatalogPersistenceIntegrationTest -DforkCount=1 -DreuseForks=true -Dsurefire.runOrder=reversealphabetical test
+./server/mvnw -f server/pom.xml -Dtest=CatalogImportApplicationIntegrationTest,CatalogPersistenceIntegrationTest -DforkCount=1 -DreuseForks=true -Dsurefire.runOrder=alphabetical test
+```
+
+| Orden | Resultado después de la corrección |
+|---|---|
+| Importación → persistencia (`reversealphabetical`) | 13 pruebas, 0 fallos, 0 errores, 0 omitidas |
+| Persistencia → importación (`alphabetical`) | 13 pruebas, 0 fallos, 0 errores, 0 omitidas |
+
+Además, una sonda temporal fuera del repositorio, con JUnit Platform Launcher
+6.0.3 ya utilizado por Surefire, ejecutó ambas secuencias consecutivas en un
+**único proceso Java**, sin reiniciar JVM ni Logback entre clases. El proceso
+`69258` ejecutó importación → persistencia → persistencia → importación:
+
+```text
+ORDER_PROBE pid=69258 step=1 class=com.propractix.academicinstitution.configuration.CatalogImportApplicationIntegrationTest tests=2 failed=0 logging_property_restored=true
+ORDER_PROBE pid=69258 step=2 class=com.propractix.academicinstitution.adapter.out.persistence.CatalogPersistenceIntegrationTest tests=11 failed=0 logging_property_restored=true
+ORDER_PROBE pid=69258 step=3 class=com.propractix.academicinstitution.adapter.out.persistence.CatalogPersistenceIntegrationTest tests=11 failed=0 logging_property_restored=true
+ORDER_PROBE pid=69258 step=4 class=com.propractix.academicinstitution.configuration.CatalogImportApplicationIntegrationTest tests=2 failed=0 logging_property_restored=true
+ORDER_PROBE_SUCCESS pid=69258 tests=26 order=import,persistence,persistence,import
+```
+
+Cada paso comprueba recuento esperado, ausencia de fallos y omisiones y
+restauración de la selección de logging. La primera secuencia parte de la
+propiedad ausente; la segunda parte del valor explícito
+`org.springframework.boot.logging.logback.LogbackLoggingSystem`. La sonda usa
+las clases compiladas reales y no añade dependencias al proyecto.
+
+### Validación completa del ajuste de soporte de pruebas
+
+| Comprobación | Resultado |
+|---|---|
+| `npm run infra:up` | Correcto; PostgreSQL y Mailpit locales saludables |
+| Ambos órdenes con Surefire y un único fork reutilizado | 13 pruebas por orden, sin fallos, errores ni omisiones |
+| Ambas secuencias consecutivas en la JVM `69258` | 26 pruebas correctas; selección de logging restaurada en cada paso |
+| `npm run server:test` | 126 pruebas, 0 fallos, 0 errores, 1 benchmark omitido |
+| `npm run server:verify` | Mismas 126 pruebas; empaquetado correcto |
+| `git diff --check` | Correcto |
+| Fixture sintética | SHA-256 `612b46e73d3fa6843e79b0efd2b0f253326803b976de5627a58daf6d416cc89a`, sin cambios |
+
+El SHA del ajuste y sus comprobaciones remotas independientes de CI, Trivy y
+Build OCI se registran en el [cuerpo de la PR #10](https://github.com/omarjtoscano/propractix-v2/pull/10)
+tras el push y la verificación. No se toma el verde de `700ac21` ni el reintento
+del commit documental `d0a422f` como evidencia remota de esta corrección.

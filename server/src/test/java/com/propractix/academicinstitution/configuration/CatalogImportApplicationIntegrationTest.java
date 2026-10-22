@@ -2,6 +2,10 @@ package com.propractix.academicinstitution.configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
 import com.propractix.academicinstitution.adapter.in.commandline.CatalogImportCommandLineAdapter;
 import com.propractix.academicinstitution.adapter.in.commandline.CatalogImportCommandLineAdapter.Operation;
 import com.propractix.academicinstitution.application.port.in.PublishInstitutionCatalog;
@@ -16,11 +20,18 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.HexFormat;
+import java.util.List;
 import javax.sql.DataSource;
 import org.flywaydb.core.Flyway;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.api.parallel.Isolated;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.logging.LoggingSystem;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -31,6 +42,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 @Testcontainers
+@Isolated("Temporarily selects Boot's logging system through a JVM system property")
 class CatalogImportApplicationIntegrationTest {
 
     private static final String HEADER = "sourceSystem,sourceRecordId,officialName,countryCode,sourceStatus\n";
@@ -42,6 +54,32 @@ class CatalogImportApplicationIntegrationTest {
 
     @TempDir
     Path temporaryDirectory;
+
+    private String previousLoggingSystem;
+    private Level previousRootLevel;
+    private List<Appender<ILoggingEvent>> previousRootAppenders;
+
+    @BeforeEach
+    void leaveLogbackUnderTheTestRunnersControl() {
+        previousLoggingSystem = System.getProperty(LoggingSystem.SYSTEM_PROPERTY);
+        previousRootLevel = rootLogger().getLevel();
+        previousRootAppenders = rootAppenders();
+        // These in-process Boot contexts test import wiring. They must not apply
+        // the CLI's root=OFF configuration to the test runner's shared Logback.
+        System.setProperty(LoggingSystem.SYSTEM_PROPERTY, LoggingSystem.NONE);
+    }
+
+    @AfterEach
+    void restoreLoggingSystemSelectionAndVerifyLogbackWasNotReconfigured() {
+        // Restore even when a test or the Logback assertions fail.
+        if (previousLoggingSystem == null) {
+            System.clearProperty(LoggingSystem.SYSTEM_PROPERTY);
+        } else {
+            System.setProperty(LoggingSystem.SYSTEM_PROPERTY, previousLoggingSystem);
+        }
+        assertThat(rootLogger().getLevel()).isEqualTo(previousRootLevel);
+        assertThat(rootAppenders()).containsExactlyElementsOf(previousRootAppenders);
+    }
 
     @Test
     void bothModesUseBootExternalConfigAndImportsWhileDryRunHasNoPublicationInfrastructure() throws Exception {
@@ -145,6 +183,16 @@ class CatalogImportApplicationIntegrationTest {
             assertThat(parser.parse(disallowed.getBytes(StandardCharsets.UTF_8)))
                     .isEqualTo(new CatalogArtifactParser.RejectedArtifact(CatalogArtifactParser.Failure.INVALID_CONTENT));
         }
+    }
+
+    private static Logger rootLogger() {
+        return (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+    }
+
+    private static List<Appender<ILoggingEvent>> rootAppenders() {
+        List<Appender<ILoggingEvent>> appenders = new ArrayList<>();
+        rootLogger().iteratorForAppenders().forEachRemaining(appenders::add);
+        return List.copyOf(appenders);
     }
 
     private static void assertExecution(ConfigurableApplicationContext context, Operation operation,
