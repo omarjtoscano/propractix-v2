@@ -6,6 +6,7 @@
 - Base integrada y aceptada de E3: `1549a4be80c87a1f7639a05ae66cda93efd10f3e`
 - Autorización: Product Owner, 2026-10-18
 - Aprobación expresa: Product Owner, 2026-10-22
+- Integración confirmada por el Product Owner el 2026-10-22: `9d128cc3df8c2a90177b1f18cea47708d8abfc03` (PR #10)
 - Commit revisado y aprobado: `700ac21de60748dce3365ba9209288e8b5108926`
 - Fecha de validación local de la corrección de revisión: 2026-10-19
 - Commit revisado, con PR #11 integrada: `f23abe0d8cfcb5139ba00ab385a41b4f93d4f744`
@@ -16,8 +17,9 @@
   `612b46e73d3fa6843e79b0efd2b0f253326803b976de5627a58daf6d416cc89a`
 
 Se registra la aceptación expresa de E4 por el Product Owner sobre el SHA
-indicado. I1-H02 permanece `IN_PROGRESS`; E5A y las entregas posteriores siguen
-sin autorización. La PR #10 permanece abierta y sin merge.
+indicado y la confirmación posterior de su integración mediante la PR #10.
+El Product Owner autorizó exclusivamente E5A el 2026-10-22; E5A e I1-H02
+permanecen `IN_PROGRESS`. E5B y posteriores siguen sin autorización.
 `CL0_CLOUD_STAGING` permanece `PENDING`.
 
 ## Correcciones de revisión del 2026-10-19
@@ -193,14 +195,16 @@ El nuevo commit documental se publica en `feature/i1-h02-e4-catalog-import`.
 Su SHA y los resultados independientes de CI, Trivy y Build OCI se registran
 en el [cuerpo de la PR #10](https://github.com/omarjtoscano/propractix-v2/pull/10)
 tras verificarlos, sin trasladar automáticamente el verde del commit aprobado.
-E4 está `ACCEPTED`; I1-H02 permanece `IN_PROGRESS`; E5A y las entregas
-posteriores siguen sin autorización. No se realiza el merge.
+En ese cambio documental E4 ya estaba `ACCEPTED` e I1-H02 permanecía
+`IN_PROGRESS`; E5A aún no estaba autorizada y no se realizó el merge.
+La integración y autorización posteriores se registran al inicio de este documento.
 
 ## Aislamiento de logging entre pruebas — 2026-10-22
 
 Base de esta corrección técnica: `d0a422f8497b0bc8698936ed2df8d036419b4f5f`.
 E4 conserva su aceptación sobre `700ac21`; I1-H02 permanece `IN_PROGRESS`.
-E5A y las entregas posteriores siguen sin autorización. No se realiza merge.
+Esta corrección fue anterior a la integración confirmada y a la autorización
+separada de E5A registradas al inicio; no realizó el merge.
 
 ### Causa reproducida y corrección limitada a pruebas
 

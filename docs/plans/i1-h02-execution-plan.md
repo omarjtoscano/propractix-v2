@@ -3,13 +3,16 @@
 - Estado del plan: `APPROVED`
 - Aprobación: Product Owner, 2026-09-27
 - Commit aprobado: `5f64aeb9e4ef4fd1c0deae845b0607407fe9133b`
-- Autorización vigente: E1, E2, E3 y `E4 — Parser e importación administrativa` están `ACCEPTED`; E5A y las entregas posteriores no están autorizadas
+- Autorización vigente: E1, E2, E3 y `E4 — Parser e importación administrativa` están `ACCEPTED`; E5A está autorizada y `IN_PROGRESS`; E5B y posteriores no están autorizadas
 - Historia: `I1-H02`
 - Estado de la historia: `IN_PROGRESS`; E1, E2, E3 y E4 están `ACCEPTED`
 - Rama de ejecución de E1: `feature/i1-h02-e1-domain`
 - Rama de ejecución de E2: `feature/i1-h02-e2-application-ports`
 - Rama de ejecución de E3: `feature/i1-h02-e3-catalog-persistence`
 - Rama de ejecución de E4: `feature/i1-h02-e4-catalog-import`
+- Rama de ejecución de E5A: `feature/i1-h02-e5a-rate-limit-foundation`
+- Autorización expresa de E5A: Product Owner, 2026-10-22
+- Commit de integración confirmado de E4: `9d128cc3df8c2a90177b1f18cea47708d8abfc03`
 - Autorización de E2: Product Owner, 2026-10-17
 - Aprobación de E2: Product Owner, 2026-10-17
 - Commit funcional aprobado de E2: `da90f183b6d41ca7ef152eb8004637839a206638`
@@ -33,10 +36,11 @@
 - Gates de entrada: H01 `DONE / ACCEPTED`; `F0_CLIENT_BASELINE`,
   `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS` `CLOSED`
 
-Este documento concreta la ejecución técnica de H02. La aceptación e
-integración de E3 autoriza exclusivamente E4, no reabre C0 ni S0, no modifica
-`CL0_CLOUD_STAGING`, no autoriza E5A ni entregas posteriores y no expone ningún
-endpoint adicional.
+Este documento concreta la ejecución técnica de H02. El Product Owner confirmó
+la integración de E4 el 2026-10-22 mediante `9d128cc3df8c2a90177b1f18cea47708d8abfc03`
+y autorizó exclusivamente E5A. C0 y S0 permanecen cerrados;
+`CL0_CLOUD_STAGING` permanece `PENDING`. E5B y posteriores no están autorizadas
+y esta entrega no expone endpoints.
 
 ## 1. Fuentes y decisiones aplicables
 
@@ -766,8 +770,8 @@ y [Build OCI release candidate #5](https://github.com/omarjtoscano/propractix-v2
 ambos correctos; `dependency-and-filesystem-scan`, incluido Trivy, está en
 verde. Esta aceptación parcial mantiene I1-H02 `IN_PROGRESS`; E2 fue autorizada
 y aceptada separadamente el 2026-10-17, E3 fue aceptada el 2026-10-18 y E4 fue
-aceptada el 2026-10-22 sobre `700ac21de60748dce3365ba9209288e8b5108926`. E5A y las entregas
-posteriores siguen sin autorización. `CL0_CLOUD_STAGING` no cambia.
+aceptada el 2026-10-22 sobre `700ac21de60748dce3365ba9209288e8b5108926`. La integración de E4 fue confirmada y E5A autorizada
+separadamente el 2026-10-22; E5B y posteriores siguen sin autorización. `CL0_CLOUD_STAGING` no cambia.
 
 Archivos previstos:
 
@@ -865,11 +869,11 @@ terminaron correctamente sobre el commit aprobado; [dependency-and-filesystem-sc
 está en verde. La [evidencia E4](../reviews/i1-h02-e4-catalog-import-evidence.md)
 recoge la corrección del parser, la configuración común y la integración i18n.
 
-Esta aceptación parcial mantiene I1-H02 `IN_PROGRESS`; E5A y las entregas
-posteriores siguen sin autorización. La PR #10 permanece abierta y sin merge.
-No autoriza snapshot RUCT real, documentación bajo `docs/catalog/snapshots/`,
-REST/OpenAPI, nuevas funcionalidades frontend, rate limiting, AWS ni cambios
-de `CL0_CLOUD_STAGING`, que permanece `PENDING`.
+La integración de E4 mediante la PR #10 fue confirmada por el Product Owner
+el 2026-10-22 sobre `9d128cc3df8c2a90177b1f18cea47708d8abfc03`.
+I1-H02 permanece `IN_PROGRESS`; la autorización separada siguiente habilita
+solo E5A. E5B y posteriores, snapshot RUCT real, REST/OpenAPI, frontend y AWS
+continúan fuera de alcance; `CL0_CLOUD_STAGING` permanece `PENDING`.
 
 Archivos previstos:
 
@@ -883,6 +887,22 @@ Archivos previstos:
 - tests de contrato CSV y verificación de su hash aprobado.
 
 ### E5A — Policy loader, configuración, IP, HMAC y secretos
+
+Estado: `IN_PROGRESS`. Autorización expresa del Product Owner el 2026-10-22,
+desde la integración confirmada de E4 `9d128cc3df8c2a90177b1f18cea47708d8abfc03`
+en `increment/01-company-identity-catalog`. Rama:
+`feature/i1-h02-e5a-rate-limit-foundation`.
+
+La autorización comprende exclusivamente modelo técnico y puertos, carga de
+S0 canónica sin duplicar ni cambiar su política, configuración tipada y
+validada, resolución/normalización segura de IP, HMAC, archivos de secretos
+locales sintéticos y pruebas de configuración, IP, HMAC y sanitización.
+El empaquetado Maven/OCI debe incluir ese mismo archivo canónico.
+No incluye migraciones de rate limiting, persistencia/operación E5B, filtro
+HTTP, Caddy, endpoints, OpenAPI, frontend, RUCT real ni AWS.
+`CL0_CLOUD_STAGING` sigue `PENDING`. E5A e I1-H02 siguen `IN_PROGRESS`;
+la implementación, commit, push y Draft PR autorizados no son aceptación ni merge.
+Véase la [evidencia E5A](../reviews/i1-h02-e5a-rate-limit-foundation-evidence.md).
 
 Archivos previstos:
 
@@ -1063,8 +1083,8 @@ Estas decisiones forman parte del plan aprobado. I1-H02 permanece
 están `ACCEPTED` por el Product Owner desde el 2026-10-17, E3 está `ACCEPTED`
 desde el 2026-10-18 y su integración está aceptada mediante
 `1549a4be80c87a1f7639a05ae66cda93efd10f3e`; E4 está `ACCEPTED` desde el
-2026-10-22 sobre `700ac21de60748dce3365ba9209288e8b5108926`. E5A y las
-entregas posteriores no están autorizadas:
+2026-10-22 sobre `700ac21de60748dce3365ba9209288e8b5108926`. Su integración se confirmó mediante `9d128cc3df8c2a90177b1f18cea47708d8abfc03`.
+E5A está autorizada y `IN_PROGRESS`; E5B y posteriores no están autorizadas:
 
 | Decisión aceptada | Aplicación |
 |---|---|
@@ -1081,6 +1101,6 @@ entregas posteriores no están autorizadas:
 | Librería CSV, si se propone una en implementación | Solo se aceptará una utilidad fijada, con licencia/dependencias revisadas; no puede cambiar el contrato ni convertirse en librería estructural. Un parser propio estricto es la alternativa. | Revisión técnica ordinaria; no ADR salvo cambio estructural. |
 | Deriva del formato RUCT real | El procedimiento aceptado de doble revisión detecta cambios; un mapeo ambiguo bloquea esa publicación sin alterar el snapshot vigente. | Producto + Datos resuelven la ambigüedad concreta antes de publicar; no reabre C0. |
 
-No hay contradicción que obligue a crear un ADR. La aceptación de E4 no
-autoriza E5A ni entregas posteriores, AWS, otro endpoint ni una ampliación
-funcional de H02. `CL0_CLOUD_STAGING` permanece sin cambios.
+No hay contradicción que obligue a crear un ADR. La autorización expresa de
+E5A del 2026-10-22 no autoriza E5B ni posteriores, AWS, endpoints ni una
+ampliación funcional de H02. `CL0_CLOUD_STAGING` permanece `PENDING`.

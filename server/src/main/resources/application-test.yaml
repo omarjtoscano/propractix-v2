@@ -2,6 +2,7 @@ spring:
   config:
     activate:
       on-profile: test
+    import: configtree:./target/test-classes/secrets/
 
 propractix:
   runtime:

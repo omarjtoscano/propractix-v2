@@ -64,6 +64,18 @@ class ArchitectureRulesTest {
             .allowEmptyShould(true);
 
     @ArchTest
+    static final ArchRule rate_limit_application_is_framework_free = noClasses()
+            .that().resideInAPackage("com.propractix.platform.ratelimit.application..")
+            .should().dependOnClassesThat().resideInAnyPackage(
+                    "org.springframework..", "jakarta.persistence..", "org.yaml..", "jakarta.servlet..",
+                    "com.fasterxml.jackson..", "tools.jackson..", "io.micrometer..", "software.amazon.awssdk..");
+
+    @ArchTest
+    static final ArchRule catalog_does_not_import_rate_limit_implementations = noClasses()
+            .that().resideInAPackage("com.propractix.academicinstitution..")
+            .should().dependOnClassesThat().resideInAPackage("com.propractix.platform.ratelimit..");
+
+    @ArchTest
     static final ArchRule rest_adapters_are_not_consumed_inward = noClasses()
             .that().resideInAnyPackage("..domain..", "..application..")
             .should().dependOnClassesThat().resideInAPackage("..adapter.in.rest..")

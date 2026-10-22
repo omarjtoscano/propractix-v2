@@ -2,10 +2,12 @@
 .github
 .idea
 .local
-docs
+docs/**
+!docs/policies/
+!docs/policies/public-endpoint-rate-limits-v1.yaml
 infra
 node_modules
 client/node_modules
 client/dist
-server
+server/target
 *.md
