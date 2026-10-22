@@ -1,10 +1,12 @@
 # Evidencia de implementación de I1-H02 E4
 
 - Entrega: `E4 — Parser e importación administrativa`
-- Estado: `IN_PROGRESS`
+- Estado: `ACCEPTED`
 - Rama: `feature/i1-h02-e4-catalog-import`
 - Base integrada y aceptada de E3: `1549a4be80c87a1f7639a05ae66cda93efd10f3e`
 - Autorización: Product Owner, 2026-10-18
+- Aprobación expresa: Product Owner, 2026-10-22
+- Commit revisado y aprobado: `700ac21de60748dce3365ba9209288e8b5108926`
 - Fecha de validación local de la corrección de revisión: 2026-10-19
 - Commit revisado, con PR #11 integrada: `f23abe0d8cfcb5139ba00ab385a41b4f93d4f744`
 - Commit funcional corregido y validado localmente: `cf23c1ebbd698e24bf8edb3472f492a366ded6bd`
@@ -13,8 +15,10 @@
 - SHA-256 exacto:
   `612b46e73d3fa6843e79b0efd2b0f253326803b976de5627a58daf6d416cc89a`
 
-E4 permanece `IN_PROGRESS`: este documento no registra aceptación, no cierra
-I1-H02 y no autoriza E5A ni ninguna entrega posterior.
+Se registra la aceptación expresa de E4 por el Product Owner sobre el SHA
+indicado. I1-H02 permanece `IN_PROGRESS`; E5A y las entregas posteriores siguen
+sin autorización. La PR #10 permanece abierta y sin merge.
+`CL0_CLOUD_STAGING` permanece `PENDING`.
 
 ## Correcciones de revisión del 2026-10-19
 
@@ -46,8 +50,9 @@ integrada en esta rama mediante `f23abe0d8cfcb5139ba00ab385a41b4f93d4f744`.
 Por tanto, el diff acumulado de la PR #10 **sí contiene cambios frontend**:
 errores ES/EN por códigos, `ErrorMessage`, límite de errores del shell,
 selector/preferencia de idioma, resolución de locale y controles del cliente.
-Véase la [guía i18n](../development/i18n-and-errors.md). Esta integración no
-acepta E4 ni inicia E5A; esta corrección de revisión no añade cambios frontend.
+Véase la [guía i18n](../development/i18n-and-errors.md). Su integración no
+constituyó la aceptación de E4 ni inició E5A. E4 se acepta por la aprobación
+posterior del 2026-10-22; la corrección de revisión no añadió cambios frontend.
 
 ## Alcance verificado
 
@@ -160,22 +165,33 @@ AWS ni cambios de `CL0_CLOUD_STAGING`; no se inició E5A. Los cambios frontend
 del diff acumulado proceden de la corrección i18n integrada de la PR #11.
 La fixture sintética existente se reutilizó sin modificar sus bytes.
 
-## Evidencia remota
+## Evidencia remota del commit aprobado
 
-La Draft PR #10 permanece abierta y sin merge. La evidencia histórica de
-`ffb7f537125072b77666d34813a2ea94b7d6425d` no valida esta corrección.
-Las validaciones locales del 2026-10-19 corresponden al commit funcional
-`cf23c1ebbd698e24bf8edb3472f492a366ded6bd`, publicado en la misma rama y PR #10.
-GitHub ha creado estas ejecuciones para ese SHA:
+Verificada el 2026-10-22 sobre `700ac21de60748dce3365ba9209288e8b5108926`:
 
-| Comprobación | Ejecución del SHA funcional corregido |
+| Comprobación | Resultado |
 |---|---|
-| CI | [CI #33](https://github.com/omarjtoscano/propractix-v2/actions/runs/39282326341) |
-| Dependencias y filesystem, incluido Trivy | [dependency-and-filesystem-scan](https://github.com/omarjtoscano/propractix-v2/actions/runs/39282326341/job/118158889001) |
-| Build OCI | [Build OCI release candidate #16](https://github.com/omarjtoscano/propractix-v2/actions/runs/39282326439) |
+| [CI #34](https://github.com/omarjtoscano/propractix-v2/actions/runs/39282934222) | `completed / success`; los cinco jobs correctos |
+| [dependency-and-filesystem-scan, incluido Trivy](https://github.com/omarjtoscano/propractix-v2/actions/runs/39282934222/job/118160825110) | `completed / success`; paso `Scan dependencies and filesystem` correcto |
+| [Build OCI release candidate #17](https://github.com/omarjtoscano/propractix-v2/actions/runs/39282934186) | `completed / success`; construcción de servidor y cliente, manifiesto y archivos OCI correctos |
 
-Al registrar esta evidencia, las ejecuciones siguen en cola: no se atribuye
-un resultado verde antes de que terminen. El estado final y las ejecuciones
-del HEAD posterior que solo registra esta evidencia se mantienen en el
-[cuerpo de la PR #10](https://github.com/omarjtoscano/propractix-v2/pull/10),
-con su SHA exacto. E4 e I1-H02 siguen `IN_PROGRESS`.
+Las ejecuciones se contrastaron con el `head_sha` exacto del commit aprobado.
+Esta evidencia sustituye la espera en cola registrada el 2026-10-19. La
+aceptación no se apoya únicamente en las ejecuciones históricas de `ffb7f537`.
+Las pruebas locales del 2026-10-19 corresponden al commit funcional
+`cf23c1ebbd698e24bf8edb3472f492a366ded6bd`; `700ac21` añadió su evidencia
+documental y es el SHA revisado y aprobado expresamente por el Product Owner.
+
+## Registro documental de aceptación
+
+La actualización del 2026-10-22 solo modifica documentación de estado, planes
+y evidencia; no modifica código, infraestructura ni la fixture. Se comprueban
+`git diff --check`, el diff completo y el estado de Git antes del commit. No se
+atribuyen nuevas ejecuciones locales de servidor o cliente a este cambio.
+
+El nuevo commit documental se publica en `feature/i1-h02-e4-catalog-import`.
+Su SHA y los resultados independientes de CI, Trivy y Build OCI se registran
+en el [cuerpo de la PR #10](https://github.com/omarjtoscano/propractix-v2/pull/10)
+tras verificarlos, sin trasladar automáticamente el verde del commit aprobado.
+E4 está `ACCEPTED`; I1-H02 permanece `IN_PROGRESS`; E5A y las entregas
+posteriores siguen sin autorización. No se realiza el merge.

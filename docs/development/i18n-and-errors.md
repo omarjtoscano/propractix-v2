@@ -5,7 +5,9 @@ Base: `ffb7f537125072b77666d34813a2ea94b7d6425d`.
 Rama original: `feature/i1-h02-i18n-errors`. La [PR #11](https://github.com/omarjtoscano/propractix-v2/pull/11)
 ya está integrada en `feature/i1-h02-e4-catalog-import` mediante
 `f23abe0d8cfcb5139ba00ab385a41b4f93d4f744`.
-I1-H02 y E4 continúan `IN_PROGRESS`. No se inicia E5A.
+E4 está `ACCEPTED` por aprobación del Product Owner el 2026-10-22 sobre
+`700ac21de60748dce3365ba9209288e8b5108926`. I1-H02 continúa `IN_PROGRESS`;
+E5A y las entregas posteriores siguen sin autorización.
 
 ## Qué se traduce
 
