@@ -8,8 +8,10 @@ Solo contiene la operación `searchAcademicInstitutions`.
 `S0_PUBLIC_ENDPOINTS` está `CLOSED`; E1–E5B están `ACCEPTED`. El Product Owner
 aprobó E5B el 2026-10-23 sobre
 `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`. I1-H02 permanece `IN_PROGRESS`.
-E5B incorpora persistencia y operación sin exposición HTTP; E5C y posteriores
-no están autorizadas. El cierre de S0 no autoriza por sí solo la exposición
+E5B está integrada mediante `7bd7bf6b4191d92cfe39864333ce5b5c3467115a`
+(PR #13), confirmado por el Product Owner el 2026-10-23. E5C está autorizada
+exclusivamente y permanece `IN_PROGRESS`; E6 y posteriores no están autorizadas.
+El cierre de S0 no autoriza por sí solo la exposición
 ni amplía la política o el alcance de H02.
 
 El mecanismo pertenece a `platform.ratelimit`, usa PostgreSQL 16 y falla
@@ -138,7 +140,7 @@ restaurar el conjunto anterior completo. No retirar primero la clave antigua.
 
 1. Identificar el modo configurado. La conexión directa local usa
    `REMOTE_ADDRESS` e ignora ambas cabeceras. El perfil detrás de Caddy elige
-   explícitamente exactamente uno entre `FORWARDED` y `X_FORWARDED_FOR`.
+   `X_FORWARDED_FOR` según el plan aprobado de H02; `FORWARDED` no está habilitado.
 2. Rechazar como inválida cualquier configuración que confíe simultáneamente en
    ambas cabeceras.
 3. Confirmar si el peer inmediato del socket pertenece realmente a un CIDR
@@ -242,3 +244,41 @@ La política S0 versionada sigue intacta; una rotación operativa real requiere
 la nueva política revisada y el procedimiento de solapamiento de 180 segundos
 indicado arriba. No hay retirada automática de claves, backfill ni cambios de
 cuota en caliente.
+
+
+## Integración HTTP implementada en E5C
+
+E5C e I1-H02 permanecen `IN_PROGRESS`; no existe aceptación ni merge de E5C.
+El único método/ruta que pasa por el filtro y la autorización HTTP es
+`GET /api/v1/academic-institutions`, usando la misma comprobación exacta en
+ambos lugares. Las variantes codificadas, otros métodos y otras rutas no
+adquieren autorización. El controlador funcional queda reservado a E6; los
+controladores de las pruebas no se empaquetan en el JAR.
+
+El filtro se registra únicamente en el contenedor servlet para `REQUEST`,
+después de `CorrelationIdFilter` y antes de Spring Security. No se añade a
+la cadena de seguridad. Los rechazos escriben el Problem Detail directamente,
+sin `sendError`, redispatch ni invocación de MVC. `Retry-After` procede de la
+decisión para 429 y es 1 para 503. `correlationId` se toma de la cabecera ya
+resuelta por el filtro de correlación; `instance` contiene solo la ruta fija.
+No se serializan excepciones ni valores de entrada.
+
+La configuración común mantiene `REMOTE_ADDRESS` y la confianza proxy
+inactiva. Para habilitar `X_FORWARDED_FOR` deben configurarse conjuntamente
+CIDR explícitos y `caddy-sanitization-configured-and-tested=true`, con evidencia
+revisada por entorno. Los CIDR de las pruebas son sintéticos y no autorizan
+configuración cloud. `server.forward-headers-strategy=none` conserva el peer
+del socket; la configuración HTTP rechaza `NATIVE` y `FRAMEWORK` al arrancar
+para impedir procesamiento paralelo al resolver validado. El Caddyfile elimina ambas cabeceras recibidas
+y reconstruye únicamente X-Forwarded-For desde `{remote_host}` en API y readyz.
+Cada proxy intermedio adicional exige evidencia de append del peer observado.
+
+Los niveles de logging web, seguridad y JDBC se fijan en INFO para impedir que
+los valores de depuración por defecto, incluido DEBUG del entorno, registren
+queries, cabeceras o parámetros. No activar request logging, trazas de parámetros
+JDBC ni access logs con datos de petición. Caddy elimina el objeto `request`
+de sus logs de ejecución, incluidos errores de transporte; conserva la señal
+operativa y el código técnico. Healthz, readyz y health/liveness/readiness del
+servidor conservan su comportamiento y no consumen cuota.
+
+Véase la [evidencia local E5C](../reviews/i1-h02-e5c-http-rate-limit-evidence.md).

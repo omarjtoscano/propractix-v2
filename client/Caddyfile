@@ -1,22 +1,46 @@
+{
+	log {
+		format filter {
+			wrap json
+			fields {
+				request delete
+				remote_ip delete
+				remote_port delete
+				headers delete
+				uri delete
+			}
+		}
+	}
+}
+
+(sanitized_backend) {
+	request_header -Forwarded
+	request_header -X-Forwarded-For
+	reverse_proxy server:8080 {
+		header_up -Forwarded
+		header_up X-Forwarded-For {remote_host}
+	}
+}
+
 {$PROPRACTIX_SITE_ADDRESS}
 
 encode zstd gzip
 
 handle /healthz {
-    respond "ok" 200
+	respond "ok" 200
 }
 
 handle /readyz {
-    rewrite * /actuator/health/readiness
-    reverse_proxy server:8080
+	rewrite * /actuator/health/readiness
+	import sanitized_backend
 }
 
 handle /api/* {
-    reverse_proxy server:8080
+	import sanitized_backend
 }
 
 handle {
-    root * /srv
-    try_files {path} /index.html
-    file_server
+	root * /srv
+	try_files {path} /index.html
+	file_server
 }

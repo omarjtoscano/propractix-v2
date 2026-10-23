@@ -3,8 +3,8 @@
 - Fecha: 2026-10-23.
 - Estado de E5B: `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23.
 - Commit funcional aprobado: `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`.
-- Estado de I1-H02: `IN_PROGRESS`; E5C y posteriores sin autorización.
-- [PR #13](https://github.com/omarjtoscano/propractix-v2/pull/13): Draft y sin merge.
+- Estado vigente de I1-H02: `IN_PROGRESS`; E5C autorizada exclusivamente y `IN_PROGRESS`; E6 y posteriores sin autorización.
+- [PR #13](https://github.com/omarjtoscano/propractix-v2/pull/13): integrada mediante `7bd7bf6b4191d92cfe39864333ce5b5c3467115a`, confirmado por el Product Owner el 2026-10-23.
 - Autorización: Product Owner, exclusivamente E5B, 2026-10-23.
 - Base actualizada y creación de rama: `8f8f1b0bda8c9d066ba4751272939b4ae5cf6590`
   de `origin/increment/01-company-identity-catalog`.
@@ -147,3 +147,16 @@ El commit documental se publica en la misma rama; su SHA y la verificación
 independiente de CI, Trivy y Build OCI se registran en el cuerpo de la PR #13
 tras comprobarlas. Los resultados del commit funcional aprobado no sustituyen
 la verificación del nuevo commit documental.
+
+
+## Integración de E5B y autorización separada de E5C — 2026-10-23
+
+El Product Owner confirmó expresamente la integración de E5B mediante
+`7bd7bf6b4191d92cfe39864333ce5b5c3467115a` (PR #13) y autorizó exclusivamente E5C
+en `feature/i1-h02-e5c-http-rate-limit`, desde el incremento actualizado.
+Los estados anteriores de Draft/sin merge y ausencia de autorización de E5C
+son el registro histórico de la entrega E5B antes de esta decisión posterior.
+E5B conserva su aceptación funcional; E5C e I1-H02 están `IN_PROGRESS`, sin
+aceptación de E5C ni merge autorizado. E6 y posteriores siguen fuera de alcance;
+S0, migraciones aplicadas y `CL0_CLOUD_STAGING` (`PENDING`) no cambian.
+Véase la [evidencia E5C](i1-h02-e5c-http-rate-limit-evidence.md).

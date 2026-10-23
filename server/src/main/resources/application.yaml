@@ -1,5 +1,8 @@
 debug: false
 
+server:
+  forward-headers-strategy: none
+
 spring:
   application:
     name: propractix-backend
@@ -29,6 +32,10 @@ management:
         include: health
 
 logging:
+  level:
+    web: INFO
+    org.springframework.security: INFO
+    org.springframework.jdbc.core: INFO
   structured:
     format:
       console: ecs
