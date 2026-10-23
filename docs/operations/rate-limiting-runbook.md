@@ -5,8 +5,11 @@
 Este runbook opera la baseline aprobada en
 [`public-endpoint-rate-limits-v1.yaml`](../policies/public-endpoint-rate-limits-v1.yaml).
 Solo contiene la operación `searchAcademicInstitutions`.
-`S0_PUBLIC_ENDPOINTS` está `CLOSED` e I1-H02 está `READY`, pero todavía no se ha
-iniciado ni implementado. El cierre de S0 no autoriza por sí solo la exposición
+`S0_PUBLIC_ENDPOINTS` está `CLOSED`; E1–E5B están `ACCEPTED`. El Product Owner
+aprobó E5B el 2026-10-23 sobre
+`53d15ffb779d2b8e2a6680cba0388bddd3cebd30`. I1-H02 permanece `IN_PROGRESS`.
+E5B incorpora persistencia y operación sin exposición HTTP; E5C y posteriores
+no están autorizadas. El cierre de S0 no autoriza por sí solo la exposición
 ni amplía la política o el alcance de H02.
 
 El mecanismo pertenece a `platform.ratelimit`, usa PostgreSQL 16 y falla
@@ -191,3 +194,51 @@ Antes de cerrar una incidencia:
 
 Una alerta no autoriza por sí sola a modificar límites ni a añadir una operación
 no incluida.
+
+
+## Operación implementada en E5B
+
+`RateLimitAdmission` y los puertos de mantenimiento se componen en
+`RateLimitPersistenceConfiguration`. La CLI administrativa es un proceso
+separado sin endpoint health y no carga el rate limiter. El servidor conserva
+los endpoints health existentes, sin nuevos endpoints ni cambios de seguridad
+HTTP. `rateLimit` participa en readiness, mientras liveness sigue independiente.
+La falta de tabla/columnas/permisos, fallo de PostgreSQL o backlog que supera
+los umbrales aprobados producen health `DOWN` sin detalles ni excepciones.
+Las claves y la política siguen siendo validadas al construir E5A.
+
+La admisión usa una transacción JDBC independiente en `READ_COMMITTED`. Un solo
+`UPSERT` reclama todas las reglas y versiones, ordenadas por clave para evitar
+interbloqueos. PostgreSQL calcula ventanas fijas desde epoch UTC, TTL y
+`Retry-After`; una denegación revierte todos los incrementos e inserciones.
+Los timeouts técnicos son 1 segundo para locks y 2 segundos para sentencias.
+Un error SQL, de conexión, transacción o commit produce únicamente
+`rate_limiter_unavailable:storage`, sin causa adjunta y sin bypass. Un commit
+incierto puede consumir cuota aunque la llamada falle cerrada; nunca concede
+admisión por incertidumbre.
+
+El scheduler ejecuta limpieza con delay de un minuto derivado de S0. Cada lote
+borra hasta 1 000 filas expiradas con `FOR UPDATE SKIP LOCKED`; cada ciclo tiene
+un presupuesto de 100 lotes, con transacciones cortas independientes. Las
+filas bloqueadas o un backlog superior al presupuesto se reevalúan en el ciclo
+siguiente. No se borran buckets activos. La expiración lógica usa el reloj de
+PostgreSQL y no espera al scheduler.
+
+La señal `rate_limit_cleanup_incident` contiene solo operación, versión de
+política, recuento y edad agregados. Se emite si el backlog supera cualquiera
+de los umbrales de S0; Operaciones abre la incidencia conforme a este runbook.
+`rate_limit_cleanup_completed` registra recuento eliminado y duración;
+`rate_limit_cleanup_failed` registra únicamente la clase `storage` e incrementa
+el contador aprobado de errores. No se envían mensajes ni se crean incidencias
+en servicios externos desde esta implementación.
+
+Micrometer registra únicamente las tres familias aprobadas de contadores.
+Las combinaciones de etiquetas se crean desde la operación, versión, reglas
+y taxonomía de errores validadas; ninguna entrada de la petición crea una label.
+No se habilita exposición HTTP de métricas en E5B.
+
+La rotación se ejercita con políticas exclusivamente sintéticas de pruebas.
+La política S0 versionada sigue intacta; una rotación operativa real requiere
+la nueva política revisada y el procedimiento de solapamiento de 180 segundos
+indicado arriba. No hay retirada automática de claves, backfill ni cambios de
+cuota en caliente.

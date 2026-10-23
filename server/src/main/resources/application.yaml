@@ -22,7 +22,7 @@ management:
         liveness:
           include: livenessState
         readiness:
-          include: readinessState,db
+          include: readinessState,db,rateLimit
   endpoints:
     web:
       exposure:

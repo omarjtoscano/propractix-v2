@@ -46,6 +46,8 @@ public final class CatalogImportCommandLineApplication {
                 : CatalogImportPublicationConfiguration.class;
         return new SpringApplicationBuilder(configuration)
                 .web(WebApplicationType.NONE)
+                // This isolated administrative process has no server readiness contributors.
+                .properties("management.endpoint.health.access=none")
                 .bannerMode(org.springframework.boot.Banner.Mode.OFF)
                 .logStartupInfo(false)
                 .run(args);
