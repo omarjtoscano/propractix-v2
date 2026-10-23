@@ -41,6 +41,10 @@ propractix:
   runtime:
     environment: ${PROPRACTIX_ENVIRONMENT:local}
     release-sha: ${PROPRACTIX_RELEASE_SHA:development}
+  rate-limit:
+    ip-mode: REMOTE_ADDRESS
+    trusted-proxy-cidrs: []
+    caddy-sanitization-configured-and-tested: false
   catalog:
     enabled-countries:
       - ES

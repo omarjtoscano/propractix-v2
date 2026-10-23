@@ -31,3 +31,12 @@ if [ -e "${secret_file}" ] && ! git check-ignore -q "${secret_file}"; then
     echo "Generated local secret is not ignored" >&2
     exit 1
 fi
+
+# HMAC material uses the same ignored config tree as the database password.
+hmac_file="infra/local/secrets/rate-limit-hmac-rl-ip-v1"
+test -r infra/local/templates/rate-limit-hmac-rl-ip-v1.example
+if [ -e "${hmac_file}" ]; then
+    git check-ignore -q "${hmac_file}"
+    test "$(stat -c '%a' "${hmac_file}")" = "600"
+    test "$(wc -c < "${hmac_file}")" -ge 32
+fi
