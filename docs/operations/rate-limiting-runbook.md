@@ -5,12 +5,11 @@
 Este runbook opera la baseline aprobada en
 [`public-endpoint-rate-limits-v1.yaml`](../policies/public-endpoint-rate-limits-v1.yaml).
 Solo contiene la operación `searchAcademicInstitutions`.
-`S0_PUBLIC_ENDPOINTS` está `CLOSED`; E1–E5B están `ACCEPTED`. El Product Owner
+`S0_PUBLIC_ENDPOINTS` está `CLOSED`; E1–E5C están `ACCEPTED`. El Product Owner
 aprobó E5B el 2026-10-23 sobre
 `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`. I1-H02 permanece `IN_PROGRESS`.
 E5B está integrada mediante `7bd7bf6b4191d92cfe39864333ce5b5c3467115a`
-(PR #13), confirmado por el Product Owner el 2026-10-23. E5C está autorizada
-exclusivamente y permanece `IN_PROGRESS`; E6 y posteriores no están autorizadas.
+(PR #13), confirmado por el Product Owner el 2026-10-23. E5C está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `8a0a46a293b9b2d9482e92c05161f8b7b57b04e2`; E6 y posteriores no están autorizadas.
 El cierre de S0 no autoriza por sí solo la exposición
 ni amplía la política o el alcance de H02.
 
@@ -248,7 +247,9 @@ cuota en caliente.
 
 ## Integración HTTP implementada en E5C
 
-E5C e I1-H02 permanecen `IN_PROGRESS`; no existe aceptación ni merge de E5C.
+E5C está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `8a0a46a293b9b2d9482e92c05161f8b7b57b04e2`.
+I1-H02 permanece `IN_PROGRESS`; la PR #14 sigue Draft y sin merge. E6 y
+posteriores no están autorizadas y `CL0_CLOUD_STAGING` permanece `PENDING`.
 El único método/ruta que pasa por el filtro y la autorización HTTP es
 `GET /api/v1/academic-institutions`, usando la misma comprobación exacta en
 ambos lugares. Las variantes codificadas, otros métodos y otras rutas no

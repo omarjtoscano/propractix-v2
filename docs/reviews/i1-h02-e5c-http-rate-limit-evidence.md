@@ -1,7 +1,10 @@
 # Evidencia E5C — Filtro HTTP, seguridad y borde Caddy
 
 - Fecha: 2026-10-23.
-- E5C e I1-H02: `IN_PROGRESS`; sin aceptación ni merge de E5C.
+- E5C: `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23.
+- Commit funcional aprobado: `8a0a46a293b9b2d9482e92c05161f8b7b57b04e2`.
+- I1-H02: `IN_PROGRESS`; E6 y posteriores sin autorización.
+- [PR #14](https://github.com/omarjtoscano/propractix-v2/pull/14): Draft y sin merge.
 - Autorización expresa y exclusiva: Product Owner, 2026-10-23.
 - Integración de E5B confirmada por el Product Owner:
   `7bd7bf6b4191d92cfe39864333ce5b5c3467115a` ([PR #13](https://github.com/omarjtoscano/propractix-v2/pull/13)).
@@ -81,7 +84,10 @@ de la familia métrica S0 existente. Los errores tipados de admisión se cuentan
 en el decorator de E5B; errores inesperados se cierran con clase `storage`.
 No se añaden endpoints de métricas ni labels derivados de la petición.
 
-## Validación local
+## Validación local del commit funcional aprobado
+
+Los resultados siguientes corresponden a `8a0a46a293b9b2d9482e92c05161f8b7b57b04e2`;
+no son nuevas ejecuciones del cambio documental de aceptación.
 
 Entorno: JDK 21.0.12.1 y Docker disponibles, PostgreSQL 16 mediante
 Testcontainers y Caddy 2.10.2 con el digest fijado en el Dockerfile.
@@ -111,9 +117,25 @@ cabeceras confiables inválidas, 429/503, fallo real de tabla, mensajes de
 provider/timeout sensibles, correlación válida/generada, limpieza de MDC,
 health independiente y rechazo de forwarding nativo/framework paralelo.
 
-La verificación remota sobre el SHA final, sus enlaces y el estado Draft de la
-PR se registran en el cuerpo de la PR después de completar CI, Trivy y Build
-OCI; este registro local no sustituye esa comprobación.
+## Verificación remota del commit funcional aprobado
+
+Sobre `8a0a46a293b9b2d9482e92c05161f8b7b57b04e2`:
+
+- [CI #41](https://github.com/omarjtoscano/propractix-v2/actions/runs/39977130409):
+  `completed / success`, cinco jobs correctos; backend confirma 238 pruebas,
+  0 fallos, 0 errores y 1 benchmark previsto omitido, BUILD SUCCESS.
+- [Trivy / dependency-and-filesystem-scan](https://github.com/omarjtoscano/propractix-v2/actions/runs/39977130409/job/120494556301):
+  `success`, incluido el paso `Scan dependencies and filesystem`.
+- [Build OCI release candidate #24](https://github.com/omarjtoscano/propractix-v2/actions/runs/39977130422):
+  `completed / success`; builds de servidor y cliente, manifiesto inmutable y
+  subida de artefactos correctos.
+
+El merge virtual `97bf35b38604211d195eff2827d5877ad1f2d8e9` tenía exactamente
+el mismo árbol que el head funcional:
+`e393093f46e2a2c19ffafc65507cd5777e559db3`. El artefacto OCI `12510979917`
+declara `workflow_run.head_sha=8a0a46a293b9b2d9482e92c05161f8b7b57b04e2`.
+La consulta del merge virtual no integró ninguna rama.
+Estos resultados no sustituyen la verificación del nuevo SHA documental.
 
 ## Límites y estado
 
@@ -129,6 +151,24 @@ la prueba de borde usa un Caddy real. Un proxy intermedio operativo adicional
 requiere evidencia de su propio comportamiento de append antes de confiar en
 su CIDR. No se activa confianza proxy en ningún perfil operativo.
 
-E5C e I1-H02 permanecen `IN_PROGRESS`. E6 y posteriores no están autorizadas.
-No se marca `ACCEPTED`, no se integra ninguna rama y `CL0_CLOUD_STAGING`
-permanece `PENDING`.
+E5C está `ACCEPTED` por aprobación expresa del Product Owner sobre
+`8a0a46a293b9b2d9482e92c05161f8b7b57b04e2`. I1-H02 permanece `IN_PROGRESS`, E6 y
+posteriores sin autorización y `CL0_CLOUD_STAGING` `PENDING`. La PR #14 sigue
+Draft y sin merge.
+
+## Registro documental de aceptación — 2026-10-23
+
+El Product Owner aprueba E5C sobre el commit funcional indicado y autoriza
+únicamente registrar la aceptación, actualizar esta evidencia y el cuerpo de
+la PR #14, y realizar commit/push en la misma rama. No se modifica código ni
+infraestructura ni se realiza merge. La aceptación no autoriza E6 ni posteriores.
+
+Se revisan el diff completo, `git diff --check` y `git status` antes del commit.
+No se atribuyen nuevas pruebas locales de servidor o cliente a este cambio
+exclusivamente documental.
+
+El SHA documental publicado y los enlaces de las ejecuciones disponibles se
+registran en el cuerpo de la PR #14. CI, Trivy y Build OCI sobre ese nuevo SHA
+quedan **pendientes de verificación del Product Owner**, que informará del
+resultado. El agente no espera ni supervisa las ejecuciones; los resultados del
+commit funcional aprobado no se presentan como validación del nuevo commit.
