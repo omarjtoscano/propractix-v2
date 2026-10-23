@@ -1,7 +1,11 @@
 # Evidencia de implementación de I1-H02 E5A
 
 - Entrega: `E5A — Policy loader, configuración, IP, HMAC y secretos`.
-- Estado de E5A e I1-H02: `IN_PROGRESS`; sin aceptación ni merge.
+- Estado de E5A: `ACCEPTED`.
+- Aprobación expresa del Product Owner: 2026-10-23.
+- Commit funcional revisado y aprobado: `6cc21e6c034b9c32db3f22ebb8b977f4250614cd`.
+- Estado de I1-H02: `IN_PROGRESS`; E5B y posteriores sin autorización.
+- [PR #12](https://github.com/omarjtoscano/propractix-v2/pull/12): Draft y sin merge.
 - Autorización expresa del Product Owner: 2026-10-22.
 - Integración de E4 confirmada por el Product Owner:
   `9d128cc3df8c2a90177b1f18cea47708d8abfc03`.
@@ -103,7 +107,37 @@ detectar IP, material HMAC, versiones, pseudónimos o valores rechazados.
   comprobación de ausencia de secretos/plantillas en el JAR: correctas.
 - `git diff --check`, diff completo y `git status`: revisados antes del commit.
 
-La Draft PR registra el SHA final publicado y las ejecuciones de CI, Trivy y
-Build OCI verificadas sobre ese head. Su éxito técnico no modifica los estados
-`IN_PROGRESS` ni autoriza E5B o el merge. La evidencia de sanitización E5A no
-sustituye las futuras comprobaciones de HTTP, Caddy, BD, métricas y trazas.
+## Evidencia remota del commit funcional aprobado
+
+Sobre `6cc21e6c034b9c32db3f22ebb8b977f4250614cd` terminaron correctamente:
+
+- [CI #37](https://github.com/omarjtoscano/propractix-v2/actions/runs/39809605429):
+  cinco jobs correctos; backend con 188 pruebas, 0 fallos, 0 errores y
+  1 benchmark omitido.
+- [dependency-and-filesystem-scan, incluido Trivy](https://github.com/omarjtoscano/propractix-v2/actions/runs/39809605429/job/119931969449):
+  `success`, incluido el paso de escaneo.
+- [Build OCI release candidate #20](https://github.com/omarjtoscano/propractix-v2/actions/runs/39809605488):
+  `success`; servidor y cliente AMD64/ARM64, manifiesto y subida de artefactos.
+
+Ambos runs identifican ese head. El merge virtual de la PR
+`d63dbd40f192f9b2bc760bc261a2f14c67f04e9e` tiene el mismo árbol
+`d33b26779e1016d12327db5bd05fb4939cfbae34` que el commit aprobado.
+El artefacto OCI `12440051904` está asociado a ese head; no se realizó merge.
+
+## Registro documental de aceptación — 2026-10-23
+
+El Product Owner aprobó expresamente E5A sobre el commit funcional indicado.
+Esta actualización solo registra estado, planes y evidencia; no modifica código
+ni infraestructura. I1-H02 permanece `IN_PROGRESS`, E5B y posteriores siguen
+sin autorización y `CL0_CLOUD_STAGING` permanece `PENDING`.
+La PR #12 continúa Draft y sin merge.
+
+Se comprueban `git diff --check`, el diff completo y `git status` antes del
+commit. No se atribuyen nuevas ejecuciones locales de servidor o cliente a
+este cambio documental. El nuevo commit se publica en la misma rama
+`feature/i1-h02-e5a-rate-limit-foundation`; su SHA y las verificaciones
+independientes de CI, Trivy y Build OCI se registran en el cuerpo de la PR #12
+tras comprobarlas, sin trasladar el verde del commit funcional aprobado.
+
+La evidencia de sanitización E5A no sustituye las futuras comprobaciones de
+HTTP, Caddy, BD, métricas y trazas.

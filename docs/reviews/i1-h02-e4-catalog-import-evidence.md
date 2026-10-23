@@ -18,8 +18,9 @@
 
 Se registra la aceptación expresa de E4 por el Product Owner sobre el SHA
 indicado y la confirmación posterior de su integración mediante la PR #10.
-El Product Owner autorizó exclusivamente E5A el 2026-10-22; E5A e I1-H02
-permanecen `IN_PROGRESS`. E5B y posteriores siguen sin autorización.
+El Product Owner autorizó exclusivamente E5A el 2026-10-22 y la aprobó
+el 2026-10-23 sobre `6cc21e6c034b9c32db3f22ebb8b977f4250614cd`: E5A está `ACCEPTED`.
+I1-H02 permanece `IN_PROGRESS`; E5B y posteriores siguen sin autorización.
 `CL0_CLOUD_STAGING` permanece `PENDING`.
 
 ## Correcciones de revisión del 2026-10-19

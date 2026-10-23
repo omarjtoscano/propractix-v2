@@ -3,15 +3,18 @@
 - Estado del plan: `APPROVED`
 - Aprobación: Product Owner, 2026-09-27
 - Commit aprobado: `5f64aeb9e4ef4fd1c0deae845b0607407fe9133b`
-- Autorización vigente: E1, E2, E3 y `E4 — Parser e importación administrativa` están `ACCEPTED`; E5A está autorizada y `IN_PROGRESS`; E5B y posteriores no están autorizadas
+- Autorización vigente: E1, E2, E3 y `E4 — Parser e importación administrativa` están `ACCEPTED`; E5A está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `6cc21e6c034b9c32db3f22ebb8b977f4250614cd`; E5B y posteriores no están autorizadas
 - Historia: `I1-H02`
-- Estado de la historia: `IN_PROGRESS`; E1, E2, E3 y E4 están `ACCEPTED`
+- Estado de la historia: `IN_PROGRESS`; E1, E2, E3, E4 y E5A están `ACCEPTED`
 - Rama de ejecución de E1: `feature/i1-h02-e1-domain`
 - Rama de ejecución de E2: `feature/i1-h02-e2-application-ports`
 - Rama de ejecución de E3: `feature/i1-h02-e3-catalog-persistence`
 - Rama de ejecución de E4: `feature/i1-h02-e4-catalog-import`
 - Rama de ejecución de E5A: `feature/i1-h02-e5a-rate-limit-foundation`
 - Autorización expresa de E5A: Product Owner, 2026-10-22
+- Aprobación expresa de E5A: Product Owner, 2026-10-23
+- Commit funcional aprobado de E5A: `6cc21e6c034b9c32db3f22ebb8b977f4250614cd`
+- Evidencias sobre E5A aprobada: [CI #37](https://github.com/omarjtoscano/propractix-v2/actions/runs/39809605429), incluido Trivy, y [Build OCI release candidate #20](https://github.com/omarjtoscano/propractix-v2/actions/runs/39809605488), ambos correctos
 - Commit de integración confirmado de E4: `9d128cc3df8c2a90177b1f18cea47708d8abfc03`
 - Autorización de E2: Product Owner, 2026-10-17
 - Aprobación de E2: Product Owner, 2026-10-17
@@ -888,7 +891,11 @@ Archivos previstos:
 
 ### E5A — Policy loader, configuración, IP, HMAC y secretos
 
-Estado: `IN_PROGRESS`. Autorización expresa del Product Owner el 2026-10-22,
+Estado: `ACCEPTED`. Aprobación expresa del Product Owner el 2026-10-23 sobre
+el commit funcional `6cc21e6c034b9c32db3f22ebb8b977f4250614cd`.
+[CI #37](https://github.com/omarjtoscano/propractix-v2/actions/runs/39809605429),
+incluido Trivy, y [Build OCI release candidate #20](https://github.com/omarjtoscano/propractix-v2/actions/runs/39809605488)
+terminaron correctamente sobre ese SHA. Autorización original el 2026-10-22,
 desde la integración confirmada de E4 `9d128cc3df8c2a90177b1f18cea47708d8abfc03`
 en `increment/01-company-identity-catalog`. Rama:
 `feature/i1-h02-e5a-rate-limit-foundation`.
@@ -900,8 +907,9 @@ locales sintéticos y pruebas de configuración, IP, HMAC y sanitización.
 El empaquetado Maven/OCI debe incluir ese mismo archivo canónico.
 No incluye migraciones de rate limiting, persistencia/operación E5B, filtro
 HTTP, Caddy, endpoints, OpenAPI, frontend, RUCT real ni AWS.
-`CL0_CLOUD_STAGING` sigue `PENDING`. E5A e I1-H02 siguen `IN_PROGRESS`;
-la implementación, commit, push y Draft PR autorizados no son aceptación ni merge.
+`CL0_CLOUD_STAGING` sigue `PENDING`. I1-H02 permanece `IN_PROGRESS`;
+la aceptación parcial de E5A no autoriza E5B ni posteriores ni el merge.
+La PR #12 permanece Draft y sin merge.
 Véase la [evidencia E5A](../reviews/i1-h02-e5a-rate-limit-foundation-evidence.md).
 
 Archivos previstos:
@@ -1084,7 +1092,7 @@ están `ACCEPTED` por el Product Owner desde el 2026-10-17, E3 está `ACCEPTED`
 desde el 2026-10-18 y su integración está aceptada mediante
 `1549a4be80c87a1f7639a05ae66cda93efd10f3e`; E4 está `ACCEPTED` desde el
 2026-10-22 sobre `700ac21de60748dce3365ba9209288e8b5108926`. Su integración se confirmó mediante `9d128cc3df8c2a90177b1f18cea47708d8abfc03`.
-E5A está autorizada y `IN_PROGRESS`; E5B y posteriores no están autorizadas:
+E5A está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `6cc21e6c034b9c32db3f22ebb8b977f4250614cd`; E5B y posteriores no están autorizadas:
 
 | Decisión aceptada | Aplicación |
 |---|---|
