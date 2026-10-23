@@ -5,10 +5,11 @@
 Este runbook opera la baseline aprobada en
 [`public-endpoint-rate-limits-v1.yaml`](../policies/public-endpoint-rate-limits-v1.yaml).
 Solo contiene la operación `searchAcademicInstitutions`.
-`S0_PUBLIC_ENDPOINTS` está `CLOSED`; E1–E5A están `ACCEPTED`. E5B e I1-H02
-permanecen `IN_PROGRESS` por autorización separada del Product Owner del
-2026-10-23. E5B incorpora persistencia y operación sin exposición HTTP; E5C y
-posteriores no están autorizadas. El cierre de S0 no autoriza por sí solo la exposición
+`S0_PUBLIC_ENDPOINTS` está `CLOSED`; E1–E5B están `ACCEPTED`. El Product Owner
+aprobó E5B el 2026-10-23 sobre
+`53d15ffb779d2b8e2a6680cba0388bddd3cebd30`. I1-H02 permanece `IN_PROGRESS`.
+E5B incorpora persistencia y operación sin exposición HTTP; E5C y posteriores
+no están autorizadas. El cierre de S0 no autoriza por sí solo la exposición
 ni amplía la política o el alcance de H02.
 
 El mecanismo pertenece a `platform.ratelimit`, usa PostgreSQL 16 y falla

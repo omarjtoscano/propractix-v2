@@ -3,15 +3,17 @@
 - Estado del plan: `APPROVED`
 - Aprobación: Product Owner, 2026-09-27
 - Commit aprobado: `5f64aeb9e4ef4fd1c0deae845b0607407fe9133b`
-- Autorización vigente: E1, E2, E3 y `E4 — Parser e importación administrativa` están `ACCEPTED`; E5A está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `6cc21e6c034b9c32db3f22ebb8b977f4250614cd`; E5B está autorizada y `IN_PROGRESS`; E5C y posteriores no están autorizadas
+- Autorización vigente: E1, E2, E3 y `E4 — Parser e importación administrativa` están `ACCEPTED`; E5A está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `6cc21e6c034b9c32db3f22ebb8b977f4250614cd`; E5B está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`; E5C y posteriores no están autorizadas
 - Historia: `I1-H02`
-- Estado de la historia: `IN_PROGRESS`; E1, E2, E3, E4 y E5A están `ACCEPTED`
+- Estado de la historia: `IN_PROGRESS`; E1, E2, E3, E4, E5A y E5B están `ACCEPTED`
 - Rama de ejecución de E1: `feature/i1-h02-e1-domain`
 - Rama de ejecución de E2: `feature/i1-h02-e2-application-ports`
 - Rama de ejecución de E3: `feature/i1-h02-e3-catalog-persistence`
 - Rama de ejecución de E4: `feature/i1-h02-e4-catalog-import`
 - Rama de ejecución de E5B: `feature/i1-h02-e5b-rate-limit-persistence`
-- Autorización expresa de E5B: Product Owner, 2026-10-23; estado `IN_PROGRESS`
+- Autorización expresa de E5B: Product Owner, 2026-10-23
+- Aprobación expresa de E5B: Product Owner, 2026-10-23; estado `ACCEPTED`
+- Commit funcional aprobado de E5B: `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`
 - Commit de integración confirmado de E5A: `8f8f1b0bda8c9d066ba4751272939b4ae5cf6590`
 - Rama de ejecución de E5A: `feature/i1-h02-e5a-rate-limit-foundation`
 - Autorización expresa de E5A: Product Owner, 2026-10-22
@@ -47,7 +49,7 @@ la integración de E4 el 2026-10-22 mediante `9d128cc3df8c2a90177b1f18cea47708d8
 y autorizó exclusivamente E5A. El 2026-10-23 confirmó su integración mediante
 `8f8f1b0bda8c9d066ba4751272939b4ae5cf6590` y autorizó exclusivamente E5B.
 C0 y S0 permanecen cerrados;
-`CL0_CLOUD_STAGING` permanece `PENDING`. E5B está autorizada y `IN_PROGRESS`; E5C y posteriores no están autorizadas
+`CL0_CLOUD_STAGING` permanece `PENDING`. E5B está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`; E5C y posteriores no están autorizadas
 y esta entrega no expone endpoints.
 
 ## 1. Fuentes y decisiones aplicables
@@ -779,7 +781,7 @@ ambos correctos; `dependency-and-filesystem-scan`, incluido Trivy, está en
 verde. Esta aceptación parcial mantiene I1-H02 `IN_PROGRESS`; E2 fue autorizada
 y aceptada separadamente el 2026-10-17, E3 fue aceptada el 2026-10-18 y E4 fue
 aceptada el 2026-10-22 sobre `700ac21de60748dce3365ba9209288e8b5108926`. La integración de E4 fue confirmada y E5A autorizada
-separadamente el 2026-10-22; E5B está autorizada y `IN_PROGRESS`; E5C y posteriores siguen sin autorización. `CL0_CLOUD_STAGING` no cambia.
+separadamente el 2026-10-22; E5B está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`; E5C y posteriores siguen sin autorización. `CL0_CLOUD_STAGING` no cambia.
 
 Archivos previstos:
 
@@ -935,7 +937,13 @@ Archivos previstos:
 
 ### E5B — Persistencia PostgreSQL y operación del rate limiter
 
-Estado: `IN_PROGRESS`. Autorización expresa del Product Owner el 2026-10-23,
+Estado: `ACCEPTED`. Aprobación expresa del Product Owner el 2026-10-23 sobre
+el commit funcional `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`.
+[CI #39](https://github.com/omarjtoscano/propractix-v2/actions/runs/39970611118),
+incluido Trivy, y [Build OCI release candidate #22](https://github.com/omarjtoscano/propractix-v2/actions/runs/39970610896)
+terminaron correctamente sobre ese SHA: 209 pruebas, 0 fallos, 0 errores y
+1 benchmark omitido. La PR #13 permanece Draft y sin merge.
+Autorización original del Product Owner el 2026-10-23,
 tras confirmar la integración de E5A mediante
 `8f8f1b0bda8c9d066ba4751272939b4ae5cf6590`. Rama creada desde
 `origin/increment/01-company-identity-catalog` actualizada en ese SHA:
@@ -950,7 +958,7 @@ La política S0 canónica se conserva byte por byte.
 
 El Product Owner autoriza commit, push y apertura de Draft PR hacia la rama de
 incremento, con verificación de CI, Trivy y Build OCI sobre el SHA final.
-E5B e I1-H02 permanecen `IN_PROGRESS`; no hay aceptación ni autorización de
+E5B está `ACCEPTED`; I1-H02 permanece `IN_PROGRESS`. No hay autorización de
 merge. E5C y posteriores, filtro HTTP, seguridad HTTP/Caddy, endpoints,
 OpenAPI, frontend, RUCT real y AWS siguen fuera de alcance.
 `CL0_CLOUD_STAGING` permanece `PENDING`.
@@ -1121,7 +1129,7 @@ están `ACCEPTED` por el Product Owner desde el 2026-10-17, E3 está `ACCEPTED`
 desde el 2026-10-18 y su integración está aceptada mediante
 `1549a4be80c87a1f7639a05ae66cda93efd10f3e`; E4 está `ACCEPTED` desde el
 2026-10-22 sobre `700ac21de60748dce3365ba9209288e8b5108926`. Su integración se confirmó mediante `9d128cc3df8c2a90177b1f18cea47708d8abfc03`.
-E5A está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `6cc21e6c034b9c32db3f22ebb8b977f4250614cd`; E5B está autorizada y `IN_PROGRESS`; E5C y posteriores no están autorizadas:
+E5A está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `6cc21e6c034b9c32db3f22ebb8b977f4250614cd`; E5B está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`; E5C y posteriores no están autorizadas:
 
 | Decisión aceptada | Aplicación |
 |---|---|

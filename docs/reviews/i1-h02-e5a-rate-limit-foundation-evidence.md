@@ -4,7 +4,7 @@
 - Estado de E5A: `ACCEPTED`.
 - Aprobación expresa del Product Owner: 2026-10-23.
 - Commit funcional revisado y aprobado: `6cc21e6c034b9c32db3f22ebb8b977f4250614cd`.
-- Estado de I1-H02: `IN_PROGRESS`; E5B autorizada separadamente el 2026-10-23 y `IN_PROGRESS`; E5C y posteriores sin autorización.
+- Estado de I1-H02: `IN_PROGRESS`; E5B `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`; E5C y posteriores sin autorización.
 - [PR #12](https://github.com/omarjtoscano/propractix-v2/pull/12): integrada; confirmación expresa del Product Owner el 2026-10-23 sobre `8f8f1b0bda8c9d066ba4751272939b4ae5cf6590`.
 - Autorización expresa del Product Owner: 2026-10-22.
 - Integración de E4 confirmada por el Product Owner:
@@ -149,6 +149,8 @@ El Product Owner confirmó el 2026-10-23 la integración de E5A mediante
 `8f8f1b0bda8c9d066ba4751272939b4ae5cf6590` y autorizó exclusivamente E5B en
 `feature/i1-h02-e5b-rate-limit-persistence`. Las referencias anteriores a la
 PR Draft y a E5B sin autorización documentan el estado de la aceptación previa;
-esta decisión posterior las sustituye. E5B e I1-H02 permanecen `IN_PROGRESS`,
-sin aceptación de E5B ni merge de su PR; E5C y posteriores no se autorizan y
+esta decisión posterior las sustituye. El Product Owner aprobó después E5B
+el 2026-10-23 sobre `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`; E5B está
+`ACCEPTED` e I1-H02 permanece `IN_PROGRESS`, sin merge de la PR #13.
+E5C y posteriores no se autorizan y
 `CL0_CLOUD_STAGING` permanece `PENDING`.

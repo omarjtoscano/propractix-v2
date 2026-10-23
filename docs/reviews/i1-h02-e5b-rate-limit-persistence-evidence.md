@@ -1,7 +1,10 @@
 # Evidencia E5B — Persistencia y operación del rate limiter
 
 - Fecha: 2026-10-23.
-- Estado de E5B e I1-H02: `IN_PROGRESS`; no aceptación ni merge.
+- Estado de E5B: `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23.
+- Commit funcional aprobado: `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`.
+- Estado de I1-H02: `IN_PROGRESS`; E5C y posteriores sin autorización.
+- [PR #13](https://github.com/omarjtoscano/propractix-v2/pull/13): Draft y sin merge.
 - Autorización: Product Owner, exclusivamente E5B, 2026-10-23.
 - Base actualizada y creación de rama: `8f8f1b0bda8c9d066ba4751272939b4ae5cf6590`
   de `origin/increment/01-company-identity-catalog`.
@@ -59,7 +62,10 @@ política validada; una operación desconocida no genera cardinalidad nueva.
 No se habilita un endpoint de métricas. Application continúa libre de frameworks,
 y configuración conecta los puertos con los adapters.
 
-## Pruebas y validación local
+## Pruebas y validación local del commit funcional aprobado
+
+Los resultados siguientes corresponden a `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`;
+no son nuevas ejecuciones locales del cambio documental de aceptación.
 
 Entorno: JDK 21 y Docker disponibles; PostgreSQL **16.15**, mediante
 `postgres:16-alpine` en Testcontainers, sin H2 ni servicios AWS.
@@ -100,9 +106,20 @@ comprueba límites, TTL, intervalo y umbrales derivados de ese mismo fichero.
 
 ## Verificación remota y límites
 
-El SHA final, la Draft PR y las evidencias de CI, Trivy y Build OCI se registran
-en el cuerpo de la PR después del push y se verifican contra ese mismo head.
-Las evidencias funcionales anteriores de E5A no sustituyen esta comprobación.
+Verificación del commit funcional aprobado `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`:
+
+- [CI #39](https://github.com/omarjtoscano/propractix-v2/actions/runs/39970611118):
+  `completed / success`, cinco jobs correctos; 209 pruebas, 0 fallos, 0 errores
+  y 1 benchmark omitido.
+- [Trivy / dependency-and-filesystem-scan](https://github.com/omarjtoscano/propractix-v2/actions/runs/39970611118/job/120471971801):
+  `success`, incluido `Scan dependencies and filesystem`.
+- [Build OCI release candidate #22](https://github.com/omarjtoscano/propractix-v2/actions/runs/39970610896):
+  `completed / success`; servidor y cliente AMD64/ARM64, manifiesto y artefactos.
+
+El merge virtual `ed37aa7cadb19a72cc47f6df7d66aad4f32a6490` tenía el mismo árbol
+que ese head: `364cf2c024236634e3fa29bcc6b3d178e59b7713`. El artefacto OCI
+`12509331985` declara `workflow_run.head_sha=53d15ffb779d2b8e2a6680cba0388bddd3cebd30`.
+No se integró ninguna rama.
 
 Un commit incierto puede consumir cuota aunque la llamada falle cerrada;
 no habilita bypass. Las filas bloqueadas o por encima del presupuesto de
@@ -114,3 +131,19 @@ prohibida por el procedimiento operativo; no se automatiza su aprobación.
 E5C y posteriores siguen sin autorización: no hay filtro HTTP, cambios de
 seguridad HTTP/Caddy, endpoints funcionales, OpenAPI, frontend, RUCT real ni AWS.
 S0 permanece intacta y `CL0_CLOUD_STAGING` permanece `PENDING`.
+
+
+## Registro documental de aceptación — 2026-10-23
+
+El Product Owner aprueba expresamente E5B sobre el commit funcional indicado.
+Este cambio registra exclusivamente estados, planes y evidencia; no modifica
+código, infraestructura ni la política S0. E5B queda `ACCEPTED`; I1-H02 sigue
+`IN_PROGRESS`, E5C y posteriores sin autorización y `CL0_CLOUD_STAGING`
+`PENDING`. La PR #13 permanece Draft y sin merge.
+
+Se revisan el diff completo, `git diff --check` y `git status` antes del commit.
+No se atribuyen nuevas pruebas locales de servidor o cliente a este cambio.
+El commit documental se publica en la misma rama; su SHA y la verificación
+independiente de CI, Trivy y Build OCI se registran en el cuerpo de la PR #13
+tras comprobarlas. Los resultados del commit funcional aprobado no sustituyen
+la verificación del nuevo commit documental.
