@@ -98,7 +98,7 @@ class CatalogPersistenceIntegrationTest {
     void migratesTheCatalogFromEmptyPostgreSql16AndEnforcesCoreConstraints() {
         assertEquals(16, jdbcTemplate.queryForObject(
                 "SELECT current_setting('server_version_num')::integer / 10000", Integer.class));
-        assertEquals(1, jdbcTemplate.queryForObject(
+        assertEquals(2, jdbcTemplate.queryForObject(
                 "SELECT count(*) FROM flyway_schema_history WHERE success", Integer.class));
         assertEquals(2, jdbcTemplate.queryForObject(
                 """

@@ -6,11 +6,21 @@ import java.util.Set;
 
 /** Technical policy only; no catalog or tenant model is imported. */
 public record RateLimitPolicy(
-        String policyId, int version, Operation operation, Hmac hmac, Duration cleanupInterval) {
+        String policyId, int version, Operation operation, Hmac hmac, Cleanup cleanup) {
     public RateLimitPolicy {
         if (policyId == null || policyId.isBlank() || version < 1 || operation == null || hmac == null
-                || cleanupInterval == null || cleanupInterval.isNegative() || cleanupInterval.isZero()) {
+                || cleanup == null) {
             throw new RateLimitFailure(RateLimitFailure.ErrorClass.CONFIGURATION);
+        }
+    }
+
+    public record Cleanup(Duration interval, long expiredRowIncidentThreshold, Duration oldestExpiredIncidentThreshold) {
+        public Cleanup {
+            if (interval == null || interval.isNegative() || interval.isZero()
+                    || expiredRowIncidentThreshold < 1 || oldestExpiredIncidentThreshold == null
+                    || oldestExpiredIncidentThreshold.isNegative() || oldestExpiredIncidentThreshold.isZero()) {
+                throw new RateLimitFailure(RateLimitFailure.ErrorClass.CONFIGURATION);
+            }
         }
     }
 

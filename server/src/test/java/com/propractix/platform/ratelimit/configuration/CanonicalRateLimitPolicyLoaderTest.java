@@ -38,6 +38,12 @@ class CanonicalRateLimitPolicyLoaderTest {
         }
         assertThat(policy.operation().excludedQueryParameters()).containsExactlyInAnyOrder("query", "cursor", "limit");
         assertThat(policy.hmac().readVersions()).contains(policy.hmac().writeVersion());
+        Map<?, ?> cleanup = (Map<?, ?>) ((Map<?, ?>) spec.get("storage")).get("cleanup");
+        Map<?, ?> thresholds = (Map<?, ?>) cleanup.get("expiredRowsIncidentThresholds");
+        assertThat(policy.cleanup().interval()).isEqualTo(Duration.parse((String) cleanup.get("interval")));
+        assertThat(policy.cleanup().expiredRowIncidentThreshold()).isEqualTo(((Number) thresholds.get("rowCountGreaterThan")).longValue());
+        assertThat(policy.cleanup().oldestExpiredIncidentThreshold())
+                .isEqualTo(Duration.parse((String) thresholds.get("oldestExpiredAgeGreaterThan")));
     }
 
     @Test

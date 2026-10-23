@@ -10,6 +10,9 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.jdbc.core.JdbcTemplate;
+import com.propractix.platform.ratelimit.application.port.in.RateLimitAdmission;
+import com.propractix.platform.ratelimit.adapter.in.maintenance.RateLimitCleanupJob;
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest(properties = "debug=false")
@@ -17,6 +20,9 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 @ActiveProfiles("test")
 class PropractixBackendApplicationTests {
     private final MockMvcTester mockMvc;
+    @Autowired JdbcTemplate jdbc;
+    @Autowired RateLimitAdmission rateLimitAdmission;
+    @Autowired RateLimitCleanupJob rateLimitCleanupJob;
 
     @Autowired
     PropractixBackendApplicationTests(MockMvcTester mockMvc) {
@@ -25,6 +31,8 @@ class PropractixBackendApplicationTests {
 
     @Test
     void contextLoads() {
+        assertThat(rateLimitAdmission).isNotNull();
+        assertThat(rateLimitCleanupJob).isNotNull();
     }
 
     @Test
@@ -45,6 +53,21 @@ class PropractixBackendApplicationTests {
         assertThat(result).bodyJson().extractingPath("$.status").isEqualTo("UP");
         assertThat(result).bodyText().doesNotContain(
                 "components", "details", "password", "username", "jdbc");
+    }
+
+    @Test
+    void missingRateLimitSchemaClosesReadinessWhileLivenessRemainsUp() {
+        jdbc.execute("ALTER TABLE platform_rate_limit_bucket RENAME TO platform_rate_limit_bucket_probe_test");
+        try {
+            var result = mockMvc.get().uri("/actuator/health/readiness").exchange();
+            assertThat(result).hasStatus(503);
+            assertThat(result).bodyJson().extractingPath("$.status").isEqualTo("DOWN");
+            assertThat(result).bodyText().doesNotContain("components", "details", "jdbc", "exception", "platform_rate_limit_bucket");
+            assertThat(mockMvc.get().uri("/actuator/health/liveness")).hasStatusOk();
+        } finally {
+            jdbc.execute("ALTER TABLE platform_rate_limit_bucket_probe_test RENAME TO platform_rate_limit_bucket");
+        }
+        assertThat(mockMvc.get().uri("/actuator/health/readiness")).hasStatusOk();
     }
 
     @Test

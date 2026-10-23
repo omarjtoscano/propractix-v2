@@ -62,6 +62,8 @@ public final class CanonicalRateLimitPolicyLoader implements RateLimitPolicyProv
                         Duration.parse(text(rule, "window")), Duration.parse(text(rule, "counterTtl")));
             }).toList();
             Map<?, ?> hmac = map(map(spec, "subject"), "hmac");
+            Map<?, ?> cleanup = map(map(spec, "storage"), "cleanup");
+            Map<?, ?> thresholds = map(cleanup, "expiredRowsIncidentThresholds");
             return new RateLimitPolicy(text(metadata, "policyId"), (Integer) metadata.get("version"),
                     new RateLimitPolicy.Operation(text(operation, "operationId"), text(operation, "method"),
                             text(operation, "pathTemplate"), text(operation, "contractVersion"),
@@ -69,7 +71,9 @@ public final class CanonicalRateLimitPolicyLoader implements RateLimitPolicyProv
                     new RateLimitPolicy.Hmac(text(hmac, "algorithm"), text(hmac, "purpose"),
                             text(hmac, "domainSeparator"), text(hmac, "encoding"), text(hmac, "writeVersion"),
                             strings(hmac, "readVersions")),
-                    Duration.parse(text(map(map(spec, "storage"), "cleanup"), "interval")));
+                    new RateLimitPolicy.Cleanup(Duration.parse(text(cleanup, "interval")),
+                            ((Number) thresholds.get("rowCountGreaterThan")).longValue(),
+                            Duration.parse(text(thresholds, "oldestExpiredAgeGreaterThan"))));
         } catch (Exception ex) {
             throw invalid();
         }
