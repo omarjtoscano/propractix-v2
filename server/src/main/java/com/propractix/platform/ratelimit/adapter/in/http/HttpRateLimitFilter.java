@@ -1,6 +1,7 @@
 package com.propractix.platform.ratelimit.adapter.in.http;
 
 import com.propractix.platform.observability.CorrelationIdFilter;
+import com.propractix.platform.web.PublicProblemDetails;
 import com.propractix.platform.ratelimit.application.model.ClientNetworkSubject;
 import com.propractix.platform.ratelimit.application.model.RateLimitDecision;
 import com.propractix.platform.ratelimit.application.model.RateLimitFailure;
@@ -11,7 +12,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
@@ -75,14 +75,8 @@ public final class HttpRateLimitFilter extends OncePerRequestFilter {
     }
 
     private void problem(HttpServletResponse response, int status, String code, long retryAfter) throws IOException {
-        ProblemDetail problem = ProblemDetail.forStatus(status);
-        problem.setType(URI.create("urn:propractix:problem:" + code));
-        problem.setTitle(code);
-        problem.setDetail(code);
-        problem.setInstance(URI.create(operation.path()));
-        problem.setProperty("code", code);
-        problem.setProperty("correlationId", response.getHeader(CorrelationIdFilter.HEADER_NAME));
-        problem.setProperty("violations", List.of());
+        ProblemDetail problem = PublicProblemDetails.create(status, code, operation.path(),
+                response.getHeader(CorrelationIdFilter.HEADER_NAME), List.of());
         response.setStatus(status);
         response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
         response.setHeader("Retry-After", Long.toString(retryAfter));

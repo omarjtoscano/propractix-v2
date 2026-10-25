@@ -11,6 +11,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.propractix.academicinstitution.adapter.in.rest.AcademicInstitutionSearchController;
+import com.propractix.academicinstitution.application.port.in.PublishInstitutionCatalog;
+import com.propractix.academicinstitution.application.port.in.SearchPublishedInstitutions;
 import com.propractix.platform.ratelimit.adapter.in.http.HttpRateLimitFilter;
 import com.propractix.platform.ratelimit.adapter.out.observability.MeteredRateLimitAdmission;
 import com.propractix.platform.ratelimit.application.model.ClientNetworkSubject;
@@ -25,7 +28,6 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,13 +37,11 @@ import org.mockito.ArgumentCaptor;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -51,11 +51,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
 import tools.jackson.databind.json.JsonMapper;
 
-@Import({TestcontainersConfiguration.class, HttpRateLimitIntegrationTest.ProbeConfiguration.class})
+@Import(TestcontainersConfiguration.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
         "propractix.rate-limit.ip-mode=X_FORWARDED_FOR",
         "propractix.rate-limit.trusted-proxy-cidrs[0]=10.0.0.0/8",
@@ -70,7 +68,9 @@ class HttpRateLimitIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired JdbcTemplate jdbc;
     @Autowired JsonMapper json;
-    @Autowired ProbeController controller;
+    @MockitoSpyBean AcademicInstitutionSearchController controller;
+    @MockitoSpyBean SearchPublishedInstitutions search;
+    @Autowired PublishInstitutionCatalog publisher;
     @Autowired FilterChainProxy security;
     @Autowired FilterRegistrationBean<HttpRateLimitFilter> registration;
     @MockitoSpyBean MeteredRateLimitAdmission admission;
@@ -81,15 +81,16 @@ class HttpRateLimitIntegrationTest {
     @BeforeEach
     void resetState() {
         jdbc.execute("TRUNCATE platform_rate_limit_bucket");
-        controller.calls.set(0);
+        jdbc.execute("TRUNCATE academicinstitution_institution, academicinstitution_catalog_import CASCADE");
+        SyntheticCatalog.publish(publisher, "Universidad Sintética");
     }
 
     @Test
     void oneAdmissionBeforeSecurityAndOneControllerExecutionPerRequest() throws Exception {
         mvc.perform(direct().header("X-Correlation-ID", "e5c-admitted")).andExpect(status().isOk());
         verify(admission).admit(eq(OPERATION), any());
-        assertThat(controller.calls.get()).isEqualTo(1);
-        assertThat(controller.correlation).isEqualTo("e5c-admitted");
+        assertControllerCalls(1);
+        verify(search).search(any());
         assertThat(security.getFilterChains()).allSatisfy(chain ->
                 assertThat(chain.getFilters()).noneMatch(HttpRateLimitFilter.class::isInstance));
         assertThat(jdbc.queryForObject("SELECT sum(request_count) FROM platform_rate_limit_bucket", Long.class))
@@ -103,7 +104,7 @@ class HttpRateLimitIntegrationTest {
             mvc.perform(direct().queryParam("query", "search-" + i).queryParam("cursor", "cursor-" + i)
                     .queryParam("limit", Integer.toString(i + 1))
                     .header("X-Forwarded-For", "198.51.100." + (i + 1))
-                    .header("Forwarded", "for=spoof-" + i)).andExpect(status().isOk());
+                    .header("Forwarded", "for=spoof-" + i)).andExpect(status().isBadRequest());
         }
         assertThat(jdbc.queryForObject("SELECT count(DISTINCT subject_fingerprint) FROM platform_rate_limit_bucket", Long.class))
                 .isEqualTo(1L);
@@ -117,7 +118,8 @@ class HttpRateLimitIntegrationTest {
                 .when(admission).admit(eq(OPERATION), any());
         MvcResult result = mvc.perform(direct().header("X-Correlation-ID", "e5c-limited")).andReturn();
         assertProblem(result, 429, "rate_limited", "37", "e5c-limited");
-        assertThat(controller.calls.get()).isZero();
+        assertControllerCalls(0);
+        verify(search, never()).search(any());
         assertThat(MDC.get("correlationId")).isNull();
     }
 
@@ -127,7 +129,8 @@ class HttpRateLimitIntegrationTest {
         doThrow(new RateLimitFailure(RateLimitFailure.ErrorClass.valueOf(kind.toUpperCase(java.util.Locale.ROOT))))
                 .when(admission).admit(eq(OPERATION), any());
         assertProblem(mvc.perform(direct()).andReturn(), 503, "rate_limiter_unavailable", "1", null);
-        assertThat(controller.calls.get()).isZero();
+        assertControllerCalls(0);
+        verify(search, never()).search(any());
     }
 
     @Test
@@ -135,7 +138,8 @@ class HttpRateLimitIntegrationTest {
         jdbc.execute("ALTER TABLE platform_rate_limit_bucket RENAME TO platform_rate_limit_bucket_e5c_test");
         try {
             assertProblem(mvc.perform(direct()).andReturn(), 503, "rate_limiter_unavailable", "1", null);
-            assertThat(controller.calls.get()).isZero();
+            assertControllerCalls(0);
+            verify(search, never()).search(any());
             mvc.perform(get("/actuator/health/liveness")).andExpect(status().isOk());
             MvcResult readiness = mvc.perform(get("/actuator/health/readiness")).andExpect(status().isServiceUnavailable()).andReturn();
             assertThat(readiness.getResponse().getContentAsString()).isEqualTo("{\"status\":\"DOWN\"}");
@@ -159,7 +163,8 @@ class HttpRateLimitIntegrationTest {
         assertProblem(result, 503, "rate_limiter_unavailable", "1", null);
         assertThat(result.getResponse().getContentAsString() + result.getResponse().getHeaderNames() + output.getAll())
                 .doesNotContain(sensitive, "192.0.2.9", "c0000209", "SQLTimeoutException", "IllegalStateException");
-        assertThat(controller.calls.get()).isZero();
+        assertControllerCalls(0);
+        verify(search, never()).search(any());
     }
 
     @Test
@@ -179,7 +184,8 @@ class HttpRateLimitIntegrationTest {
         assertProblem(mvc.perform(proxied().header("X-Forwarded-For", chain)).andReturn(),
                 503, "rate_limiter_unavailable", "1", null);
         verify(admission, never()).admit(any(), any());
-        assertThat(controller.calls.get()).isZero();
+        assertControllerCalls(0);
+        verify(search, never()).search(any());
     }
 
     @Test
@@ -191,7 +197,8 @@ class HttpRateLimitIntegrationTest {
             assertProblem(mvc.perform(request).andReturn(), 503, "rate_limiter_unavailable", "1", null);
         }
         verify(admission, never()).admit(any(), any());
-        assertThat(controller.calls.get()).isZero();
+        assertControllerCalls(0);
+        verify(search, never()).search(any());
         assertThat(output.getAll()).doesNotContain("192.0.2.9", "198.51.100.1", "SENSITIVE-SPOOF");
     }
 
@@ -203,7 +210,8 @@ class HttpRateLimitIntegrationTest {
         mvc.perform(get("/api/v1/not-implemented")).andExpect(status().isForbidden());
         mvc.perform(get(PATH + "/")).andExpect(status().isForbidden());
         verify(admission, never()).admit(any(), any());
-        assertThat(controller.calls.get()).isZero();
+        assertControllerCalls(0);
+        verify(search, never()).search(any());
     }
 
     @ParameterizedTest
@@ -213,7 +221,8 @@ class HttpRateLimitIntegrationTest {
         var response = HttpClient.newHttpClient().send(HttpRequest.newBuilder(
                 URI.create("http://127.0.0.1:" + port + path)).GET().build(), HttpResponse.BodyHandlers.ofString());
         assertThat(response.statusCode()).isIn(400, 403, 404);
-        assertThat(controller.calls.get()).isZero();
+        assertControllerCalls(0);
+        verify(search, never()).search(any());
         verify(admission, never()).admit(any(), any());
     }
 
@@ -223,7 +232,7 @@ class HttpRateLimitIntegrationTest {
                 .header("X-Forwarded-For", "192.0.2.9").header("X-Correlation-ID", "e5c-socket")
                 .GET().build(), HttpResponse.BodyHandlers.ofString());
         assertThat(response.statusCode()).isEqualTo(200);
-        assertThat(controller.calls.get()).isEqualTo(1);
+        assertControllerCalls(1);
         verify(resolver).resolve(eq("127.0.0.1"), eq(List.of("192.0.2.9")), eq(List.of()));
         verify(admission).admit(eq(OPERATION), any());
         assertThat(response.headers().firstValue("X-Correlation-ID")).contains("e5c-socket");
@@ -261,7 +270,7 @@ class HttpRateLimitIntegrationTest {
             assertThat(headers.getAllValues().getFirst()).isEqualTo(headers.getAllValues().getLast());
             assertThat(headers.getAllValues().getFirst().getFirst().toString())
                     .doesNotContain("198.51.100.", "203.0.113.9", "10.1.2.3", ",");
-            assertThat(controller.calls.get()).isEqualTo(2);
+            assertControllerCalls(2);
 
             doReturn(new RateLimitDecision(false, Duration.ofSeconds(11), Set.of("burst")))
                     .when(admission).admit(eq(OPERATION), any());
@@ -278,7 +287,7 @@ class HttpRateLimitIntegrationTest {
             assertThat(unavailable.headers().firstValue("Retry-After")).contains("1");
             assertThat(json.readTree(unavailable.body()).path("correlationId").asText())
                     .isEqualTo(unavailable.headers().firstValue("X-Correlation-ID").orElseThrow());
-            assertThat(controller.calls.get()).isEqualTo(2);
+            assertControllerCalls(2);
             assertThat(http.send(HttpRequest.newBuilder(URI.create(base + "/healthz")).GET().build(),
                     HttpResponse.BodyHandlers.ofString()).body()).isEqualTo("ok");
             var ready = http.send(HttpRequest.newBuilder(URI.create(base + "/readyz")).GET().build(), HttpResponse.BodyHandlers.ofString());
@@ -308,6 +317,7 @@ class HttpRateLimitIntegrationTest {
     }
 
     private void assertProblem(MvcResult result, int status, String code, String retry, String correlation) throws Exception {
+        AcademicInstitutionOpenApiContract.assertResponse(result);
         var response = result.getResponse();
         assertThat(response.getStatus()).isEqualTo(status);
         assertThat(response.getContentType()).isEqualTo("application/problem+json");
@@ -327,22 +337,7 @@ class HttpRateLimitIntegrationTest {
         assertThat(response.getContentAsString()).doesNotContain("192.0.2.9", "10.0.0.1", "fingerprint", "jdbc", "stackTrace");
     }
 
-    @TestConfiguration(proxyBeanMethods = false)
-    static class ProbeConfiguration {
-        @Bean ProbeController rateLimitProbeController() { return new ProbeController(); }
-    }
-
-    /** Deliberately test-only: E6 owns the functional catalog controller. */
-    @org.springframework.boot.test.context.TestComponent
-    @RestController
-    static class ProbeController {
-        final AtomicInteger calls = new AtomicInteger();
-        volatile String correlation;
-        @GetMapping(PATH)
-        String probe() {
-            calls.incrementAndGet();
-            correlation = MDC.get("correlationId");
-            return "test-only";
-        }
+    private void assertControllerCalls(int expected) {
+        verify(controller, org.mockito.Mockito.times(expected)).search(any(), any());
     }
 }

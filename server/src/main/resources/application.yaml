@@ -52,6 +52,10 @@ propractix:
     ip-mode: REMOTE_ADDRESS
     trusted-proxy-cidrs: []
     caddy-sanitization-configured-and-tested: false
+  academic-institution:
+    search:
+      default-limit: 20
+      max-limit: 50
   catalog:
     enabled-countries:
       - ES
