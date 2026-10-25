@@ -1,8 +1,12 @@
 # I1-H02 E6 — Contrato OpenAPI y API REST del catálogo
 
-Estado de E6 e I1-H02: `IN_PROGRESS`. Autorización expresa del Product Owner
-el 2026-10-23; validación local final el 2026-10-25. Esta evidencia no constituye
-aceptación ni autoriza merge, E7 o entregas posteriores.
+E6: `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-25 sobre
+`de269313888d912807536b5805e9e2c054955347`, incluida la corrección de privacidad de
+`sourceUrl`. I1-H02 permanece `IN_PROGRESS`; E7 y posteriores no están
+autorizadas y `CL0_CLOUD_STAGING` permanece `PENDING`. La PR
+[#15](https://github.com/omarjtoscano/propractix-v2/pull/15) sigue Draft y sin merge.
+La autorización original fue el 2026-10-23; las validaciones locales del
+commit funcional se conservan a continuación como evidencia histórica.
 
 ## Base e integración
 
@@ -93,7 +97,8 @@ dominio, aplicación, importación, persistencia, rate limiting y ArchUnit.
 
 El Product Owner autorizó corregir el hallazgo en la misma rama y Draft PR #15,
 con commit/push y verificación independiente posterior de CI, Trivy y Build OCI.
-E6 e I1-H02 permanecen `IN_PROGRESS`, sin aceptación ni merge.
+En aquella corrección E6 e I1-H02 permanecían `IN_PROGRESS`, sin aceptación
+ni merge; la aceptación posterior se registra al final de esta evidencia.
 
 El mapper REST valida la URL antes de construir la proyección pública. Solo
 admite HTTP(S), sin distinción de mayúsculas, con autoridad de servidor y host
@@ -146,5 +151,24 @@ de cliente/UI; no se adquiere RUCT real ni se ejecuta AWS.
 El SHA final y la Draft PR hacia `increment/01-company-identity-catalog` se
 entregan en la respuesta y en el cuerpo de la PR. **CI, Trivy y Build OCI
 quedan pendientes de verificación del Product Owner** sobre ese SHA. El agente
-no espera ni supervisa esas ejecuciones. E6 e I1-H02 siguen `IN_PROGRESS`,
-sin aceptación ni merge.
+no espera ni supervisa esas ejecuciones. E6 está `ACCEPTED`; I1-H02 sigue
+`IN_PROGRESS`, sin autorización de merge.
+
+## Registro documental de aceptación — 2026-10-25
+
+El Product Owner aprueba expresamente E6 implementada en
+`de269313888d912807536b5805e9e2c054955347`. La aceptación corresponde al commit funcional,
+incluida la protección de `sourceUrl`; no cierra I1-H02 ni habilita E7.
+
+Este registro modifica únicamente `AGENTS.md`, los planes de incremento y
+ejecución H02 y esta evidencia. Se actualiza también el cuerpo de la PR #15.
+Se revisan el diff completo, `git diff --check` y `git status` antes del commit;
+no se modifica código ni infraestructura y no se realiza merge. No se ejecutan
+nuevas pruebas de aplicación para este cambio documental ni se atribuyen a él
+las validaciones históricas del commit funcional.
+
+El SHA documental publicado se entrega en la respuesta y en el cuerpo de la
+PR #15. CI, Trivy y Build OCI sobre ese nuevo SHA quedan **pendientes de
+verificación del Product Owner**, que informará del resultado. El agente no
+espera ni supervisa esas ejecuciones. La PR permanece Draft; I1-H02
+`IN_PROGRESS`, E7 y posteriores sin autorización y `CL0_CLOUD_STAGING` `PENDING`.
