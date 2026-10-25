@@ -18,5 +18,33 @@
     "rate_limited": "You have made too many requests. Wait before trying again.",
     "rate_limiter_unavailable": "The service is temporarily unavailable. Please try again later.",
     "academic_institution_catalog_unavailable": "The university catalog is temporarily unavailable."
+  },
+  "academicInstitutions": {
+    "title": "Find a university",
+    "description": "Search the catalog and choose a university or tell us you cannot find it.",
+    "label": "University",
+    "hint": "Type to search. Use the arrow keys to browse results, Enter to select and Escape to close.",
+    "initial": "Open search to browse the catalog.",
+    "loading": "Searching universities…",
+    "empty": "No universities match your search.",
+    "results": "{{count}} universities available.",
+    "more": "Load more universities",
+    "retry": "Retry search",
+    "waiting": "You can search again in {{count}} seconds.",
+    "changed": "The catalog has changed. Search has been restarted.",
+    "manual": "I cannot find my university",
+    "manualLabel": "My university name",
+    "manualHelp": "This name stays on this screen only. It is not added to the catalog or saved on the server.",
+    "selected": "Selected university: {{name}}",
+    "selectedManual": "Manually entered university: {{name}}",
+    "scope": "The catalog is for information only: it does not certify affiliation, enrollment, eligibility, an agreement or compliance.",
+    "synthetic": "This version uses synthetic test data. It does not contain real RUCT data.",
+    "attribution": "Snapshot attribution",
+    "retrievedAt": "Source retrieved on {{date}}",
+    "source": "View snapshot source",
+    "results_one": "{{count}} university available.",
+    "results_other": "{{count}} universities available.",
+    "waiting_one": "You can search again in {{count}} second.",
+    "waiting_other": "You can search again in {{count}} seconds."
   }
 }

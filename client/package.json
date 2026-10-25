@@ -11,9 +11,11 @@
     "lint": "node scripts/check-visible-text.mjs && node scripts/check-i18n-parity.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node --test scripts/*.node.mjs && vitest run",
-    "build": "tsc --noEmit && vite build"
+    "build": "tsc --noEmit && vite build",
+    "generate": "npm --prefix ../tools/openapi-generator run generate"
   },
   "dependencies": {
+    "@tanstack/react-query": "5.102.8",
     "i18next": "26.4.2",
     "react": "19.3.0",
     "react-dom": "19.3.0",
