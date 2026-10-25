@@ -3,6 +3,7 @@ package com.propractix.academicinstitution.adapter.in.rest;
 import com.propractix.academicinstitution.application.query.AcademicInstitutionSearchPage;
 import com.propractix.academicinstitution.application.query.NormalizedInstitutionSearchTerm;
 import com.propractix.academicinstitution.application.query.SearchPublishedInstitutionsQuery;
+import java.net.URI;
 import java.util.Optional;
 import org.springframework.util.MultiValueMap;
 
@@ -33,12 +34,25 @@ public final class AcademicInstitutionSearchMapper {
     }
 
     public AcademicInstitutionSearchResponse toResponse(AcademicInstitutionSearchPage page) {
+        URI sourceUrl = publicSourceUrl(page.sourceUrl());
         return new AcademicInstitutionSearchResponse(page.items().stream()
                 .map(item -> new AcademicInstitutionSearchResponse.Item(
                         item.id().value(), item.officialName().value(), item.countryCode().value()))
                 .toList(), page.nextCursor().map(cursors::encode).orElse(null),
                 new AcademicInstitutionSearchResponse.Snapshot(
-                        page.retrievedAt(), page.sourceUrl(), page.sourceAttribution()));
+                        page.retrievedAt(), sourceUrl, page.sourceAttribution()));
+    }
+
+    private static URI publicSourceUrl(URI sourceUrl) {
+        // Validate only the public projection; retain the original administrative metadata.
+        // URI accessors do not create parse exceptions containing the source value.
+        if (!("http".equalsIgnoreCase(sourceUrl.getScheme()) || "https".equalsIgnoreCase(sourceUrl.getScheme()))
+                || sourceUrl.isOpaque() || sourceUrl.getRawAuthority() == null
+                || sourceUrl.getHost() == null || sourceUrl.getRawUserInfo() != null
+                || sourceUrl.getPort() > 65535) {
+            throw new IllegalStateException("Public catalog snapshot is unavailable");
+        }
+        return sourceUrl;
     }
 
     private static String single(MultiValueMap<String, String> parameters, String name) {

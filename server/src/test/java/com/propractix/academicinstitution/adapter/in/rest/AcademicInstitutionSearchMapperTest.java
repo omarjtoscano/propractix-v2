@@ -3,12 +3,16 @@ package com.propractix.academicinstitution.adapter.in.rest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.propractix.academicinstitution.application.query.AcademicInstitutionSearchPage;
 import com.propractix.academicinstitution.application.query.InstitutionSearchCursor;
 import com.propractix.academicinstitution.application.query.SearchPublishedInstitutionsQuery;
 import com.propractix.academicinstitution.domain.model.AcademicInstitutionId;
 import com.propractix.academicinstitution.domain.model.CatalogImportId;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -20,6 +24,43 @@ import tools.jackson.databind.json.JsonMapper;
 class AcademicInstitutionSearchMapperTest {
     private final InstitutionSearchCursorCodec codec = new InstitutionSearchCursorCodec(JsonMapper.builder().build());
     private final AcademicInstitutionSearchMapper mapper = new AcademicInstitutionSearchMapper(7, 12, codec);
+
+    @ParameterizedTest(name = "public source URL #{index}")
+    @ValueSource(strings = {"https://example.invalid/catalog.csv?export=1#source", "http://example.invalid/catalog.csv",
+            "HTTPS://example.invalid:8443/catalog.csv", "http://[2001:db8::1]:8080/catalog.csv"})
+    void preservesValidPublicHttpUrlsAndAdministrativeMetadata(String sourceUrl) {
+        var page = searchPage(sourceUrl);
+        var response = mapper.toResponse(page);
+        assertThat(response.snapshot().sourceUrl()).isEqualTo(page.sourceUrl());
+        assertThat(response.snapshot().retrievedAt()).isEqualTo(page.retrievedAt());
+        assertThat(response.snapshot().sourceAttribution()).isEqualTo(page.sourceAttribution());
+    }
+
+    @ParameterizedTest(name = "unsafe source URL #{index}")
+    @ValueSource(strings = {"https://SYNTHETIC_SOURCE_USER:SYNTHETIC_SOURCE_PASSWORD@example.invalid/catalog.csv",
+            "https://SYNTHETIC_SOURCE_USER@example.invalid/catalog.csv", "https://@example.invalid/catalog.csv",
+            "file:/synthetic/catalog.csv", "ftp://example.invalid/catalog.csv", "mailto:synthetic@example.invalid",
+            "javascript:synthetic", "https:catalog.csv", "https:/catalog.csv", "https://:443/catalog.csv",
+            "https://bad_host.invalid/catalog.csv", "https://example.invalid:bad/catalog.csv",
+            "https://example.invalid:65536/catalog.csv"})
+    void unsafeProjectionFailsWithASanitizedExceptionWithoutChangingAdministrativeMetadata(String sourceUrl) {
+        var page = searchPage(sourceUrl);
+        assertThatThrownBy(() -> mapper.toResponse(page))
+                .isExactlyInstanceOf(IllegalStateException.class)
+                .hasMessage("Public catalog snapshot is unavailable").hasNoCause()
+                .satisfies(failure -> {
+                    var diagnostics = new java.io.StringWriter();
+                    failure.printStackTrace(new java.io.PrintWriter(diagnostics));
+                    assertThat(diagnostics.toString()).doesNotContain(
+                            sourceUrl, "SYNTHETIC_SOURCE_USER", "SYNTHETIC_SOURCE_PASSWORD");
+                });
+        assertThat(page.sourceUrl()).isEqualTo(URI.create(sourceUrl));
+    }
+
+    private static AcademicInstitutionSearchPage searchPage(String sourceUrl) {
+        return new AcademicInstitutionSearchPage(List.of(), Optional.empty(),
+                Instant.parse("2026-10-25T00:00:00Z"), URI.create(sourceUrl), "Synthetic source attribution");
+    }
 
     @Test
     void usesConfiguredPaginationAndCodePointsInsteadOfUtf16Length() {

@@ -54,7 +54,7 @@ E5C conserva su aceptación sobre
 Todas estas respuestas conservan `X-Correlation-ID`; los errores contienen
 el mismo valor en `correlationId`.
 
-## Pruebas y validación local
+## Pruebas y validación local inicial — `3e77e87`
 
 Java 21, Maven Wrapper aprobado, PostgreSQL 16/Testcontainers y Caddy real
 con la imagen fijada existente. Solo datos y secretos sintéticos.
@@ -88,6 +88,53 @@ health/readiness, confianza en proxies, spoofing, rutas y métodos denegados y
 borde Caddy. Las entradas con cursores ficticios ahora reciben 400 después de
 consumir la misma cuota de red. También se ejecutan las pruebas previas de
 dominio, aplicación, importación, persistencia, rate limiting y ArchUnit.
+
+## Corrección de privacidad de `sourceUrl` — 2026-10-25
+
+El Product Owner autorizó corregir el hallazgo en la misma rama y Draft PR #15,
+con commit/push y verificación independiente posterior de CI, Trivy y Build OCI.
+E6 e I1-H02 permanecen `IN_PROGRESS`, sin aceptación ni merge.
+
+El mapper REST valida la URL antes de construir la proyección pública. Solo
+admite HTTP(S), sin distinción de mayúsculas, con autoridad de servidor y host
+válidos, puerto dentro del rango permitido y sin `userinfo`, tampoco vacío.
+No resuelve DNS ni realiza peticiones a la URL. El contrato OpenAPI recoge la
+restricción pública. No se modifica la admisión administrativa ni el valor
+almacenado, sus hashes o el historial del snapshot.
+
+Si los metadatos existentes son inseguros, la lectura devuelve
+`503 academic_institution_catalog_unavailable`, incluso cuando la búsqueda no
+tiene coincidencias. Se conserva `X-Correlation-ID` y el mismo `correlationId`
+del Problem Detail, con violations vacías y sin `Retry-After`. La excepción del
+mapper tiene mensaje fijo y ninguna causa ni valor de origen. El handler
+existente registra únicamente su categoría fija de fallo. Una URL almacenada
+que ni siquiera es parseable también utiliza el fallo sanitizado del adapter
+de lectura existente.
+
+Las pruebas nuevas cubren cuatro URLs públicas válidas (HTTP, HTTPS, puerto y
+IPv6), trece URLs inseguras en el mapper y esos casos más una URI almacenada
+malformada en REST. Incluyen usuario/contraseña sintéticos, usuario solo,
+userinfo vacío, esquemas no admitidos, URI opaca, autoridad/host ausentes o
+inválidos y puertos inválidos. REST comprueba respuesta, cabeceras, logs y
+excepciones resueltas sin la URL ni los valores sintéticos; verifica el contrato
+de errores, correlación y limpieza de MDC. También compara la fila completa
+del snapshot antes y después para conservar su trazabilidad administrativa.
+
+Validación local de la corrección:
+
+- `npm run infra:up`: PostgreSQL 16 y Mailpit saludables.
+- `npm run server:test`, desde compilación limpia, y `npm run server:verify`:
+  **313 pruebas, 0 fallos, 0 errores y 1 benchmark omitido**, BUILD SUCCESS
+  y empaquetado local correcto. Incluyen 45 casos REST, 29 del mapper y
+  los 26 de regresión HTTP/Caddy de E5C.
+- `npm run openapi:lint` y `npm run openapi:bundle`: correctos.
+- `check-migrations.sh`, `check-local-baseline.sh`, `deployment-gate-test.sh`
+  y `git diff --check`: correctos. Diff y estado revisados antes del commit.
+
+Solo cambian el contrato, el mapper REST, sus pruebas y esta evidencia. S0,
+migraciones, dominio, persistencia y metadatos administrativos no se modifican.
+CI, Trivy y Build OCI sobre el nuevo SHA quedan pendientes de verificación del
+Product Owner; el agente no espera ni supervisa sus ejecuciones.
 
 ## Alcance conservado y entrega
 

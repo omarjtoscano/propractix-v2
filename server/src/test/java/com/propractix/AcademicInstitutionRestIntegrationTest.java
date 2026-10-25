@@ -213,6 +213,51 @@ class AcademicInstitutionRestIntegrationTest {
                 "IllegalArgumentException", "SQLTimeoutException");
     }
 
+    @ParameterizedTest(name = "public source URL #{index}")
+    @ValueSource(strings = {"https://example.invalid/catalog.csv?export=1#source", "http://example.invalid/catalog.csv",
+            "HTTPS://example.invalid:8443/catalog.csv", "http://[2001:db8::1]:8080/catalog.csv"})
+    void storedPublicSourceUrlRemainsAvailableWithItsCorrelationAndContract(String sourceUrl) throws Exception {
+        jdbc.update("UPDATE academicinstitution_catalog_import SET source_url = ? WHERE status = 'PUBLISHED'", sourceUrl);
+        var result = mvc.perform(get(PATH).header("X-Correlation-ID", "e6-source-public"))
+                .andExpect(status().isOk()).andReturn();
+        var body = page(result);
+        assertThat(body.at("/snapshot/sourceUrl").asText()).isEqualTo(sourceUrl);
+        assertThat(result.getResponse().getHeader("X-Correlation-ID")).isEqualTo("e6-source-public");
+        assertThat(MDC.get("correlationId")).isNull();
+    }
+
+    @ParameterizedTest(name = "unsafe source URL #{index}")
+    @ValueSource(strings = {"https://SYNTHETIC_SOURCE_USER:SYNTHETIC_SOURCE_PASSWORD@example.invalid/catalog.csv",
+            "https://SYNTHETIC_SOURCE_USER@example.invalid/catalog.csv", "https://@example.invalid/catalog.csv",
+            "file:/synthetic/catalog.csv", "ftp://example.invalid/catalog.csv", "mailto:synthetic@example.invalid",
+            "javascript:synthetic", "https:catalog.csv", "https:/catalog.csv", "https://:443/catalog.csv",
+            "https://bad_host.invalid/catalog.csv", "https://example.invalid:bad/catalog.csv",
+            "https://example.invalid:65536/catalog.csv",
+            "https://SYNTHETIC_SOURCE_USER:SYNTHETIC_SOURCE_PASSWORD@[invalid/catalog.csv"})
+    void unsafeStoredSourceUrlFailsClosedWithoutDisclosureOrLossOfAdministrativeTrace(
+            String sourceUrl, CapturedOutput output) throws Exception {
+        jdbc.update("UPDATE academicinstitution_catalog_import SET source_url = ? WHERE status = 'PUBLISHED'", sourceUrl);
+        var before = jdbc.queryForMap("SELECT * FROM academicinstitution_catalog_import WHERE status = 'PUBLISHED'");
+        // The same guard applies even if the search has no matching institutions.
+        for (String query : List.of("", "no-match")) {
+            var result = mvc.perform(get(PATH).queryParam("query", query)
+                    .header("X-Correlation-ID", "e6-source-private")).andReturn();
+            problem(result, 503, "academic_institution_catalog_unavailable", null);
+            var response = result.getResponse();
+            assertThat(response.getHeader("X-Correlation-ID")).isEqualTo("e6-source-private");
+            var diagnostics = new java.io.StringWriter();
+            if (result.getResolvedException() != null) {
+                assertThat(result.getResolvedException().getCause()).isNull();
+                result.getResolvedException().printStackTrace(new java.io.PrintWriter(diagnostics));
+            }
+            String headers = response.getHeaderNames().stream().map(response::getHeaders).toList().toString();
+            assertThat(response.getContentAsString() + headers + output.getAll() + diagnostics)
+                    .doesNotContain(sourceUrl, "SYNTHETIC_SOURCE_USER", "SYNTHETIC_SOURCE_PASSWORD");
+        }
+        assertThat(jdbc.queryForMap("SELECT * FROM academicinstitution_catalog_import WHERE status = 'PUBLISHED'"))
+                .isEqualTo(before);
+    }
+
     @Test
     void correlationReachesTheApplicationAndMdcIsClearedAfterSuccessAndValidationError() throws Exception {
         doAnswer(invocation -> {
