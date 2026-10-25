@@ -53,9 +53,7 @@ export function AcademicInstitutionAutocomplete({ onChange }: Props) {
       if (manual) { setManual(false); onChange(null); }
       setOpened(true);
       setStarted(true);
-      const next = event.key === 'ArrowDown'
-        ? Math.min(activeIndex + 1, search.items.length - 1)
-        : activeIndex < 0 ? search.items.length - 1 : Math.max(activeIndex - 1, 0);
+      const next = nextOptionIndex(event.key, activeIndex, search.items.length);
       const item = search.items[next];
       setActiveId(item?.id ?? null);
       if (item) document.getElementById(`${id}-option-${item.id}`)?.scrollIntoView?.({ block: 'nearest' });
@@ -65,11 +63,13 @@ export function AcademicInstitutionAutocomplete({ onChange }: Props) {
     }
   }
 
-  const announcement = !started ? t('academicInstitutions.initial')
-    : search.loading ? t('academicInstitutions.loading')
-      : search.error ? ''
-        : search.items.length === 0 ? t('academicInstitutions.empty')
-          : t('academicInstitutions.results', { count: search.items.length });
+  function resultAnnouncement() {
+    if (!started) return t('academicInstitutions.initial');
+    if (search.loading) return t('academicInstitutions.loading');
+    if (search.error) return '';
+    if (search.items.length === 0) return t('academicInstitutions.empty');
+    return t('academicInstitutions.results', { count: search.items.length });
+  }
 
   return (
     <div className="institution-search" onBlur={(event) => {
@@ -109,12 +109,13 @@ export function AcademicInstitutionAutocomplete({ onChange }: Props) {
         }}
         onKeyDown={navigate}
       />
-      <p id={`${id}-status`} role="status" aria-live="polite" aria-atomic="true">{announcement}</p>
-      {search.snapshotChanged && <p role="status">{t('academicInstitutions.changed')}</p>}
+      <output id={`${id}-status`} aria-live="polite" aria-atomic="true">{resultAnnouncement()}</output>
+      {search.snapshotChanged && <output>{t('academicInstitutions.changed')}</output>}
       {search.error && !manual && <ErrorMessage code={search.error.code} />}
       {search.waitSeconds > 0 && !manual && (
-        <p role="status">{t('academicInstitutions.waiting', { count: search.waitSeconds })}</p>
+        <output>{t('academicInstitutions.waiting', { count: search.waitSeconds })}</output>
       )}
+      {/* Options use the combobox keyboard handler and aria-activedescendant; they do not enter the Tab sequence. */}
       <ul id={`${id}-list`} role="listbox" aria-label={t('academicInstitutions.label')} hidden={!expanded} aria-busy={search.loading}>
         {search.items.map((item) => (
           <li
@@ -169,4 +170,11 @@ export function AcademicInstitutionAutocomplete({ onChange }: Props) {
       )}
     </div>
   );
+}
+
+
+function nextOptionIndex(key: string, activeIndex: number, count: number): number {
+  if (key === 'ArrowDown') return Math.min(activeIndex + 1, count - 1);
+  if (activeIndex < 0) return count - 1;
+  return Math.max(activeIndex - 1, 0);
 }

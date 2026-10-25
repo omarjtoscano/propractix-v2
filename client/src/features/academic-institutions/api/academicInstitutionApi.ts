@@ -13,8 +13,8 @@ export class AcademicInstitutionApiError extends Error {
 export class AcademicInstitutionApi {
   private retryAt = 0;
   private retryCode = 'rate_limited';
-  private listeners = new Set<() => void>();
-  private client = createClient(createConfig({
+  private readonly listeners = new Set<() => void>();
+  private readonly client = createClient(createConfig({
     baseUrl: globalThis.location?.origin,
     fetch: (request) => globalThis.fetch(request),
   }));
@@ -64,7 +64,7 @@ export function retryAfterDeadline(value: string | null, now = Date.now()): numb
     }
   }
   // Also accept the standard HTTP-date form; malformed/missing headers use a conservative delay.
-  const date = value !== null && /^[A-Za-z]{3}, /u.test(value) ? Date.parse(value) : NaN;
+  const date = value !== null && /^[A-Za-z]{3}, /u.test(value) ? Date.parse(value) : Number.NaN;
   return Number.isFinite(date) && date > now ? date : now + configuration.retryFallbackMs;
 }
 

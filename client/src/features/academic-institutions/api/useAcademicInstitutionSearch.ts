@@ -47,10 +47,7 @@ export function useAcademicInstitutionSearch(text: string, active: boolean) {
   });
   const pages = ready ? query.data?.pages ?? [] : [];
   const mixedSnapshots = pages.some((page) => !sameSnapshot(pages[0].snapshot, page.snapshot));
-  const error = ready ? mixedSnapshots
-    ? new AcademicInstitutionApiError('catalog_snapshot_changed', 409)
-    : query.error instanceof AcademicInstitutionApiError ? query.error : query.error
-      ? new AcademicInstitutionApiError('unexpected_error') : null : null;
+  const error = resolveSearchError(ready, mixedSnapshots, query.error);
   const changed = error?.code === 'catalog_snapshot_changed';
 
   useEffect(() => {
@@ -86,4 +83,12 @@ export function useAcademicInstitutionSearch(text: string, active: boolean) {
       setGeneration((value) => value + 1);
     },
   };
+}
+
+
+function resolveSearchError(ready: boolean, mixedSnapshots: boolean, error: unknown): AcademicInstitutionApiError | null {
+  if (!ready) return null;
+  if (mixedSnapshots) return new AcademicInstitutionApiError('catalog_snapshot_changed', 409);
+  if (error instanceof AcademicInstitutionApiError) return error;
+  return error ? new AcademicInstitutionApiError('unexpected_error') : null;
 }

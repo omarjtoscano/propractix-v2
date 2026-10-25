@@ -56,7 +56,7 @@ it('lists the first page for blank input and announces an empty result', async (
   start();
   await settle();
   expect(new URL(fetchMock.mock.calls[0][0].url).searchParams.has('cursor')).toBe(false);
-  expect(screen.getByText('No hay universidades que coincidan con la búsqueda.').getAttribute('role')).toBe('status');
+  expect(screen.getAllByRole('status')).toContain(screen.getByText('No hay universidades que coincidan con la búsqueda.'));
 });
 
 it('supports keyboard navigation, active descendant, Escape, Tab and selection by UUID', async () => {

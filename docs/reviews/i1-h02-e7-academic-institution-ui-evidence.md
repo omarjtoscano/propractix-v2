@@ -153,3 +153,26 @@ No se simulan pruebas ni se atribuye una ejecución local a CI.
   fuera del alcance autorizado.
 - H02 y E7 siguen `IN_PROGRESS`. Aceptación, E8, RUCT real, AWS y merge requieren
   sus autorizaciones correspondientes; no se infieren de esta evidencia.
+
+## Revisión adicional de hallazgos SonarQube (2026-10-25)
+
+Por instrucción posterior del Product Owner se contrastaron los hallazgos
+locales disponibles con el código de E7. La
+[revisión individual de SonarQube](i1-h02-e7-sonarqube-review.md) y su
+[registro estructurado](i1-h02-e7-sonarqube-findings.json) documentan regla,
+archivo, impacto, decisión y corrección o justificación para los 46 hallazgos.
+
+Se corrigieron 17 avisos propios de E7. La segunda pasada local del analizador
+ya instalado conserva 29: 1 propio justificado por el patrón de combobox,
+9 generados justificados, 18 pendientes del generador y 1 previo de E6 ajeno
+al alcance. Los archivos generados permanecen idénticos a la regeneración;
+no se cambian backend, contrato, dependencias, workflows ni reglas de Sonar.
+No se instala SonarQube ni se introduce un gate nuevo.
+
+Lint, typecheck, 92 pruebas Vitest, suite Node, build y doble generación
+reproducible siguen correctos tras los ajustes. Las 313 pruebas backend y la
+construcción Docker de la tabla anterior son evidencia de la entrega original;
+no se repitieron en esta revisión limitada al cliente. E7 e I1-H02 siguen
+`IN_PROGRESS`; PR #16 Draft y sin merge. CI, Trivy, Build OCI y el resultado
+remoto de SonarQube, cuando esté disponible, quedan pendientes de verificación
+del Product Owner, sin espera ni supervisión por el agente.

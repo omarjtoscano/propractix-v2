@@ -23,3 +23,4 @@ a { color: #155d88; overflow-wrap: anywhere; }
 [role="alert"] { color: #9c1828; }
 .catalog-notice { background: #fff3cf; padding: .8rem; border-left: .25rem solid #9b7100; }
 aside { border-top: 1px solid #c5d2db; margin-top: 1rem; padding-top: .5rem; font-size: .9rem; }
+output { display: block; margin-block: 1em; }

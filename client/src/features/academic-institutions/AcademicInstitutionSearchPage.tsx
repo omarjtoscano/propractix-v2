@@ -14,10 +14,10 @@ export function AcademicInstitutionSearchPage() {
       <p>{t('academicInstitutions.scope')}</p>
       <AcademicInstitutionAutocomplete onChange={setSelection} />
       {selection?.kind === 'catalog' && (
-        <p role="status">{t('academicInstitutions.selected', { name: selection.officialName })}</p>
+        <output>{t('academicInstitutions.selected', { name: selection.officialName })}</output>
       )}
       {selection?.kind === 'manual' && selection.name !== '' && (
-        <p role="status">{t('academicInstitutions.selectedManual', { name: selection.name })}</p>
+        <output>{t('academicInstitutions.selectedManual', { name: selection.name })}</output>
       )}
     </section>
   );
