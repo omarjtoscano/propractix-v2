@@ -1,5 +1,15 @@
 # Evidencia E5C — Filtro HTTP, seguridad y borde Caddy
 
+**Actualización de integración — 2026-10-23:** el Product Owner confirmó la
+integración de la PR #14 mediante
+`6f8c906448116d621763f8b2e7b7484b2273fb77` y autorizó exclusivamente E6 en
+`feature/i1-h02-e6-catalog-rest-api`. E5C conserva `ACCEPTED`; E6 e I1-H02
+permanecen `IN_PROGRESS`. Los apartados siguientes conservan la evidencia y
+el alcance histórico de E5C. La autorización vigente y las nuevas pruebas se
+registran en el [plan H02](../plans/i1-h02-execution-plan.md#e6--openapi-problem-details-y-rest)
+y en la [evidencia E6](i1-h02-e6-catalog-rest-api-evidence.md). E7 y posteriores
+y el merge de E6 no están autorizados; `CL0_CLOUD_STAGING` permanece `PENDING`.
+
 - Fecha: 2026-10-23.
 - E5C: `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23.
 - Commit funcional aprobado: `8a0a46a293b9b2d9482e92c05161f8b7b57b04e2`.

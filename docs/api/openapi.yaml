@@ -2,11 +2,207 @@ openapi: 3.1.0
 info:
   title: ProPractix API
   version: 1.0.0
-  description: Contrato design-first de la API ProPractix V2. I1-H01 no expone endpoints funcionales.
+  description: Contrato design-first de la API ProPractix V2. Catálogo informativo sin acreditar afiliación o elegibilidad.
 jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
-paths: {}
+tags:
+  - name: Academic institutions
+    description: Catálogo público de instituciones externas.
+paths:
+  /api/v1/academic-institutions:
+    get:
+      operationId: searchAcademicInstitutions
+      summary: Search published academic institutions
+      description: >-
+        Consulta el único snapshot publicado. Búsqueda contains sin distinguir mayúsculas
+        ni diacríticos, con espacios Unicode normalizados. Query ausente o en blanco
+        lista la primera página. Orden estable por nombre normalizado y UUID interno.
+        Un cursor solo se reutiliza con la misma consulta normalizada; si cambia el
+        snapshot devuelve catalog_snapshot_changed y debe reiniciarse la búsqueda.
+        La cuota de red es independiente de query, cursor y limit conforme a la política S0.
+      tags:
+        - Academic institutions
+      security: []
+      parameters:
+        - name: query
+          in: query
+          required: false
+          description: Texto de búsqueda, hasta 300 puntos de código Unicode, sin controles ni saltos de línea.
+          schema:
+            type: string
+            maxLength: 300
+        - name: cursor
+          in: query
+          required: false
+          description: Cursor opaco versionado base64url sin padding de una respuesta anterior. Vacío es inválido.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 4096
+            pattern: '^[A-Za-z0-9_-]+$'
+        - name: limit
+          in: query
+          required: false
+          description: Tamaño de página desde configuración tipada. No admite valores vacíos, repetidos o no enteros.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+        - name: X-Correlation-ID
+          in: header
+          required: false
+          description: Se conserva si es válido; en otro caso se genera un identificador seguro.
+          schema:
+            $ref: '#/components/schemas/CorrelationId'
+      responses:
+        '200':
+          description: Página del snapshot publicado, también cuando no hay coincidencias.
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/CorrelationId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicInstitutionSearchPage'
+        '400':
+          description: validation_error. Query, cursor o limit inválidos o repetidos; cursor ligado a otra consulta.
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/CorrelationId'
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ProblemDetail'
+                  - properties:
+                      status:
+                        const: 400
+                      code:
+                        const: validation_error
+        '409':
+          description: catalog_snapshot_changed. Reiniciar búsqueda desde la primera página.
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/CorrelationId'
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ProblemDetail'
+                  - properties:
+                      status:
+                        const: 409
+                      code:
+                        const: catalog_snapshot_changed
+        '429':
+          description: rate_limited. Esperar Retry-After segundos antes de reintentar.
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/CorrelationId'
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ProblemDetail'
+                  - properties:
+                      status:
+                        const: 429
+                      code:
+                        const: rate_limited
+        '503':
+          description: >-
+            rate_limiter_unavailable (incluye Retry-After de 1 segundo) o
+            academic_institution_catalog_unavailable (sin snapshot publicado o fallo
+            de lectura; sin Retry-After). Nunca incluye diagnósticos internos.
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/CorrelationId'
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
+          content:
+            application/problem+json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ProblemDetail'
+                  - properties:
+                      status:
+                        const: 503
+                      code:
+                        enum:
+                          - rate_limiter_unavailable
+                          - academic_institution_catalog_unavailable
 components:
+  headers:
+    CorrelationId:
+      required: true
+      description: Identificador público de soporte, igual al correlationId de los errores.
+      schema:
+        $ref: '#/components/schemas/CorrelationId'
+    RetryAfter:
+      description: Segundos enteros hasta poder reintentar; obligatorio en 429 y en rate_limiter_unavailable.
+      schema:
+        type: integer
+        minimum: 1
   schemas:
+    CorrelationId:
+      type: string
+      minLength: 1
+      maxLength: 64
+      pattern: '^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$'
+    AcademicInstitutionSearchPage:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor, snapshot]
+      properties:
+        items:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/AcademicInstitutionSearchItem'
+        nextCursor:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 4096
+          pattern: '^[A-Za-z0-9_-]+$'
+        snapshot:
+          $ref: '#/components/schemas/AcademicInstitutionSnapshot'
+    AcademicInstitutionSearchItem:
+      type: object
+      additionalProperties: false
+      required: [id, officialName, countryCode]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID v4 interno estable de ProPractix, independiente de la referencia de origen.
+        officialName:
+          type: string
+          minLength: 1
+          maxLength: 300
+        countryCode:
+          type: string
+          pattern: '^[A-Z]{2}$'
+    AcademicInstitutionSnapshot:
+      type: object
+      additionalProperties: false
+      required: [retrievedAt, sourceUrl, sourceAttribution]
+      properties:
+        retrievedAt:
+          type: string
+          format: date-time
+        sourceUrl:
+          type: string
+          format: uri
+          pattern: '^[Hh][Tt][Tt][Pp][Ss]?://[^/?#@]+([/?#].*)?$'
+          description: >-
+            URL HTTP(S) con autoridad de servidor válida y sin credenciales de usuario.
+            Si el snapshot almacenado contiene una URL insegura, la consulta devuelve
+            503 academic_institution_catalog_unavailable sin exponer su valor.
+        sourceAttribution:
+          type: string
+          minLength: 1
     ProblemDetail:
       type: object
       required:
@@ -33,8 +229,7 @@ components:
         code:
           type: string
         correlationId:
-          type: string
-          maxLength: 64
+          $ref: '#/components/schemas/CorrelationId'
         violations:
           type: array
           items:
