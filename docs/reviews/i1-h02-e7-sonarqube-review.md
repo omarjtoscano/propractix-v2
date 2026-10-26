@@ -1,7 +1,12 @@
 # Revisión de hallazgos SonarQube — I1-H02 E7
 
 Fecha: 2026-10-25. Base revisada: `4bf0a922b391e2535f91b5bf719f2ffb995366e7`.
-E7 e I1-H02 permanecen `IN_PROGRESS`; PR #16 Draft y sin merge.
+Estado al realizar el análisis: E7 e I1-H02 `IN_PROGRESS`.
+Estado vigente: E7 `ACCEPTED` por aprobación expresa del Product Owner el
+2026-10-26 sobre `d1db0ddf925a441ba8370d9a10b1f6cac5ffeff2`; I1-H02 permanece `IN_PROGRESS`;
+PR #16 Draft y sin merge. Véase la [aceptación y evidencia E7](i1-h02-e7-academic-institution-ui-evidence.md).
+Esta actualización de estado no modifica los diagnósticos ni representa un
+Quality Gate remoto verde.
 
 ## Procedencia y límites de la evidencia
 
@@ -27,9 +32,13 @@ repetidas de LSP no se cuentan como hallazgos nuevos.
 
 Esta evidencia es **análisis local de IDE**, no resultado de SonarQube Server,
 Cloud ni certificación de Quality Gate. No cubre todos los lenguajes del repo
-ni sustituye la verificación del Product Owner. CI, Trivy, Build OCI y el
-resultado remoto de SonarQube, cuando esté disponible, quedan pendientes de
-su verificación; el agente no espera ni supervisa esos checks.
+ni sustituye la verificación del Product Owner. Al realizar este análisis,
+CI, Trivy, Build OCI y el resultado remoto de SonarQube quedaban pendientes
+de su verificación. El PO confirmó después CI, Trivy y Build OCI en verde
+sobre el SHA funcional aprobado de E7; no confirmó un resultado remoto de
+SonarQube. Este último, cuando esté disponible, y los checks del nuevo commit
+documental quedan pendientes de verificación del PO; el agente no espera ni
+supervisa esas ejecuciones.
 
 ## Resultado y decisiones
 

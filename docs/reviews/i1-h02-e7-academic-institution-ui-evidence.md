@@ -1,11 +1,40 @@
 # I1-H02 E7 — Cliente generado y consulta académica en UI
 
-- Fecha: 2026-10-25.
-- Estado: E7 e I1-H02 `IN_PROGRESS`; pendiente de revisión del Product Owner.
+- Fecha de implementación: 2026-10-25; aceptación expresa: 2026-10-26.
+- Estado: E7 `ACCEPTED` por el Product Owner; I1-H02 permanece `IN_PROGRESS`.
 - Rama: `feature/i1-h02-e7-academic-institution-ui`.
 - Base: incremento actualizado en `11dda0c9fb267b619c98baabd12465e143c43d53`.
-- El SHA de entrega es el commit que incorpora esta evidencia, comunicado en la
-  entrega y en la Draft PR hacia `increment/01-company-identity-catalog`.
+- Commit funcional aprobado: [`d1db0ddf925a441ba8370d9a10b1f6cac5ffeff2`](https://github.com/omarjtoscano/propractix-v2/commit/d1db0ddf925a441ba8370d9a10b1f6cac5ffeff2).
+- PR: [#16](https://github.com/omarjtoscano/propractix-v2/pull/16), Draft y sin fusionar,
+  hacia `increment/01-company-identity-catalog`.
+- El SHA del nuevo commit exclusivamente documental se comunica en la entrega y
+  en el cuerpo de la PR; no sustituye al SHA funcional aprobado.
+
+## Aprobación expresa y verificación remota confirmada por el PO
+
+El Product Owner aprobó expresamente **E7 — Cliente generado y componente UI**
+el 2026-10-26 sobre `d1db0ddf925a441ba8370d9a10b1f6cac5ffeff2`, incluida la corrección de foco
+tras paginar y seleccionar. E7 queda `ACCEPTED`; I1-H02 permanece `IN_PROGRESS`.
+
+| Comprobación remota | Resultado y procedencia |
+|---|---|
+| CI | Verde sobre el SHA funcional aprobado, confirmado expresamente por el Product Owner el 2026-10-26. |
+| Trivy | Verde sobre el mismo SHA, confirmado expresamente por el Product Owner el 2026-10-26. |
+| Build OCI | Verde sobre el mismo SHA, confirmado expresamente por el Product Owner el 2026-10-26. |
+
+La fuente de esta verificación es la confirmación expresa del Product Owner;
+el agente no consulta, espera ni supervisa esas ejecuciones. La aprobación
+no aporta identificadores de ejecución; se enlazan el commit aprobado y la PR.
+El análisis de SonarQube documentado más abajo es local de IDE: conserva sus
+hallazgos y **no acredita un Quality Gate remoto verde**. La aprobación no incluye
+una confirmación de resultado remoto de SonarQube.
+
+El Product Owner autoriza exclusivamente registrar la aceptación, actualizar
+AGENTS.md, planes, evidencia, índice y cuerpo de la PR, y realizar commit/push
+documental en la misma rama. La PR permanece Draft y sin fusionar. CI, Trivy y
+Build OCI del nuevo commit documental quedan pendientes de verificación del
+Product Owner, sin espera ni supervisión por el agente. No se autorizan E8,
+cambios funcionales ni AWS; `CL0_CLOUD_STAGING` permanece `PENDING`.
 
 ## Autorizaciones y límites
 
@@ -21,9 +50,10 @@ con aislamiento efectivo. Se registra explícitamente en
 No hay cambios de backend, contrato OpenAPI aceptado, S0, migraciones, RUCT
 real ni AWS. `CL0_CLOUD_STAGING` permanece `PENDING`. E8, Playwright, la
 orquestación E2E y entregas posteriores no están implementadas ni autorizadas.
-La PR permanece Draft; esta entrega no acepta E7 ni H02 y no hace merge.
-CI, Trivy y Build OCI del SHA final quedan **pendientes de verificación del
-Product Owner**; el agente no espera ni supervisa esas ejecuciones.
+La aceptación expresa posterior se registra arriba: E7 `ACCEPTED`, H02
+`IN_PROGRESS`, PR Draft y sin merge. La confirmación remota del PO corresponde
+al SHA funcional aprobado; los checks del nuevo commit documental siguen
+pendientes de su verificación.
 
 ## Implementación
 
@@ -105,7 +135,7 @@ e736f509ea989ec4ac71cdff30ba0e620de9848ca06ef9cba5a23aa0f3b52158  tools/openapi-
 
 La generación repetida después de reinstalar coincide en los 16 archivos.
 
-## Validaciones locales
+## Validaciones locales de la implementación inicial (2026-10-25)
 
 | Comando/control | Resultado |
 |---|---|
@@ -151,8 +181,9 @@ No se simulan pruebas ni se atribuye una ejecución local a CI.
 - La accesibilidad se prueba con Testing Library y teclado en DOM. No se
   afirma una auditoría con lector de pantalla real ni E2E Playwright; E8 sigue
   fuera del alcance autorizado.
-- H02 y E7 siguen `IN_PROGRESS`. Aceptación, E8, RUCT real, AWS y merge requieren
-  sus autorizaciones correspondientes; no se infieren de esta evidencia.
+- E7 está `ACCEPTED` por aprobación expresa del PO sobre el SHA funcional
+  identificado arriba; H02 permanece `IN_PROGRESS`. E8, RUCT real, AWS y merge
+  no están autorizados por esta aceptación.
 
 ## Revisión adicional de hallazgos SonarQube (2026-10-25)
 
@@ -172,16 +203,19 @@ No se instala SonarQube ni se introduce un gate nuevo.
 Lint, typecheck, 92 pruebas Vitest, suite Node, build y doble generación
 reproducible siguen correctos tras los ajustes. Las 313 pruebas backend y la
 construcción Docker de la tabla anterior son evidencia de la entrega original;
-no se repitieron en esta revisión limitada al cliente. E7 e I1-H02 siguen
-`IN_PROGRESS`; PR #16 Draft y sin merge. CI, Trivy, Build OCI y el resultado
-remoto de SonarQube, cuando esté disponible, quedan pendientes de verificación
-del Product Owner, sin espera ni supervisión por el agente.
+no se repitieron en aquella revisión limitada al cliente. En ese momento E7
+e I1-H02 seguían `IN_PROGRESS`; PR #16 Draft y sin merge. CI, Trivy, Build OCI
+y el resultado remoto de SonarQube quedaban pendientes de verificación del PO.
+La aprobación posterior y la confirmación de CI, Trivy y Build OCI sobre el
+SHA funcional aprobado se registran al inicio de esta evidencia; no incluyen
+un resultado remoto de SonarQube.
 
 ## Corrección del foco tras paginar y seleccionar (2026-10-26)
 
 Solicitud del Product Owner sobre la misma rama y PR #16, partiendo de
-`539d7e2d5087f5f43d23c78e91bb8a7730de87c4`. E7 e I1-H02 permanecen
-`IN_PROGRESS`, sin aceptación, merge ni E8.
+`539d7e2d5087f5f43d23c78e91bb8a7730de87c4`. En el momento de aquella
+corrección E7 e I1-H02 permanecían `IN_PROGRESS`, sin aceptación, merge ni E8.
+La aceptación posterior de E7 se registra al inicio de esta evidencia.
 
 La nueva regresión con `userEvent` reproduce el foco real: abrir el campo,
 cargar otra página mediante el botón, comprobar que el botón conserva el
@@ -216,7 +250,28 @@ Validación local del ajuste:
   0 fallos, 0 errores y 1 benchmark omitido, con JDK 21 y Docker disponibles.
 - `git diff --check`, revisión de diff y status: correctos antes del commit.
 
-Solo cambian el autocompletado, su prueba y esta evidencia. El código generado,
-backend, OpenAPI, dependencias y workflows permanecen sin cambios. CI, Trivy y
-Build OCI del nuevo SHA quedan pendientes de verificación del Product Owner,
-sin espera ni supervisión por el agente; no se infiere aceptación ni merge.
+En aquella corrección solo cambiaron el autocompletado, su prueba y esta
+evidencia. El código generado, backend, OpenAPI, dependencias y workflows
+permanecieron sin cambios. CI, Trivy y Build OCI del SHA funcional resultante
+`d1db0ddf925a441ba8370d9a10b1f6cac5ffeff2` quedaron pendientes de verificación del Product Owner.
+El PO confirmó posteriormente esos checks en verde y aprobó E7 expresamente,
+como se registra al inicio; la PR sigue Draft y sin merge.
+
+## Actualización documental de aceptación (2026-10-26)
+
+Solo se actualizan AGENTS.md, ambos planes, el índice, esta evidencia y el estado
+vigente de la revisión local de SonarQube; los diagnósticos estructurados
+permanecen intactos. Validaciones documentales correctas antes del commit/push:
+
+- Diff completo y status revisados: únicamente seis archivos Markdown.
+- 42 destinos de enlaces locales existentes, incluidos archivos y el directorio ADR.
+- Enlaces externos nuevos limitados al commit funcional aprobado y la PR #16;
+  SHA contrastado con HEAD local y PR contrastada mediante sus metadatos de GitHub
+  (rama, destino, Draft y sin merge), sin consultar checks remotos.
+- `git diff --check`: correcto.
+
+Las validaciones funcionales anteriores corresponden al código aprobado;
+no se ejecutan de nuevo pruebas,
+instalación ni generación para este cambio exclusivamente documental.
+Los checks remotos del nuevo commit quedan pendientes de verificación del PO,
+sin espera ni supervisión por el agente.
