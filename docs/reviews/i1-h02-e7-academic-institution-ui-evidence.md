@@ -176,3 +176,47 @@ no se repitieron en esta revisión limitada al cliente. E7 e I1-H02 siguen
 `IN_PROGRESS`; PR #16 Draft y sin merge. CI, Trivy, Build OCI y el resultado
 remoto de SonarQube, cuando esté disponible, quedan pendientes de verificación
 del Product Owner, sin espera ni supervisión por el agente.
+
+## Corrección del foco tras paginar y seleccionar (2026-10-26)
+
+Solicitud del Product Owner sobre la misma rama y PR #16, partiendo de
+`539d7e2d5087f5f43d23c78e91bb8a7730de87c4`. E7 e I1-H02 permanecen
+`IN_PROGRESS`, sin aceptación, merge ni E8.
+
+La nueva regresión con `userEvent` reproduce el foco real: abrir el campo,
+cargar otra página mediante el botón, comprobar que el botón conserva el
+foco y seleccionar una universidad de la segunda página. En la versión
+anterior ambas variantes fallaban: después de devolver el foco al campo,
+`aria-expanded` era `true` en lugar de `false`. La prueba anterior de
+paginación usaba `fireEvent.click`, que no reproducía ese cambio de foco.
+
+La corrección se limita al orden de operaciones de `select`: devolver el foco
+antes de fijar el texto seleccionado y cerrar/desactivar la búsqueda.
+Así `onFocus` no sobrescribe el cierre ni reactiva una consulta al devolver
+el foco desde el botón. Se conservan los handlers de apertura voluntaria y
+navegación por teclado, sin flags adicionales ni cambios de API.
+
+La prueba parametrizada añade dos casos: reapertura voluntaria mediante clic
+y mediante ArrowDown. Verifica foco, cierre, ausencia de opción activa y
+selección única por UUID; tras esperar más que el debounce configurado siguen
+existiendo exactamente las dos peticiones correspondientes a las dos páginas.
+Solo la reapertura voluntaria produce una tercera consulta desde la primera
+página. Una selección posterior con ArrowDown/Enter vuelve a cerrar sin
+producir otra petición.
+
+Validación local del ajuste:
+
+- Antes de corregir: las dos variantes de regresión fallaban por el desplegable
+  abierto; las otras 92 pruebas pasaban.
+- Después: `client:lint`, `client:typecheck`, 94 pruebas Vitest y suite Node,
+  `client:build` y `client:check-generated` correctos. Las dos generaciones
+  conservan idénticos los 16 archivos generados.
+- `infra:up`: PostgreSQL y Mailpit saludables, exclusivamente en local.
+- `server:test` y `server:verify`: correctos; cada ejecución incluye 313 pruebas,
+  0 fallos, 0 errores y 1 benchmark omitido, con JDK 21 y Docker disponibles.
+- `git diff --check`, revisión de diff y status: correctos antes del commit.
+
+Solo cambian el autocompletado, su prueba y esta evidencia. El código generado,
+backend, OpenAPI, dependencias y workflows permanecen sin cambios. CI, Trivy y
+Build OCI del nuevo SHA quedan pendientes de verificación del Product Owner,
+sin espera ni supervisión por el agente; no se infiere aceptación ni merge.

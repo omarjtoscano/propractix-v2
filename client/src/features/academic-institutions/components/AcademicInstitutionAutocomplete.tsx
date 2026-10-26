@@ -34,13 +34,14 @@ export function AcademicInstitutionAutocomplete({ onChange }: Props) {
   const activeOption = expanded && activeIndex >= 0 ? `${id}-option-${activeId}` : undefined;
 
   function select(item: AcademicInstitutionSearchItem) {
+    // Restore focus before closing selection, so onFocus cannot reopen or restart the search.
+    inputRef.current?.focus();
     setSelectedSnapshot(search.snapshot);
     setText(item.officialName);
     setOpened(false);
     setStarted(false);
     setActiveId(null);
     onChange({ kind: 'catalog', id: item.id, officialName: item.officialName });
-    inputRef.current?.focus();
   }
 
   function navigate(event: KeyboardEvent<HTMLInputElement>) {

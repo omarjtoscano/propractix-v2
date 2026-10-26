@@ -88,6 +88,51 @@ it('supports keyboard navigation, active descendant, Escape, Tab and selection b
   expect(document.activeElement).not.toBe(input());
 });
 
+it.each(['pointer', 'keyboard'])('restores focus after paging and selection without reopening or querying, then allows %s reopening', async (reopen) => {
+  vi.useRealTimers();
+  const user = userEvent.setup();
+  const onChange = vi.fn();
+  fetchMock.mockResolvedValueOnce(response(page([first], 'cursor_1')))
+    .mockResolvedValueOnce(response(page([second], 'cursor_2')))
+    .mockImplementation(async () => response(page([second])));
+  renderWithQuery(<AcademicInstitutionAutocomplete onChange={onChange} />);
+
+  await user.click(input());
+  await screen.findByRole('option', { name: first.officialName });
+  expect(document.activeElement).toBe(input());
+  const more = screen.getByRole('button', { name: 'Cargar más universidades' });
+  await user.click(more);
+  await screen.findByRole('option', { name: second.officialName });
+  expect(document.activeElement).toBe(more);
+  expect(fetchMock).toHaveBeenCalledTimes(2);
+  expect(new URL(fetchMock.mock.calls[1][0].url).searchParams.get('cursor')).toBe('cursor_1');
+
+  await user.click(screen.getByRole('option', { name: second.officialName }));
+  expect(document.activeElement).toBe(input());
+  expect(input().value).toBe(second.officialName);
+  expect(input().getAttribute('aria-expanded')).toBe('false');
+  expect(input().hasAttribute('aria-activedescendant')).toBe(false);
+  expect(screen.queryByRole('listbox')).toBeNull();
+  expect(onChange).toHaveBeenCalledExactlyOnceWith({ kind: 'catalog', id: second.id, officialName: second.officialName });
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, config.debounceMs + 50)); });
+  expect(fetchMock).toHaveBeenCalledTimes(2);
+  expect(input().getAttribute('aria-expanded')).toBe('false');
+
+  if (reopen === 'pointer') await user.click(input());
+  else await user.keyboard('{ArrowDown}');
+  expect(input().getAttribute('aria-expanded')).toBe('true');
+  await screen.findByRole('option', { name: second.officialName });
+  expect(fetchMock).toHaveBeenCalledTimes(3);
+  expect(new URL(fetchMock.mock.calls[2][0].url).searchParams.has('cursor')).toBe(false);
+  await user.keyboard('{ArrowDown}{Enter}');
+  expect(document.activeElement).toBe(input());
+  expect(input().getAttribute('aria-expanded')).toBe('false');
+  expect(onChange).toHaveBeenCalledTimes(2);
+  expect(onChange).toHaveBeenLastCalledWith({ kind: 'catalog', id: second.id, officialName: second.officialName });
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, config.debounceMs + 50)); });
+  expect(fetchMock).toHaveBeenCalledTimes(3);
+});
+
 it('selects by pointer and clears the selection on further input', async () => {
   const onChange = vi.fn();
   renderWithQuery(<AcademicInstitutionAutocomplete onChange={onChange} />);
