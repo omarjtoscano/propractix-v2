@@ -18,5 +18,33 @@
     "rate_limited": "Has realizado demasiadas solicitudes. Espera antes de volver a intentarlo.",
     "rate_limiter_unavailable": "El servicio no está disponible temporalmente. Vuelve a intentarlo más tarde.",
     "academic_institution_catalog_unavailable": "El catálogo de universidades no está disponible temporalmente."
+  },
+  "academicInstitutions": {
+    "title": "Buscar universidad",
+    "description": "Consulta el catálogo y elige una universidad o indica que no la encuentras.",
+    "label": "Universidad",
+    "hint": "Escribe para buscar. Usa las flechas para recorrer los resultados, Intro para elegir y Escape para cerrar.",
+    "initial": "Abre la búsqueda para consultar el catálogo.",
+    "loading": "Buscando universidades…",
+    "empty": "No hay universidades que coincidan con la búsqueda.",
+    "results": "{{count}} universidades disponibles.",
+    "more": "Cargar más universidades",
+    "retry": "Reintentar búsqueda",
+    "waiting": "Podrás volver a consultar en {{count}} segundos.",
+    "changed": "El catálogo se ha actualizado. La búsqueda se ha reiniciado.",
+    "manual": "No encuentro mi universidad",
+    "manualLabel": "Nombre de mi universidad",
+    "manualHelp": "Este nombre se conserva solo en esta pantalla. No se añade al catálogo ni se guarda en el servidor.",
+    "selected": "Universidad seleccionada: {{name}}",
+    "selectedManual": "Universidad indicada manualmente: {{name}}",
+    "scope": "El catálogo es informativo: no acredita afiliación, matrícula, elegibilidad, convenio ni cumplimiento.",
+    "synthetic": "Esta versión utiliza datos sintéticos para pruebas. No son datos reales de RUCT.",
+    "attribution": "Atribución del snapshot",
+    "retrievedAt": "Fuente consultada el {{date}}",
+    "source": "Consultar fuente del snapshot",
+    "results_one": "{{count}} universidad disponible.",
+    "results_other": "{{count}} universidades disponibles.",
+    "waiting_one": "Podrás volver a consultar en {{count}} segundo.",
+    "waiting_other": "Podrás volver a consultar en {{count}} segundos."
   }
 }

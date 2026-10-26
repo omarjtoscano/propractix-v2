@@ -1,0 +1,1430 @@
+{
+  "source": {
+    "mode": "SonarQube for IDE ya instalado, LSP standalone, configuración predeterminada sin supresiones; no es análisis de servidor ni Quality Gate",
+    "date": "2026-10-25",
+    "baseCommit": "4bf0a922b391e2535f91b5bf719f2ffb995366e7",
+    "extensionVersion": "6.2.0",
+    "languageServerVersion": "6.2.0.79823",
+    "javascriptTypescriptAnalyzer": "14.3.0.46350",
+    "javaAnalyzer": "8.44.0.48651"
+  },
+  "analyzedFiles": [
+    "client/scripts/check-generated.mjs",
+    "client/src/app/App.css",
+    "client/src/app/App.test.tsx",
+    "client/src/app/App.tsx",
+    "client/src/app/main.tsx",
+    "client/src/configuration/academicInstitutionSearch.test.ts",
+    "client/src/configuration/academicInstitutionSearch.ts",
+    "client/src/features/academic-institutions/AcademicInstitutionSearchPage.tsx",
+    "client/src/features/academic-institutions/api/academicInstitutionApi.test.ts",
+    "client/src/features/academic-institutions/api/academicInstitutionApi.ts",
+    "client/src/features/academic-institutions/api/useAcademicInstitutionSearch.ts",
+    "client/src/features/academic-institutions/components/AcademicInstitutionAutocomplete.test.tsx",
+    "client/src/features/academic-institutions/components/AcademicInstitutionAutocomplete.tsx",
+    "client/src/shared/api/generated/client.gen.ts",
+    "client/src/shared/api/generated/client/client.gen.ts",
+    "client/src/shared/api/generated/client/index.ts",
+    "client/src/shared/api/generated/client/types.gen.ts",
+    "client/src/shared/api/generated/client/utils.gen.ts",
+    "client/src/shared/api/generated/core/auth.gen.ts",
+    "client/src/shared/api/generated/core/bodySerializer.gen.ts",
+    "client/src/shared/api/generated/core/params.gen.ts",
+    "client/src/shared/api/generated/core/pathSerializer.gen.ts",
+    "client/src/shared/api/generated/core/queryKeySerializer.gen.ts",
+    "client/src/shared/api/generated/core/serverSentEvents.gen.ts",
+    "client/src/shared/api/generated/core/types.gen.ts",
+    "client/src/shared/api/generated/core/utils.gen.ts",
+    "client/src/shared/api/generated/index.ts",
+    "client/src/shared/api/generated/sdk.gen.ts",
+    "client/src/shared/api/generated/types.gen.ts",
+    "client/src/shared/api/queryClient.ts",
+    "client/src/shared/i18n/LanguageSelector.test.tsx",
+    "client/src/test/render.tsx",
+    "client/src/vite-env.d.ts",
+    "client/vite.config.ts",
+    "server/src/main/java/com/propractix/academicinstitution/adapter/in/rest/InstitutionSearchCursorCodec.java",
+    "tools/openapi-generator/install.mjs",
+    "tools/openapi-generator/openapi-ts.config.mjs",
+    "tools/openapi-generator/verify-versions.mjs"
+  ],
+  "summary": {
+    "before": 46,
+    "after": 29,
+    "byDecision": {
+      "CORRECTED": 17,
+      "JUSTIFIED": 10,
+      "GENERATOR_PENDING": 18,
+      "OUT_OF_SCOPE": 1
+    }
+  },
+  "findings": [
+    {
+      "id": "SQ-01",
+      "rule": "javascript:S9382",
+      "file": "client/scripts/check-generated.mjs",
+      "line": 13,
+      "column": 52,
+      "message": "Unexpected `await` inside a loop.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 12,
+          "character": 51
+        },
+        "end": {
+          "line": 12,
+          "character": 71
+        }
+      },
+      "owner": "E7",
+      "impact": "Trabajo de lectura independiente serializado; la doble regeneración, en cambio, comparte directorio y exige orden.",
+      "decision": "Corregir la lectura de snapshots con Promise.all y mantener explícitamente las dos generaciones secuenciales.",
+      "correctionOrJustification": "snapshot usa Promise.all; verifyGeneration se llama dos veces con await, fuera de un bucle.",
+      "status": "CORRECTED",
+      "afterLocations": []
+    },
+    {
+      "id": "SQ-02",
+      "rule": "javascript:S9382",
+      "file": "client/scripts/check-generated.mjs",
+      "line": 14,
+      "column": 46,
+      "message": "Unexpected `await` inside a loop.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 13,
+          "character": 45
+        },
+        "end": {
+          "line": 13,
+          "character": 73
+        }
+      },
+      "owner": "E7",
+      "impact": "Trabajo de lectura independiente serializado; la doble regeneración, en cambio, comparte directorio y exige orden.",
+      "decision": "Corregir la lectura de snapshots con Promise.all y mantener explícitamente las dos generaciones secuenciales.",
+      "correctionOrJustification": "snapshot usa Promise.all; verifyGeneration se llama dos veces con await, fuera de un bucle.",
+      "status": "CORRECTED",
+      "afterLocations": []
+    },
+    {
+      "id": "SQ-03",
+      "rule": "javascript:S4036",
+      "file": "client/scripts/check-generated.mjs",
+      "line": 20,
+      "column": 28,
+      "message": "Make sure the \"PATH\" variable only contains fixed, unwriteable directories.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 19,
+          "character": 27
+        },
+        "end": {
+          "line": 19,
+          "character": 32
+        }
+      },
+      "owner": "E7",
+      "impact": "El comando npm se resolvía por PATH, permitiendo que un ejecutable de otro directorio ocultase el esperado.",
+      "decision": "Válido en la herramienta local; no hay entrada HTTP implicada.",
+      "correctionOrJustification": "spawnSync usa process.execPath y el CLI npm_execpath de la invocación actual; se exige ejecutar el check mediante npm.",
+      "status": "CORRECTED",
+      "afterLocations": []
+    },
+    {
+      "id": "SQ-04",
+      "rule": "javascript:S9382",
+      "file": "client/scripts/check-generated.mjs",
+      "line": 22,
+      "column": 20,
+      "message": "Unexpected `await` inside a loop.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 21,
+          "character": 19
+        },
+        "end": {
+          "line": 21,
+          "character": 35
+        }
+      },
+      "owner": "E7",
+      "impact": "Trabajo de lectura independiente serializado; la doble regeneración, en cambio, comparte directorio y exige orden.",
+      "decision": "Corregir la lectura de snapshots con Promise.all y mantener explícitamente las dos generaciones secuenciales.",
+      "correctionOrJustification": "snapshot usa Promise.all; verifyGeneration se llama dos veces con await, fuera de un bucle.",
+      "status": "CORRECTED",
+      "afterLocations": []
+    },
+    {
+      "id": "SQ-05",
+      "rule": "typescript:S6819",
+      "file": "client/src/features/academic-institutions/AcademicInstitutionSearchPage.tsx",
+      "line": 17,
+      "column": 9,
+      "message": "Use <output> instead of the \"status\" role to ensure accessibility across all devices.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 16,
+          "character": 8
+        },
+        "end": {
+          "line": 16,
+          "character": 25
+        }
+      },
+      "owner": "E7",
+      "impact": "Semántica accesible: p con role=status puede usar el elemento nativo output.",
+      "decision": "Válido; mantener el anuncio y sus textos traducidos.",
+      "correctionOrJustification": "Usar output con role status implícito; conservar aria-live/aria-atomic del anuncio principal y presentación en bloque.",
+      "status": "CORRECTED",
+      "afterLocations": []
+    },
+    {
+      "id": "SQ-06",
+      "rule": "typescript:S6819",
+      "file": "client/src/features/academic-institutions/AcademicInstitutionSearchPage.tsx",
+      "line": 20,
+      "column": 9,
+      "message": "Use <output> instead of the \"status\" role to ensure accessibility across all devices.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 19,
+          "character": 8
+        },
+        "end": {
+          "line": 19,
+          "character": 25
+        }
+      },
+      "owner": "E7",
+      "impact": "Semántica accesible: p con role=status puede usar el elemento nativo output.",
+      "decision": "Válido; mantener el anuncio y sus textos traducidos.",
+      "correctionOrJustification": "Usar output con role status implícito; conservar aria-live/aria-atomic del anuncio principal y presentación en bloque.",
+      "status": "CORRECTED",
+      "afterLocations": []
+    },
+    {
+      "id": "SQ-07",
+      "rule": "typescript:S2933",
+      "file": "client/src/features/academic-institutions/api/academicInstitutionApi.ts",
+      "line": 13,
+      "column": 14,
+      "message": "Mark these members as `readonly`. [+2 locations]",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 12,
+          "character": 13
+        },
+        "end": {
+          "line": 12,
+          "character": 35
+        }
+      },
+      "owner": "E7",
+      "impact": "Mantenibilidad: listeners y client no se reasignan y permitían reasignación accidental.",
+      "decision": "Válido; readonly protege las referencias sin impedir las altas/bajas del Set.",
+      "correctionOrJustification": "Declarar private readonly listeners y private readonly client.",
+      "status": "CORRECTED",
+      "afterLocations": []
+    },
+    {
+      "id": "SQ-08",
+      "rule": "typescript:S7773",
+      "file": "client/src/features/academic-institutions/api/academicInstitutionApi.ts",
+      "line": 67,
+      "column": 86,
+      "message": "Prefer `Number.NaN` over `NaN`.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 66,
+          "character": 85
+        },
+        "end": {
+          "line": 66,
+          "character": 88
+        }
+      },
+      "owner": "E7",
+      "impact": "Consistencia del uso de NaN en el cálculo de Retry-After.",
+      "decision": "Válido, sin cambio semántico.",
+      "correctionOrJustification": "Usar Number.NaN.",
+      "status": "CORRECTED",
+      "afterLocations": []
+    },
+    {
+      "id": "SQ-09",
+      "rule": "typescript:S3358",
+      "file": "client/src/features/academic-institutions/api/useAcademicInstitutionSearch.ts",
+      "line": 50,
+      "column": 25,
+      "message": "Extract this nested ternary operation into an independent statement.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 49,
+          "character": 24
+        },
+        "end": {
+          "line": 52,
+          "character": 66
+        }
+      },
+      "owner": "E7",
+      "impact": "Legibilidad de la precedencia de estados y de la navegación del autocompletado.",
+      "decision": "Válido; conservar precedencia y comportamiento probado.",
+      "correctionOrJustification": "resolveSearchError usa retornos tempranos para distinguir no listo, snapshot cambiado, error público y error desconocido.",
+      "status": "CORRECTED",
+      "afterLocations": []
+    },
+    {
+      "id": "SQ-10",
+      "rule": "typescript:S3358",
+      "file": "client/src/features/academic-institutions/api/useAcademicInstitutionSearch.ts",
+      "line": 52,
+      "column": 74,
+      "message": "Extract this nested ternary operation into an independent statement.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 51,
+          "character": 73
+        },
+        "end": {
+          "line": 52,
+          "character": 66
+        }
+      },
+      "owner": "E7",
+      "impact": "Legibilidad de la precedencia de estados y de la navegación del autocompletado.",
+      "decision": "Válido; conservar precedencia y comportamiento probado.",
+      "correctionOrJustification": "resolveSearchError usa retornos tempranos para distinguir no listo, snapshot cambiado, error público y error desconocido.",
+      "status": "CORRECTED",
+      "afterLocations": []
+    },
+    {
+      "id": "SQ-11",
+      "rule": "typescript:S3358",
+      "file": "client/src/features/academic-institutions/api/useAcademicInstitutionSearch.ts",
+      "line": 52,
+      "column": 7,
+      "message": "Extract this nested ternary operation into an independent statement.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 51,
+          "character": 6
+        },
+        "end": {
+          "line": 52,
+          "character": 66
+        }
+      },
+      "owner": "E7",
+      "impact": "Legibilidad de la precedencia de estados y de la navegación del autocompletado.",
+      "decision": "Válido; conservar precedencia y comportamiento probado.",
+      "correctionOrJustification": "resolveSearchError usa retornos tempranos para distinguir no listo, snapshot cambiado, error público y error desconocido.",
+      "status": "CORRECTED",
+      "afterLocations": []
+    },
+    {
+      "id": "SQ-12",
+      "rule": "typescript:S3358",
+      "file": "client/src/features/academic-institutions/components/AcademicInstitutionAutocomplete.tsx",
+      "line": 58,
+      "column": 11,
+      "message": "Extract this nested ternary operation into an independent statement.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 57,
+          "character": 10
+        },
+        "end": {
+          "line": 57,
+          "character": 82
+        }
+      },
+      "owner": "E7",
+      "impact": "Legibilidad de la precedencia de estados y de la navegación del autocompletado.",
+      "decision": "Válido; conservar precedencia y comportamiento probado.",
+      "correctionOrJustification": "nextOptionIndex expresa el recorrido con retornos tempranos, sin ternarios anidados.",
+      "status": "CORRECTED",
+      "afterLocations": []
+    },
+    {
+      "id": "SQ-13",
+      "rule": "typescript:S3358",
+      "file": "client/src/features/academic-institutions/components/AcademicInstitutionAutocomplete.tsx",
+      "line": 69,
+      "column": 7,
+      "message": "Extract this nested ternary operation into an independent statement.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 68,
+          "character": 6
+        },
+        "end": {
+          "line": 71,
+          "character": 77
+        }
+      },
+      "owner": "E7",
+      "impact": "Legibilidad de la precedencia de estados y de la navegación del autocompletado.",
+      "decision": "Válido; conservar precedencia y comportamiento probado.",
+      "correctionOrJustification": "resultAnnouncement expresa la precedencia inicial/carga/error/vacío/resultados con retornos tempranos.",
+      "status": "CORRECTED",
+      "afterLocations": []
+    },
+    {
+      "id": "SQ-14",
+      "rule": "typescript:S3358",
+      "file": "client/src/features/academic-institutions/components/AcademicInstitutionAutocomplete.tsx",
+      "line": 70,
+      "column": 9,
+      "message": "Extract this nested ternary operation into an independent statement.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 69,
+          "character": 8
+        },
+        "end": {
+          "line": 71,
+          "character": 77
+        }
+      },
+      "owner": "E7",
+      "impact": "Legibilidad de la precedencia de estados y de la navegación del autocompletado.",
+      "decision": "Válido; conservar precedencia y comportamiento probado.",
+      "correctionOrJustification": "resultAnnouncement expresa la precedencia inicial/carga/error/vacío/resultados con retornos tempranos.",
+      "status": "CORRECTED",
+      "afterLocations": []
+    },
+    {
+      "id": "SQ-15",
+      "rule": "typescript:S3358",
+      "file": "client/src/features/academic-institutions/components/AcademicInstitutionAutocomplete.tsx",
+      "line": 71,
+      "column": 11,
+      "message": "Extract this nested ternary operation into an independent statement.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 70,
+          "character": 10
+        },
+        "end": {
+          "line": 71,
+          "character": 77
+        }
+      },
+      "owner": "E7",
+      "impact": "Legibilidad de la precedencia de estados y de la navegación del autocompletado.",
+      "decision": "Válido; conservar precedencia y comportamiento probado.",
+      "correctionOrJustification": "resultAnnouncement expresa la precedencia inicial/carga/error/vacío/resultados con retornos tempranos.",
+      "status": "CORRECTED",
+      "afterLocations": []
+    },
+    {
+      "id": "SQ-16",
+      "rule": "typescript:S6819",
+      "file": "client/src/features/academic-institutions/components/AcademicInstitutionAutocomplete.tsx",
+      "line": 113,
+      "column": 34,
+      "message": "Use <output> instead of the \"status\" role to ensure accessibility across all devices.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 112,
+          "character": 33
+        },
+        "end": {
+          "line": 112,
+          "character": 50
+        }
+      },
+      "owner": "E7",
+      "impact": "Semántica accesible: p con role=status puede usar el elemento nativo output.",
+      "decision": "Válido; mantener el anuncio y sus textos traducidos.",
+      "correctionOrJustification": "Usar output con role status implícito; conservar aria-live/aria-atomic del anuncio principal y presentación en bloque.",
+      "status": "CORRECTED",
+      "afterLocations": []
+    },
+    {
+      "id": "SQ-17",
+      "rule": "typescript:S6819",
+      "file": "client/src/features/academic-institutions/components/AcademicInstitutionAutocomplete.tsx",
+      "line": 116,
+      "column": 9,
+      "message": "Use <output> instead of the \"status\" role to ensure accessibility across all devices.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 115,
+          "character": 8
+        },
+        "end": {
+          "line": 115,
+          "character": 25
+        }
+      },
+      "owner": "E7",
+      "impact": "Semántica accesible: p con role=status puede usar el elemento nativo output.",
+      "decision": "Válido; mantener el anuncio y sus textos traducidos.",
+      "correctionOrJustification": "Usar output con role status implícito; conservar aria-live/aria-atomic del anuncio principal y presentación en bloque.",
+      "status": "CORRECTED",
+      "afterLocations": []
+    },
+    {
+      "id": "SQ-18",
+      "rule": "typescript:S1082",
+      "file": "client/src/features/academic-institutions/components/AcademicInstitutionAutocomplete.tsx",
+      "line": 120,
+      "column": 11,
+      "message": "Visible, non-interactive elements with click handlers must have at least one keyboard listener.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 119,
+          "character": 10
+        },
+        "end": {
+          "line": 126,
+          "character": 11
+        }
+      },
+      "owner": "E7",
+      "impact": "El análisis local no asocia el click de cada opción con el listener de teclado del input del widget compuesto.",
+      "decision": "Justificado por contexto: el foco DOM permanece en el combobox, que gestiona flechas/Intro/Escape y aria-activedescendant. Las opciones no entran en Tab, según WAI-ARIA APG.",
+      "correctionOrJustification": "Conservar el patrón y la prueba de selección por UUID solo con teclado, foco y ARIA. No añadir tabindex o handlers vacíos ni suprimir la regla.",
+      "status": "JUSTIFIED",
+      "afterLocations": [
+        {
+          "line": 121,
+          "column": 11
+        }
+      ]
+    },
+    {
+      "id": "SQ-19",
+      "rule": "typescript:S3776",
+      "file": "client/src/shared/api/generated/client/client.gen.ts",
+      "line": 74,
+      "column": 54,
+      "message": "Refactor this function to reduce its Cognitive Complexity from 46 to the 15 allowed. [+22 locations]",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 73,
+          "character": 53
+        },
+        "end": {
+          "line": 73,
+          "character": 55
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "Mantenibilidad: complejidad cognitiva elevada en helpers genéricos de transporte.",
+      "decision": "Válido como deuda del runtime generado; no indica por sí mismo un fallo de la consulta GET de E7.",
+      "correctionOrJustification": "Extraer responsabilidades en las plantillas/runtime del generador y regenerar tras un cambio de versión revisado; no modificar el contrato ni introducir un parche manual o un postprocesado.",
+      "status": "GENERATOR_PENDING",
+      "afterLocations": [
+        {
+          "line": 74,
+          "column": 54
+        }
+      ]
+    },
+    {
+      "id": "SQ-20",
+      "rule": "typescript:S9382",
+      "file": "client/src/shared/api/generated/client/client.gen.ts",
+      "line": 93,
+      "column": 21,
+      "message": "Unexpected `await` inside a loop.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 92,
+          "character": 20
+        },
+        "end": {
+          "line": 92,
+          "character": 43
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "El await serializa operaciones que dependen del resultado o del orden anterior.",
+      "decision": "Los interceptores reciben request, response o finalError ya transformados por el interceptor anterior; Promise.all alteraría el contrato.",
+      "correctionOrJustification": "Conservar sin edición manual; cualquier reorganización corresponde al generador, no al contrato OpenAPI ni a desactivar reglas.",
+      "status": "JUSTIFIED",
+      "afterLocations": [
+        {
+          "line": 93,
+          "column": 21
+        },
+        {
+          "line": 105,
+          "column": 22
+        },
+        {
+          "line": 204,
+          "column": 24
+        },
+        {
+          "line": 238,
+          "column": 23
+        }
+      ]
+    },
+    {
+      "id": "SQ-21",
+      "rule": "typescript:S9382",
+      "file": "client/src/shared/api/generated/client/client.gen.ts",
+      "line": 105,
+      "column": 22,
+      "message": "Unexpected `await` inside a loop.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 104,
+          "character": 21
+        },
+        "end": {
+          "line": 104,
+          "character": 54
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "El await serializa operaciones que dependen del resultado o del orden anterior.",
+      "decision": "Los interceptores reciben request, response o finalError ya transformados por el interceptor anterior; Promise.all alteraría el contrato.",
+      "correctionOrJustification": "Conservar sin edición manual; cualquier reorganización corresponde al generador, no al contrato OpenAPI ni a desactivar reglas.",
+      "status": "JUSTIFIED",
+      "afterLocations": [
+        {
+          "line": 93,
+          "column": 21
+        },
+        {
+          "line": 105,
+          "column": 22
+        },
+        {
+          "line": 204,
+          "column": 24
+        },
+        {
+          "line": 238,
+          "column": 23
+        }
+      ]
+    },
+    {
+      "id": "SQ-22",
+      "rule": "typescript:S9382",
+      "file": "client/src/shared/api/generated/client/client.gen.ts",
+      "line": 204,
+      "column": 24,
+      "message": "Unexpected `await` inside a loop.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 203,
+          "character": 23
+        },
+        "end": {
+          "line": 203,
+          "character": 97
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "El await serializa operaciones que dependen del resultado o del orden anterior.",
+      "decision": "Los interceptores reciben request, response o finalError ya transformados por el interceptor anterior; Promise.all alteraría el contrato.",
+      "correctionOrJustification": "Conservar sin edición manual; cualquier reorganización corresponde al generador, no al contrato OpenAPI ni a desactivar reglas.",
+      "status": "JUSTIFIED",
+      "afterLocations": [
+        {
+          "line": 93,
+          "column": 21
+        },
+        {
+          "line": 105,
+          "column": 22
+        },
+        {
+          "line": 204,
+          "column": 24
+        },
+        {
+          "line": 238,
+          "column": 23
+        }
+      ]
+    },
+    {
+      "id": "SQ-23",
+      "rule": "typescript:S1135",
+      "file": "client/src/shared/api/generated/client/client.gen.ts",
+      "line": 214,
+      "column": 10,
+      "message": "Complete the task associated to this \"TODO\" comment.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 213,
+          "character": 9
+        },
+        "end": {
+          "line": 213,
+          "character": 13
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "Deuda upstream: TODO sobre retorno de errores y tipos en responseStyle=data.",
+      "decision": "Se confirma el TODO del proveedor. E7 consume la respuesta por campos y sus errores están cubiertos por pruebas; no hay una tarea funcional de E7 omitida aquí.",
+      "correctionOrJustification": "Resolver el diseño y los tipos en el generador. No borrar el comentario ni cambiar el contrato para obtener verde.",
+      "status": "GENERATOR_PENDING",
+      "afterLocations": [
+        {
+          "line": 214,
+          "column": 10
+        }
+      ]
+    },
+    {
+      "id": "SQ-24",
+      "rule": "typescript:S9382",
+      "file": "client/src/shared/api/generated/client/client.gen.ts",
+      "line": 238,
+      "column": 23,
+      "message": "Unexpected `await` inside a loop.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 237,
+          "character": 22
+        },
+        "end": {
+          "line": 237,
+          "character": 45
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "El await serializa operaciones que dependen del resultado o del orden anterior.",
+      "decision": "Los interceptores reciben request, response o finalError ya transformados por el interceptor anterior; Promise.all alteraría el contrato.",
+      "correctionOrJustification": "Conservar sin edición manual; cualquier reorganización corresponde al generador, no al contrato OpenAPI ni a desactivar reglas.",
+      "status": "JUSTIFIED",
+      "afterLocations": [
+        {
+          "line": 93,
+          "column": 21
+        },
+        {
+          "line": 105,
+          "column": 22
+        },
+        {
+          "line": 204,
+          "column": 24
+        },
+        {
+          "line": 238,
+          "column": 23
+        }
+      ]
+    },
+    {
+      "id": "SQ-25",
+      "rule": "typescript:S3776",
+      "file": "client/src/shared/api/generated/client/utils.gen.ts",
+      "line": 18,
+      "column": 52,
+      "message": "Refactor this function to reduce its Cognitive Complexity from 24 to the 15 allowed. [+10 locations]",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 17,
+          "character": 51
+        },
+        "end": {
+          "line": 17,
+          "character": 53
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "Mantenibilidad: complejidad cognitiva elevada en helpers genéricos de transporte.",
+      "decision": "Válido como deuda del runtime generado; no indica por sí mismo un fallo de la consulta GET de E7.",
+      "correctionOrJustification": "Extraer responsabilidades en las plantillas/runtime del generador y regenerar tras un cambio de versión revisado; no modificar el contrato ni introducir un parche manual o un postprocesado.",
+      "status": "GENERATOR_PENDING",
+      "afterLocations": [
+        {
+          "line": 18,
+          "column": 52
+        }
+      ]
+    },
+    {
+      "id": "SQ-26",
+      "rule": "typescript:S3626",
+      "file": "client/src/shared/api/generated/client/utils.gen.ts",
+      "line": 99,
+      "column": 3,
+      "message": "Remove this \"return\" that does not affect the flow of execution.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 98,
+          "character": 2
+        },
+        "end": {
+          "line": 98,
+          "character": 9
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "Mantenibilidad: return final redundante en getParseAs.",
+      "decision": "Válido, sin cambio funcional al eliminarlo.",
+      "correctionOrJustification": "Corregir la plantilla del cliente Fetch upstream y regenerar; no es un problema del contrato o de la configuración local.",
+      "status": "GENERATOR_PENDING",
+      "afterLocations": [
+        {
+          "line": 99,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "id": "SQ-27",
+      "rule": "typescript:S9382",
+      "file": "client/src/shared/api/generated/client/utils.gen.ts",
+      "line": 131,
+      "column": 19,
+      "message": "Unexpected `await` inside a loop.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 130,
+          "character": 18
+        },
+        "end": {
+          "line": 130,
+          "character": 56
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "El await serializa operaciones que dependen del resultado o del orden anterior.",
+      "decision": "La resolución de credenciales evalúa el estado de options y añade cabeceras/query antes de evaluar la siguiente entrada.",
+      "correctionOrJustification": "Conservar sin edición manual; cualquier reorganización corresponde al generador, no al contrato OpenAPI ni a desactivar reglas.",
+      "status": "JUSTIFIED",
+      "afterLocations": [
+        {
+          "line": 131,
+          "column": 19
+        }
+      ]
+    },
+    {
+      "id": "SQ-28",
+      "rule": "typescript:S6606",
+      "file": "client/src/shared/api/generated/client/utils.gen.ts",
+      "line": 141,
+      "column": 9,
+      "message": "Prefer using nullish coalescing operator (`??=`) instead of an assignment expression, as it is simpler to read.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 140,
+          "character": 8
+        },
+        "end": {
+          "line": 142,
+          "character": 9
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "Legibilidad: inicialización condicional que puede expresarse con ??= para estos tipos opcionales.",
+      "decision": "Válido; las estructuras Map/query son objetos truthy cuando existen.",
+      "correctionOrJustification": "Ajustar las plantillas del runtime generado. No cambiar el contrato ni editar la copia generada.",
+      "status": "GENERATOR_PENDING",
+      "afterLocations": [
+        {
+          "line": 141,
+          "column": 9
+        }
+      ]
+    },
+    {
+      "id": "SQ-29",
+      "rule": "typescript:S3776",
+      "file": "client/src/shared/api/generated/client/utils.gen.ts",
+      "line": 188,
+      "column": 12,
+      "message": "Refactor this function to reduce its Cognitive Complexity from 20 to the 15 allowed. [+9 locations]",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 187,
+          "character": 11
+        },
+        "end": {
+          "line": 187,
+          "character": 13
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "Mantenibilidad: complejidad cognitiva elevada en helpers genéricos de transporte.",
+      "decision": "Válido como deuda del runtime generado; no indica por sí mismo un fallo de la consulta GET de E7.",
+      "correctionOrJustification": "Extraer responsabilidades en las plantillas/runtime del generador y regenerar tras un cambio de versión revisado; no modificar el contrato ni introducir un parche manual o un postprocesado.",
+      "status": "GENERATOR_PENDING",
+      "afterLocations": [
+        {
+          "line": 188,
+          "column": 12
+        }
+      ]
+    },
+    {
+      "id": "SQ-30",
+      "rule": "typescript:S6606",
+      "file": "client/src/shared/api/generated/core/params.gen.ts",
+      "line": 66,
+      "column": 3,
+      "message": "Prefer using nullish coalescing operator (`??=`) instead of an assignment expression, as it is simpler to read.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 65,
+          "character": 2
+        },
+        "end": {
+          "line": 67,
+          "character": 3
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "Legibilidad: inicialización condicional que puede expresarse con ??= para estos tipos opcionales.",
+      "decision": "Válido; las estructuras Map/query son objetos truthy cuando existen.",
+      "correctionOrJustification": "Ajustar las plantillas del runtime generado. No cambiar el contrato ni editar la copia generada.",
+      "status": "GENERATOR_PENDING",
+      "afterLocations": [
+        {
+          "line": 66,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "id": "SQ-31",
+      "rule": "typescript:S3776",
+      "file": "client/src/shared/api/generated/core/params.gen.ts",
+      "line": 106,
+      "column": 17,
+      "message": "Refactor this function to reduce its Cognitive Complexity from 50 to the 15 allowed. [+18 locations]",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 105,
+          "character": 16
+        },
+        "end": {
+          "line": 105,
+          "character": 33
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "Mantenibilidad: complejidad cognitiva elevada en helpers genéricos de transporte.",
+      "decision": "Válido como deuda del runtime generado; no indica por sí mismo un fallo de la consulta GET de E7.",
+      "correctionOrJustification": "Extraer responsabilidades en las plantillas/runtime del generador y regenerar tras un cambio de versión revisado; no modificar el contrato ni introducir un parche manual o un postprocesado.",
+      "status": "GENERATOR_PENDING",
+      "afterLocations": [
+        {
+          "line": 106,
+          "column": 17
+        }
+      ]
+    },
+    {
+      "id": "SQ-32",
+      "rule": "typescript:S4144",
+      "file": "client/src/shared/api/generated/core/pathSerializer.gen.ts",
+      "line": 54,
+      "column": 92,
+      "message": "Update this function so that its implementation is not identical to the one on line 28. [+1 location]",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 53,
+          "character": 91
+        },
+        "end": {
+          "line": 53,
+          "character": 93
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "Mantenibilidad: duplicación del mapeo de separadores de arrays y objetos.",
+      "decision": "Válido como duplicación, con firmas y conceptos públicos distintos; no demuestra un error de serialización.",
+      "correctionOrJustification": "Compartir internamente el mapeo en el generador preservando ambas firmas; no eliminar helpers del SDK manualmente.",
+      "status": "GENERATOR_PENDING",
+      "afterLocations": [
+        {
+          "line": 54,
+          "column": 92
+        }
+      ]
+    },
+    {
+      "id": "SQ-33",
+      "rule": "typescript:S7786",
+      "file": "client/src/shared/api/generated/core/pathSerializer.gen.ts",
+      "line": 119,
+      "column": 15,
+      "message": "`new Error()` is too unspecific for a type check. Use `new TypeError()` instead.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 118,
+          "character": 14
+        },
+        "end": {
+          "line": 118,
+          "character": 19
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "Diagnóstico: el error para un objeto anidado no soportado es Error en lugar de TypeError.",
+      "decision": "Válido como clasificación del error; E7 utiliza parámetros escalares y nunca presenta Error.message.",
+      "correctionOrJustification": "La plantilla del serializador debe emitir TypeError; no corresponde ampliar o alterar el OpenAPI para silenciar este aviso.",
+      "status": "GENERATOR_PENDING",
+      "afterLocations": [
+        {
+          "line": 119,
+          "column": 15
+        }
+      ]
+    },
+    {
+      "id": "SQ-34",
+      "rule": "typescript:S6571",
+      "file": "client/src/shared/api/generated/core/queryKeySerializer.gen.ts",
+      "line": 17,
+      "column": 69,
+      "message": "'unknown' overrides all other types in this union type.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 16,
+          "character": 68
+        },
+        "end": {
+          "line": 16,
+          "character": 75
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "Mantenibilidad/tipos: unknown absorbe otros miembros, o never es redundante, en una unión.",
+      "decision": "Válido como redundancia del tipo generado; no es una pérdida nueva de validación de dominio en E7.",
+      "correctionOrJustification": "Simplificar la emisión de tipos del runtime del generador preservando compatibilidad; no cambiar los schemas ni las copias generadas.",
+      "status": "GENERATOR_PENDING",
+      "afterLocations": [
+        {
+          "line": 17,
+          "column": 69
+        }
+      ]
+    },
+    {
+      "id": "SQ-35",
+      "rule": "typescript:S3776",
+      "file": "client/src/shared/api/generated/core/serverSentEvents.gen.ts",
+      "line": 99,
+      "column": 30,
+      "message": "Refactor this function to reduce its Cognitive Complexity from 72 to the 15 allowed. [+25 locations]",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 98,
+          "character": 29
+        },
+        "end": {
+          "line": 98,
+          "character": 37
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "Mantenibilidad: complejidad cognitiva elevada en helpers genéricos de transporte.",
+      "decision": "Válido como deuda del runtime generado; no indica por sí mismo un fallo de la consulta GET de E7.",
+      "correctionOrJustification": "Extraer responsabilidades en las plantillas/runtime del generador y regenerar tras un cambio de versión revisado; no modificar el contrato ni introducir un parche manual o un postprocesado.",
+      "status": "GENERATOR_PENDING",
+      "afterLocations": [
+        {
+          "line": 99,
+          "column": 30
+        }
+      ]
+    },
+    {
+      "id": "SQ-36",
+      "rule": "typescript:S4822",
+      "file": "client/src/shared/api/generated/core/serverSentEvents.gen.ts",
+      "line": 144,
+      "column": 11,
+      "message": "Consider using 'await' for the promise inside this 'try' or replace it with 'Promise.prototype.catch(...)' usage. [+1 location]",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 143,
+          "character": 10
+        },
+        "end": {
+          "line": 143,
+          "character": 13
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "Robustez: reader.cancel() devuelve una promesa y el try/catch síncrono no captura un rechazo asíncrono.",
+      "decision": "Válido en el helper SSE; E7 solo usa GET JSON y no llama client.sse. Ambos avisos corresponden a la misma causa.",
+      "correctionOrJustification": "La plantilla SSE debe manejar el rechazo explícitamente (por ejemplo, catch en cancel()). Pendiente del generador; no añadir SSE al contrato ni editar el archivo generado.",
+      "status": "GENERATOR_PENDING",
+      "afterLocations": [
+        {
+          "line": 144,
+          "column": 11
+        }
+      ]
+    },
+    {
+      "id": "SQ-37",
+      "rule": "typescript:S9383",
+      "file": "client/src/shared/api/generated/core/serverSentEvents.gen.ts",
+      "line": 145,
+      "column": 13,
+      "message": "Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 144,
+          "character": 12
+        },
+        "end": {
+          "line": 144,
+          "character": 28
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "Robustez: reader.cancel() devuelve una promesa y el try/catch síncrono no captura un rechazo asíncrono.",
+      "decision": "Válido en el helper SSE; E7 solo usa GET JSON y no llama client.sse. Ambos avisos corresponden a la misma causa.",
+      "correctionOrJustification": "La plantilla SSE debe manejar el rechazo explícitamente (por ejemplo, catch en cancel()). Pendiente del generador; no añadir SSE al contrato ni editar el archivo generado.",
+      "status": "GENERATOR_PENDING",
+      "afterLocations": [
+        {
+          "line": 145,
+          "column": 13
+        }
+      ]
+    },
+    {
+      "id": "SQ-38",
+      "rule": "typescript:S9382",
+      "file": "client/src/shared/api/generated/core/serverSentEvents.gen.ts",
+      "line": 198,
+      "column": 19,
+      "message": "Unexpected `await` inside a loop.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 197,
+          "character": 18
+        },
+        "end": {
+          "line": 197,
+          "character": 47
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "El await serializa operaciones que dependen del resultado o del orden anterior.",
+      "decision": "La validación debe terminar antes de transformar y emitir cada evento; se conserva el orden del stream.",
+      "correctionOrJustification": "Conservar sin edición manual; cualquier reorganización corresponde al generador, no al contrato OpenAPI ni a desactivar reglas.",
+      "status": "JUSTIFIED",
+      "afterLocations": [
+        {
+          "line": 198,
+          "column": 19
+        },
+        {
+          "line": 202,
+          "column": 26
+        },
+        {
+          "line": 234,
+          "column": 9
+        }
+      ]
+    },
+    {
+      "id": "SQ-39",
+      "rule": "typescript:S9382",
+      "file": "client/src/shared/api/generated/core/serverSentEvents.gen.ts",
+      "line": 202,
+      "column": 26,
+      "message": "Unexpected `await` inside a loop.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 201,
+          "character": 25
+        },
+        "end": {
+          "line": 201,
+          "character": 56
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "El await serializa operaciones que dependen del resultado o del orden anterior.",
+      "decision": "Cada transformación debe terminar antes de emitir su evento; no se paralelizan eventos de un stream.",
+      "correctionOrJustification": "Conservar sin edición manual; cualquier reorganización corresponde al generador, no al contrato OpenAPI ni a desactivar reglas.",
+      "status": "JUSTIFIED",
+      "afterLocations": [
+        {
+          "line": 198,
+          "column": 19
+        },
+        {
+          "line": 202,
+          "column": 26
+        },
+        {
+          "line": 234,
+          "column": 9
+        }
+      ]
+    },
+    {
+      "id": "SQ-40",
+      "rule": "typescript:S9382",
+      "file": "client/src/shared/api/generated/core/serverSentEvents.gen.ts",
+      "line": 234,
+      "column": 9,
+      "message": "Unexpected `await` inside a loop.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 233,
+          "character": 8
+        },
+        "end": {
+          "line": 233,
+          "character": 28
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "El await serializa operaciones que dependen del resultado o del orden anterior.",
+      "decision": "La espera aplica backoff antes del siguiente intento; paralelizarla eliminaría la espera deliberada.",
+      "correctionOrJustification": "Conservar sin edición manual; cualquier reorganización corresponde al generador, no al contrato OpenAPI ni a desactivar reglas.",
+      "status": "JUSTIFIED",
+      "afterLocations": [
+        {
+          "line": 198,
+          "column": 19
+        },
+        {
+          "line": 202,
+          "column": 26
+        },
+        {
+          "line": 234,
+          "column": 9
+        }
+      ]
+    },
+    {
+      "id": "SQ-41",
+      "rule": "typescript:S4782",
+      "file": "client/src/shared/api/generated/core/types.gen.ts",
+      "line": 40,
+      "column": 7,
+      "message": "Consider removing 'undefined' type or '?' specifier, one of them is redundant. [+1 location]",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 39,
+          "character": 6
+        },
+        "end": {
+          "line": 39,
+          "character": 7
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "Mantenibilidad/tipos: opcionalidad duplicada entre auth? y AuthToken, que ya admite undefined.",
+      "decision": "Válido como redundancia estática; no cambia la autenticación pública de E7, cuyo endpoint declara security: [].",
+      "correctionOrJustification": "Ajustar la definición genérica del runtime en el generador; no cambiar la seguridad del contrato.",
+      "status": "GENERATOR_PENDING",
+      "afterLocations": [
+        {
+          "line": 40,
+          "column": 7
+        }
+      ]
+    },
+    {
+      "id": "SQ-42",
+      "rule": "typescript:S6571",
+      "file": "client/src/shared/api/generated/core/types.gen.ts",
+      "line": 56,
+      "column": 88,
+      "message": "'unknown' overrides all other types in this union type.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 55,
+          "character": 87
+        },
+        "end": {
+          "line": 55,
+          "character": 94
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "Mantenibilidad/tipos: unknown absorbe otros miembros, o never es redundante, en una unión.",
+      "decision": "Válido como redundancia del tipo generado; no es una pérdida nueva de validación de dominio en E7.",
+      "correctionOrJustification": "Simplificar la emisión de tipos del runtime del generador preservando compatibilidad; no cambiar los schemas ni las copias generadas.",
+      "status": "GENERATOR_PENDING",
+      "afterLocations": [
+        {
+          "line": 56,
+          "column": 88
+        }
+      ]
+    },
+    {
+      "id": "SQ-43",
+      "rule": "typescript:S6571",
+      "file": "client/src/shared/api/generated/core/types.gen.ts",
+      "line": 102,
+      "column": 18,
+      "message": "'never' is overridden by other types in this union type.",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 101,
+          "character": 17
+        },
+        "end": {
+          "line": 101,
+          "character": 22
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "Mantenibilidad/tipos: unknown absorbe otros miembros, o never es redundante, en una unión.",
+      "decision": "Válido como redundancia del tipo generado; no es una pérdida nueva de validación de dominio en E7.",
+      "correctionOrJustification": "Simplificar la emisión de tipos del runtime del generador preservando compatibilidad; no cambiar los schemas ni las copias generadas.",
+      "status": "GENERATOR_PENDING",
+      "afterLocations": [
+        {
+          "line": 102,
+          "column": 18
+        }
+      ]
+    },
+    {
+      "id": "SQ-44",
+      "rule": "typescript:S3776",
+      "file": "client/src/shared/api/generated/core/utils.gen.ts",
+      "line": 18,
+      "column": 84,
+      "message": "Refactor this function to reduce its Cognitive Complexity from 25 to the 15 allowed. [+10 locations]",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 17,
+          "character": 83
+        },
+        "end": {
+          "line": 17,
+          "character": 85
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "Mantenibilidad: complejidad cognitiva elevada en helpers genéricos de transporte.",
+      "decision": "Válido como deuda del runtime generado; no indica por sí mismo un fallo de la consulta GET de E7.",
+      "correctionOrJustification": "Extraer responsabilidades en las plantillas/runtime del generador y regenerar tras un cambio de versión revisado; no modificar el contrato ni introducir un parche manual o un postprocesado.",
+      "status": "GENERATOR_PENDING",
+      "afterLocations": [
+        {
+          "line": 18,
+          "column": 84
+        }
+      ]
+    },
+    {
+      "id": "SQ-45",
+      "rule": "typescript:S6564",
+      "file": "client/src/shared/api/generated/types.gen.ts",
+      "line": 7,
+      "column": 13,
+      "message": "Remove this redundant type alias and replace its occurrences with \"string\".",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 6,
+          "character": 12
+        },
+        "end": {
+          "line": 6,
+          "character": 25
+        }
+      },
+      "owner": "Generador @hey-api/openapi-ts 0.99.0 / runtime Fetch",
+      "impact": "Alias estructural sin coste de ejecución; no aporta nominalidad al tipo string.",
+      "decision": "CorrelationId procede del schema con nombre del contrato aceptado y conserva vocabulario del contrato en el SDK.",
+      "correctionOrJustification": "Conservar el contrato y el alias generado. Una política distinta de emisión de alias debe resolverse en el plugin TypeScript del generador.",
+      "status": "JUSTIFIED",
+      "afterLocations": [
+        {
+          "line": 7,
+          "column": 13
+        }
+      ]
+    },
+    {
+      "id": "SQ-46",
+      "rule": "java:S1192",
+      "file": "server/src/main/java/com/propractix/academicinstitution/adapter/in/rest/InstitutionSearchCursorCodec.java",
+      "line": 17,
+      "column": 13,
+      "message": "Define a constant instead of duplicating this literal \"version\" 5 times. [+4 locations]",
+      "severity": 2,
+      "range": {
+        "start": {
+          "line": 16,
+          "character": 12
+        },
+        "end": {
+          "line": 16,
+          "character": 21
+        }
+      },
+      "owner": "E6 / backend",
+      "impact": "Mantenibilidad: el nombre de propiedad version se repite cinco veces en el codec; no se ha observado un fallo de decodificación.",
+      "decision": "Válido, previo a E7. Registrar por separado; el diff de E7 no modifica backend.",
+      "correctionOrJustification": "Proponer una constante de campo en una entrega backend autorizada; no cambiar asText ni el contrato del cursor en E7.",
+      "status": "OUT_OF_SCOPE",
+      "afterLocations": [
+        {
+          "line": 17,
+          "column": 13
+        }
+      ]
+    }
+  ]
+}

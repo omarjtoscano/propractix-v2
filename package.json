@@ -31,7 +31,10 @@
     "client:build": "npm run build --workspace=client",
     "openapi:lint": "redocly lint docs/api/openapi.yaml",
     "openapi:bundle": "redocly bundle docs/api/openapi.yaml --output .local/openapi.yaml",
-    "check": "npm run infra:config && ./scripts/check-local-baseline.sh && ./infra/staging/scripts/deployment-gate-test.sh && npm run openapi:lint && npm run server:verify && npm run client:lint && npm run client:test && npm run client:build"
+    "check": "npm run infra:config && ./scripts/check-local-baseline.sh && ./infra/staging/scripts/deployment-gate-test.sh && npm run openapi:lint && npm run client:check-generated && npm run server:verify && npm run client:lint && npm run client:test && npm run client:build",
+    "client:generate": "npm run generate --workspace=client",
+    "client:check-generated": "node client/scripts/check-generated.mjs",
+    "postinstall": "node tools/openapi-generator/install.mjs"
   },
   "devDependencies": {
     "@redocly/cli": "2.52.1"

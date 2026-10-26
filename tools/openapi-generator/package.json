@@ -1,0 +1,21 @@
+{
+  "name": "@propractix/openapi-generator",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25",
+    "npm": ">=11.9.0 <11.10.0"
+  },
+  "scripts": {
+    "generate": "node verify-versions.mjs && openapi-ts",
+    "verify-versions": "node verify-versions.mjs"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "0.99.0",
+    "typescript": "6.0.3"
+  },
+  "overrides": {
+    "js-yaml": "4.3.2"
+  }
+}

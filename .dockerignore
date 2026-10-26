@@ -8,6 +8,7 @@ docs/**
 infra
 node_modules
 client/node_modules
+tools/openapi-generator/node_modules
 client/dist
 server/target
 *.md

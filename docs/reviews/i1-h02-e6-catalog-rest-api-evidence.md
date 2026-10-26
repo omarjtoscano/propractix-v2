@@ -172,3 +172,10 @@ PR #15. CI, Trivy y Build OCI sobre ese nuevo SHA quedan **pendientes de
 verificación del Product Owner**, que informará del resultado. El agente no
 espera ni supervisa esas ejecuciones. La PR permanece Draft; I1-H02
 `IN_PROGRESS`, E7 y posteriores sin autorización y `CL0_CLOUD_STAGING` `PENDING`.
+
+## Integración confirmada por el Product Owner
+
+El 2026-10-25 el Product Owner confirmó la integración de E6 mediante
+`11dda0c9fb267b619c98baabd12465e143c43d53` (PR #15) y autorizó exclusivamente
+E7. E6 conserva `ACCEPTED`; E7 e I1-H02 permanecen `IN_PROGRESS`. Esta anotación
+registra la confirmación del propietario y no atribuye resultados nuevos a CI.

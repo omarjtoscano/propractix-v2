@@ -1,0 +1,5 @@
+{
+  "debounceMs": 300,
+  "pageSize": 20,
+  "retryFallbackMs": 1000
+}

@@ -32,10 +32,15 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            tools/openapi-generator/package-lock.json
       - name: Install with the approved npm version
         run: npx --yes npm@11.9.0 ci
       - name: Validate OpenAPI
         run: npx --yes npm@11.9.0 run openapi:lint
+      - name: Verify isolated generator and reproducible client
+        run: npx --yes npm@11.9.0 run client:check-generated
       - name: Lint and typecheck client
         run: npx --yes npm@11.9.0 run client:lint && npx --yes npm@11.9.0 run client:typecheck
       - name: Test and build client

@@ -131,6 +131,39 @@ Spring Modulith no será obligatorio durante el inicio. Requerirá un ADR poster
 
 Estas versiones constituyen `F0_CLIENT_BASELINE`. El `package-lock.json` fijará el árbol instalado y CI utilizará `npm ci`. Una actualización mayor, una nueva librería estructural o un cambio de generador OpenAPI exige ADR o actualización explícita de uno existente; parches y menores se incorporan mediante pull request con pruebas, revisión del cliente generado y evidencia de compatibilidad.
 
+## Excepción de compatibilidad F0 — generador OpenAPI (2026-10-25)
+
+Aprobada expresamente por el Product Owner para E7 de I1-H02. La baseline de la
+aplicación conserva **TypeScript 7.0.2** y el generador conserva
+**@hey-api/openapi-ts 0.99.0**. Se fija **TypeScript 6.0.3 exclusivamente para
+la ejecución del generador**, con aislamiento efectivo de dependencias.
+
+Motivo: 0.99.0 utiliza la API clásica de TypeScript (`SyntaxKind`, entre otras),
+que 7.0.2 no exporta; la generación falla con `SyntaxKind.AnyKeyword`.
+El [issue oficial hey-api/hey-api#4235](https://github.com/hey-api/hey-api/issues/4235)
+describe la misma incompatibilidad y el funcionamiento con 6.0.3. Esta excepción
+no cambia la versión con la que se comprueba o compila la aplicación.
+
+Implementación y controles obligatorios:
+
+- `tools/openapi-generator` es un paquete npm independiente, fuera de los
+  workspaces, con `package.json`, `package-lock.json` y `node_modules` propios.
+- `npm ci` raíz ejecuta el `postinstall` que instala ese árbol mediante su propio
+  lockfile, reutilizando el mismo CLI npm. CI y Docker instalan ambos árboles.
+- Antes de generar se resuelve TypeScript desde la entrada real de Hey API y
+  desde el paquete de la aplicación: deben ser 6.0.3 y 7.0.2 respectivamente,
+  con rutas diferentes y el generador contenido en su árbol aislado.
+- `client:check-generated` regenera dos veces desde el OpenAPI aceptado y
+  compara todos los archivos con la copia versionada. No se edita el código
+  generado ni se modifica `node_modules` manualmente.
+- `client:typecheck` y `client:build` utilizan TypeScript 7.0.2 e incluyen el
+  cliente generado. Ambos lockfiles y la instalación `npm ci` se verifican.
+
+El coste aceptado es mantener dos árboles de herramientas. La retirada de la
+excepción requiere una propuesta revisada que demuestre compatibilidad del
+generador con la versión de aplicación y generación reproducible. No autoriza
+E8, otras actualizaciones de F0, aceptación de E7 ni cambios de dominio o seguridad.
+
 ## Alternativas consideradas
 
 - Microservicios: rechazados por complejidad operativa y transaccional prematura.

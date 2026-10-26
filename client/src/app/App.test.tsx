@@ -1,18 +1,19 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, screen } from '@testing-library/react';
 import i18n from '../shared/i18n';
+import { renderWithQuery } from '../test/render';
 import { App } from './App';
 
-describe('technical shell', () => {
+describe('H02 application screen', () => {
   afterEach(cleanup);
 
   it.each([
-    ['es', 'Base técnica preparada'],
-    ['en', 'Technical foundation ready'],
-  ])('renders copy through the %s i18n catalog', async (locale, description) => {
+    ['es', 'Buscar universidad', 'Esta versión utiliza datos sintéticos para pruebas. No son datos reales de RUCT.'],
+    ['en', 'Find a university', 'This version uses synthetic test data. It does not contain real RUCT data.'],
+  ])('renders the functional screen through the %s catalog', async (locale, title, notice) => {
     await i18n.changeLanguage(locale);
-    render(<App />);
-
+    renderWithQuery(<App />);
     expect(screen.getByRole('heading', { name: 'ProPractix' })).toBeDefined();
-    expect(screen.getByText(description)).toBeDefined();
+    expect(screen.getByRole('heading', { name: title })).toBeDefined();
+    expect(screen.getByText(notice)).toBeDefined();
   });
 });

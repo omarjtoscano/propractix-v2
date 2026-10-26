@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+import { dirname, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const generatorRequire = createRequire(import.meta.url);
+const heyApiEntry = fileURLToPath(import.meta.resolve('@hey-api/openapi-ts'));
+const heyApiRequire = createRequire(heyApiEntry);
+const applicationRequire = createRequire(new URL('../../client/package.json', import.meta.url));
+const generatorCompiler = heyApiRequire.resolve('typescript/package.json');
+const applicationCompiler = applicationRequire.resolve('typescript/package.json');
+assert.equal(generatorRequire('@hey-api/openapi-ts/package.json').version, '0.99.0');
+assert.equal(heyApiRequire('typescript/package.json').version, '6.0.3');
+assert.equal(applicationRequire('typescript/package.json').version, '7.0.2');
+assert.notEqual(generatorCompiler, applicationCompiler);
+const toolRoot = dirname(fileURLToPath(import.meta.url));
+assert.ok(relative(toolRoot, heyApiEntry).startsWith('node_modules/'));
+assert.ok(relative(toolRoot, generatorCompiler).startsWith('node_modules/'));
+console.log(`generator: @hey-api/openapi-ts 0.99.0 -> TypeScript 6.0.3 (${generatorCompiler})`);
+console.log(`application: TypeScript 7.0.2 (${applicationCompiler})`);

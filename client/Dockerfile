@@ -3,6 +3,7 @@ WORKDIR /workspace
 RUN npm install --global npm@11.9.0
 COPY package.json package-lock.json .npmrc ./
 COPY client/package.json client/package.json
+COPY tools/openapi-generator/package.json tools/openapi-generator/package-lock.json tools/openapi-generator/install.mjs tools/openapi-generator/
 RUN npm ci
 COPY client client
 RUN npm run build --workspace=client
