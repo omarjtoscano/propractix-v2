@@ -105,6 +105,9 @@ confirmados expresamente por el Product Owner el 2026-11-01. Los checks del nuev
 commit documental quedan pendientes de su verificación, sin espera ni supervisión
 por el agente. La aceptación expresa de E8 no cerró I1-H02 ni autorizó merge. Posteriormente la
 [PR #17](https://github.com/omarjtoscano/propractix-v2/pull/17) quedó integrada mediante
-`866c4c71511c181564b8f8d165c06759fcb4442b`. E9 solo prepara RUCT para segunda revisión
-según su [evidencia](../reviews/i1-h02-first-snapshot-evidence.md); este procedimiento
-E2E conserva sus fixtures sintéticas y no publica el snapshot real.
+`866c4c71511c181564b8f8d165c06759fcb4442b`. E9 dispone de autorización
+para publicación exclusivamente local del RUCT aprobado, según su
+[evidencia](../reviews/i1-h02-first-snapshot-evidence.md). Este procedimiento E2E
+conserva sus fixtures sintéticas y no publica el snapshot real. La corrección
+Playwright de PR #20 está integrada en el incremento mediante
+`15eb4d03ae2e4a0834e5f2a808edb75b416eebc9` y se conserva en E9.

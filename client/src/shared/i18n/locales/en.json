@@ -38,7 +38,7 @@
     "selected": "Selected university: {{name}}",
     "selectedManual": "Manually entered university: {{name}}",
     "scope": "The catalog is for information only: it does not certify affiliation, enrollment, eligibility, an agreement or compliance.",
-    "synthetic": "This version uses synthetic test data. It does not contain real RUCT data.",
+    "provenance": "Check the snapshot attribution and retrieval date for the source of the displayed data.",
     "attribution": "Snapshot attribution",
     "retrievedAt": "Source retrieved on {{date}}",
     "source": "View snapshot source",

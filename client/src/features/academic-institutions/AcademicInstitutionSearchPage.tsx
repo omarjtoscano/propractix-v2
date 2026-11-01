@@ -10,7 +10,7 @@ export function AcademicInstitutionSearchPage() {
     <section aria-labelledby="academic-institution-heading">
       <h2 id="academic-institution-heading">{t('academicInstitutions.title')}</h2>
       <p>{t('academicInstitutions.description')}</p>
-      <p className="catalog-notice">{t('academicInstitutions.synthetic')}</p>
+      <p className="catalog-notice">{t('academicInstitutions.provenance')}</p>
       <p>{t('academicInstitutions.scope')}</p>
       <AcademicInstitutionAutocomplete onChange={setSelection} />
       {selection?.kind === 'catalog' && (

@@ -193,21 +193,63 @@ validation:
   resultCode: catalog_artifact_valid
   note: 'published_rows=99 en el dry run cuenta candidatos válidos; no publica ni conecta a PostgreSQL.'
 secondReview:
-  status: PENDING_REVIEW
-  reviewer: null
-  reviewedAt: null
-  reviewedArtifactHash: null
-  decision: null
-  requiredChecks:
-  - Reconciliar 109 = 99 + 10 y contrastar duplicados.
-  - Comparar muestra de incluidas y todas las omisiones con el original RUCT conservado.
-  - Verificar claves literales, ceros iniciales, nombres y ausencia de estados inferidos.
-  - Recalcular ambos hashes y registrar persona revisora, fecha UTC, hash exacto revisado y decisión antes
-    de publicar.
+  status: MAPPING_APPROVED_BY_PRODUCT_OWNER
+  reviewedArtifactHash: ad2a9ca6f05dfe35851dcc00f3cf568e034d64db5b63d4009a2029fe78633b04
+  independentTechnicalReview:
+    status: REPORTED_BY_PRODUCT_OWNER
+    source: 'Mensaje del Product Owner en este chat el 2026-11-01: revisión técnica independiente realizada
+      en este chat y mapeo revisado en PR #19.'
+    reviewer: null
+    reviewedAt: null
+    reportReference: null
+    note: El contexto disponible y la PR no aportan identidad ni dictamen del revisor. No se atribuye
+      independencia a las comprobaciones del agente ni se inventan hallazgos.
+  productOwnerApproval:
+    status: APPROVED
+    approver: Product Owner, aprobación expresa en este chat
+    approvalDate: '2026-11-01'
+    artifactHash: ad2a9ca6f05dfe35851dcc00f3cf568e034d64db5b63d4009a2029fe78633b04
+    scope: 'Mapeo del snapshot RUCT de PR #19 y continuación E9 con publicación exclusivamente local y
+      aviso neutral ES/EN; no aceptación de E9 ni cierre H02.'
+  decision: Publicación local autorizada expresamente por el PO tras su aprobación del mapeo. Revisión
+    técnica independiente y aprobación PO registradas separadamente.
 publication:
-  status: NOT_PUBLISHED
-  authorizedInThisPhase: false
-  catalogImportId: null
-  publishedAt: null
+  status: PUBLISHED_LOCAL
+  authorizedInThisPhase: true
+  environment: local
+  database: PostgreSQL 16.15, 127.0.0.1:5432/propractix
+  method: CLI existente npm run catalog:publish; sin escrituras SQL directas al catálogo
+  catalogImportId: 29ca8394-9878-44ba-82f2-2971534b1ead
+  publishedAt: '2026-11-01T18:16:34.162754Z'
+  artifactHash: ad2a9ca6f05dfe35851dcc00f3cf568e034d64db5b63d4009a2029fe78633b04
+  totalCanonicalRows: 99
+  publishedRows: 99
+  omittedCanonicalRows: 0
+  omittedSourceRowsBeforeCanonicalCsv: 10
+  publishedImportCount: 1
+  visibleSnapshotCount: 1
+  activeInstitutionCount: 99
+  repeatUnchanged: true
+  invalidArtifactRejected: true
+  invalidApplicationExitCode: 6
+  invalidNpmMavenExitCode: 1
+  lastValidSnapshotPreserved: true
+  verificationEvidence: ../../../reviews/i1-h02-first-snapshot-evidence.md#publicación-y-verificaciones-locales-de-continuación
+httpVerification:
+  pageSizes:
+  - 20
+  - 20
+  - 20
+  - 20
+  - 19
+  uniqueUuidV4Institutions: 99
+  sourceNamesMatchExactly: true
+  persistedCanonicalRowsMatchExactly: true
+  persistedKeysWithLeadingZero: 90
+  accentInsensitiveSearchVerified: true
+  snapshotMetadataMatch: true
+  cursorSurvivesRepeat: true
+  cursorSurvivesRejectedArtifact: true
+  evidence: ../../../reviews/i1-h02-e9-local-validation.json
 e9Status: IN_PROGRESS
 h02Status: IN_PROGRESS

@@ -1,9 +1,12 @@
-# I1-H02 E9 — Primer snapshot RUCT, preparación para segunda revisión
+# I1-H02 E9 — Primer snapshot RUCT y evidencia de publicación local
 
 - Fecha: 2026-11-01. E9 e I1-H02: `IN_PROGRESS`.
-- Segunda revisión del mapeo: `PENDING_REVIEW`. Publicación: `NOT_PUBLISHED`.
+- Mapeo: `MAPPING_APPROVED_BY_PRODUCT_OWNER`; revisión independiente referida por el PO.
+- Publicación local: autorizada; resultados registrados abajo.
 - Rama: `feature/i1-h02-e9-ruct-first-snapshot`.
-- Base actualizada mediante fetch: `3d339d1598c4a7deafedea3d4d9d78fc16c87088`.
+- Base inicial: `3d339d1598c4a7deafedea3d4d9d78fc16c87088`.
+- PR #20 integrada en el incremento mediante `15eb4d03ae2e4a0834e5f2a808edb75b416eebc9`;
+  E9 actualizada mediante merge `0069c9a`, conservando `globalSetup` y descubrimiento Playwright.
 - E8 permanece `ACCEPTED` sobre `fc9660e997df990d08677f6a55d91d57f92ef9c7`.
   La PR [#17](https://github.com/omarjtoscano/propractix-v2/pull/17) está integrada
   mediante `866c4c71511c181564b8f8d165c06759fcb4442b`, contrastado con Git y GitHub.
@@ -12,23 +15,35 @@
   anterior. No se modifican aquellas PR ni sus resultados históricos.
 - El SHA de esta entrega se registra en su Draft PR y en el mensaje de entrega.
 
-## Autorización y límite de la fase
+## Autorización y revisión diferenciadas
 
-El Product Owner autoriza el 2026-11-01 adquirir la exportación oficial,
-preparar CSV/manifest y evidencia para la segunda revisión del apartado 8.2 del
-[plan H02](../plans/i1-h02-execution-plan.md#82-obtención-del-primer-snapshot-real),
-validarlos con parser/dry run existentes, proponer el ajuste de UI y realizar
-commit, push y Draft PR. Los artefactos se versionan como candidatos pendientes
-de revisión, por esta autorización expresa; esto no completa el paso de revisión
-ni habilita el paso de publicación del plan.
+La primera fase preparó CSV, manifest y evidencia para segunda revisión, sin
+publicar. El Product Owner aprueba después expresamente en este chat, el
+2026-11-01, el mapeo revisado en la PR #19 sobre el hash exacto
+`ad2a9ca6f05dfe35851dcc00f3cf568e034d64db5b63d4009a2029fe78633b04` y autoriza continuar E9 tras integrar la PR #20.
 
-No se ejecuta `catalog:publish`, no se entrega RUCT a `PublishInstitutionCatalog`
-y no se carga este CSV en PostgreSQL. La validación administrativa usa el contexto
-ligero de dry run, sin DataSource ni publicador. Los tests backend existentes usan
-sus propias fixtures y bases Testcontainers desechables.
-C0 y S0 continúan `CLOSED`; `CL0_CLOUD_STAGING` continúa `PENDING`.
-No se reabre C0, no se amplía el análisis jurídico y no cambian código funcional,
-S0, migraciones, OpenAPI, generador ni AWS. No se acepta E9 ni se cierra H02.
+Se registran por separado dos hechos:
+
+1. **Revisión técnica independiente:** el PO refiere que se realizó en este
+   chat. El contexto accesible y la PR #19 no contienen identidad del revisor,
+   dictamen ni fecha/hora de esa revisión. Se conserva como revisión referida
+   por el PO (`REPORTED_BY_PRODUCT_OWNER`), sin inventar autor, hallazgos ni
+   atribuir independencia a las comprobaciones del agente. Ante la solicitud
+   de referencia, el PO indicó continuar con lo planteado.
+2. **Aprobación del PO:** expresa sobre el hash anterior, con fecha 2026-11-01,
+   y autorización de publicación exclusivamente local, verificaciones, aviso
+   neutral ES/EN, evidencia, commit y push en la misma rama/PR #19. La aprobación
+   del mapeo y la revisión técnica no se confunden con aceptación de E9/H02.
+
+El manifest conserva ambos registros con procedencia separada. No se asignan
+instantes ni identidades no aportados. La publicación se realiza por la CLI
+existente contra PostgreSQL de loopback, sin inserts o updates directos del
+catálogo. Las consultas SQL de evidencia son de solo lectura. Las pruebas E2E
+sintéticas conservan su proyecto Compose desechable, separado del snapshot RUCT.
+C0 y S0 continúan `CLOSED`; E9 e I1-H02 `IN_PROGRESS` y CL0 `PENDING`.
+Sin aceptación de E9/H02, merge de PR #19, cambios en S0, migraciones, OpenAPI,
+generador ni AWS. CI, Trivy y Build OCI los verifica el PO sin espera ni
+supervisión del agente.
 
 ## Adquisición oficial y procedencia
 
@@ -184,15 +199,15 @@ significa publicación**. Las diez omisiones ocurrieron antes, al transformar
 La CLI verifica `artifactHash`; el hash del original se verifica separadamente
 por el procedimiento anterior, pues el dry run no recibe el XLS.
 
-## Segunda revisión pendiente
+## Revisión del mapeo y muestra trazable
 
-La preparación y las comprobaciones del agente no sustituyen la segunda persona
-exigida por el plan. Antes de publicar debe registrarse en `secondReview` del
-manifest persona revisora, fecha UTC, hash exacto revisado, decisión y evidencia
-de recuentos/duplicados, muestra y omisiones. Los campos permanecen nulos y el
-estado es `PENDING_REVIEW`.
+El estado inicial `PENDING_REVIEW` del commit `b31eda0` queda sustituido por
+la aprobación expresa del mapeo del PO registrada arriba, que autoriza la
+publicación local. La revisión independiente se conserva como referida por el
+PO, con sus límites de atribución. Las comprobaciones reproducibles del agente
+se mantienen separadas y no se presentan como una segunda persona.
 
-Muestra propuesta para que esa persona contraste B/A del XLS, CSV y fuente RUCT:
+Muestra conservada para trazabilidad del contraste B/A del XLS, CSV y fuente RUCT:
 
 | Fila Excel | Clave literal | Denominación incluida | Motivo de muestra |
 |---:|---|---|---|
@@ -210,31 +225,30 @@ La ficha pública para una muestra usa
 Revisar también las diez omisiones, especialmente `000` y las agrupaciones
 extranjeras. No se deriva vigencia ni significado legal de este contraste.
 
-## Propuesta mínima de UI, pendiente de revisión
+## Aviso neutral de UI ES/EN autorizado
 
 `client/src/features/academic-institutions/AcademicInstitutionSearchPage.tsx`
-renderiza siempre `academicInstitutions.synthetic`, incluso si la API devuelve
+renderizaba siempre `academicInstitutions.synthetic`, incluso si la API devolvía
 el snapshot real. La atribución, URL y fecha ya se muestran desde los metadatos
 del snapshot en el autocompletado. OpenAPI no expone un discriminador de origen.
 
-Se propone sustituir únicamente la clave y el párrafo incondicional por un aviso
+Se sustituye únicamente la clave y el párrafo incondicional por un aviso
 neutral `academicInstitutions.provenance`, manteniendo el aviso
 `academicInstitutions.scope` y la atribución dinámica existentes:
 
-| Locale | Texto propuesto para `academicInstitutions.provenance` |
+| Locale | Texto implementado para `academicInstitutions.provenance` |
 |---|---|
 | ES | Consulta la atribución y la fecha del snapshot para conocer el origen de los datos mostrados. |
 | EN | Check the snapshot attribution and retrieval date for the source of the displayed data. |
 
 Así el texto sigue siendo verdadero tanto con fixtures sintéticas, cuya
 atribución las identifica, como con RUCT real. No se añade flag ni se infiere el
-origen examinando nombres, URLs o textos traducidos. La propuesta no se implementa
-en esta fase. Al autorizarla: cambiar solo la referencia del componente y ambos
-catálogos, ajustar la expectativa pertinente y verificar ES/EN, paridad y ambos
-orígenes. El aviso de alcance informativo sigue sin acreditar afiliación,
+origen examinando nombres, URLs o textos traducidos. Se implementa por autorización expresa del PO: referencia del componente y ambos
+catálogos, expectativa de pantalla y comprobación de atribución/fecha/alcance
+para datos sintéticos y RUCT en ES/EN. El aviso de alcance informativo sigue sin acreditar afiliación,
 matrícula, elegibilidad, convenio ni cumplimiento.
 
-## Validaciones locales y aceptación pendiente
+## Validaciones de la primera fase (antes de publicación)
 
 | Comprobación | Resultado |
 |---|---|
@@ -255,8 +269,112 @@ la que acredita el resultado. El benchmark sigue omitido por su condición
 explícita existente. No se añaden tests ni se repiten cliente/E2E en esta fase
 documental; la evidencia sintética aceptada de E8 conserva su procedencia y alcance.
 
-El [documento de aceptación H02](aceptacion-i1-h02.md) es un borrador pendiente.
-No hay import ID, snapshot publicado, prueba de búsqueda del RUCT real ni
-aceptación expresa de E9/H02. Esas evidencias quedan pendientes tras la segunda
-revisión y autorización de continuación. CI, Trivy y Build OCI de esta entrega
-los verifica el Product Owner; el agente no espera ni supervisa esas ejecuciones.
+## Publicación y verificaciones locales de continuación
+
+Publicación mediante el comando existente, con override no versionado
+`.local/e9-ruct-validation/publication.yaml`: fuente permitida `RUCT`, país `ES`,
+bytes del CSV aprobado, metadatos exactos del manifest y DataSource restringido a
+`jdbc:postgresql://127.0.0.1:5432/propractix`. La contraseña sintética sigue
+procediendo del config tree local; no se incrusta ni se registra. PostgreSQL
+reporta **16.15**. No se publica por SQL ni mediante endpoints administrativos.
+
+```bash
+npm run catalog:publish -- \
+  "-Dspring-boot.run.arguments=--spring.config.additional-location=file:$(pwd)/.local/e9-ruct-validation/publication.yaml"
+```
+
+Resultado inicial (salida 0):
+
+```text
+catalog_import_result code=catalog_published import_id=29ca8394-9878-44ba-82f2-2971534b1ead artifact_hash=ad2a9ca6f05dfe35851dcc00f3cf568e034d64db5b63d4009a2029fe78633b04
+```
+
+| Evidencia persistida | Resultado |
+|---|---|
+| `catalogImportId` | `29ca8394-9878-44ba-82f2-2971534b1ead` |
+| `publishedAt` | `2026-11-01T18:16:34.162754Z` |
+| `artifactHash` | `ad2a9ca6f05dfe35851dcc00f3cf568e034d64db5b63d4009a2029fe78633b04` |
+| Recuentos de importación | 99 totales, 99 publicadas, 0 omisiones del CSV canónico. |
+| Omisiones previas de transformación | 10 agrupaciones de las 109 filas del XLS, documentadas en el manifest. |
+| Versiones `PUBLISHED` / snapshots visibles | 1 / 1. |
+| Filas actualmente seleccionables | 99, exactamente iguales a las cinco columnas del CSV; 90 claves conservan ceros iniciales. |
+| Metadatos | URL, instante de adquisición, atribución y `sourceDownloadHash` idénticos al manifest. |
+
+La fixture local previa de tres instituciones conserva su importación histórica
+`54424c4e-2c8d-4d6a-ae52-38fcdb16bc1d`; la CLI la sustituye por el snapshot RUCT.
+No se borra ni se modifica una migración. Las tres instituciones históricas no
+pertenecen a la versión seleccionable actual.
+
+La repetición del mismo comando devuelve salida 0:
+
+```text
+catalog_import_result code=catalog_active_artifact_unchanged import_id=29ca8394-9878-44ba-82f2-2971534b1ead artifact_hash=ad2a9ca6f05dfe35851dcc00f3cf568e034d64db5b63d4009a2029fe78633b04
+```
+
+Se compararon recuentos, metadatos y resúmenes de todas las columnas de ambas
+tablas de catálogo, ordenadas por sus IDs: sin nuevas importaciones, cambios de
+IDs, versiones, timestamps ni filas. Un cursor HTTP emitido antes de repetir
+sigue devolviendo la misma página exacta después.
+
+Se preparó **solo bajo `.local`** una copia inválida del CSV sin LF final,
+calculando el hash real de esa copia para ejercitar el parser del publicador.
+El artefacto aprobado permanece byte a byte idéntico. La CLI existente devuelve:
+
+```text
+catalog_import_result code=catalog_publication_rejected reason=artifact_invalid
+```
+
+El proceso administrativo termina con código **6**; npm/Maven propaga código
+**1** e informa `Process terminated with exit code: 6`. No se confunden ambos
+códigos. Los mismos resúmenes de tablas, import ID, hash, recuentos y página HTTP
+permanecen iguales. El cursor previo tampoco se invalida tras el rechazo.
+No se provocan fallos destruyendo o renombrando tablas del perfil local.
+
+## Búsqueda HTTP del snapshot real
+
+Se arrancó el backend empaquetado solo en `127.0.0.1`, puerto efímero, contra la
+base local anterior; se detuvo al terminar. Sin cambiar S0, cuota, configuración
+de proxy ni perfiles versionados. Las peticiones usan exclusivamente
+`GET /api/v1/academic-institutions` y readiness existente.
+
+| Comprobación | Resultado |
+|---|---|
+| Paginación `limit` por defecto | 5 páginas: 20, 20, 20, 20 y 19; cursor final nulo. |
+| Identidades | 99 UUID v4 distintos, sin duplicados entre páginas. |
+| Denominaciones | Las 99 coinciden exactamente con el CSV aprobado y conservan orden estable de búsqueda. |
+| `Alcalá` / `alcala` | Mismos resultados: 1 universidad. |
+| `València` / `valencia` | Mismos resultados: 5 universidades. |
+| `Politécnica` / `politecnica` | Mismos resultados: 4 universidades. |
+| Procedencia pública | Atribución, URL y fecha exactas del snapshot publicado. |
+| Repetición / fallo | Mismo cursor y misma segunda página antes y después de ambas operaciones CLI. |
+
+Los resultados agregados, sin cursores ni filas completas, se versionan en
+[i1-h02-e9-local-validation.json](i1-h02-e9-local-validation.json).
+Los logs, overrides y comparaciones locales permanecen ignorados en
+`.local/e9-ruct-validation/`. El original RUCT temporal sigue conservado para
+reproducción; no se incorpora como fixture ni imagen.
+
+## Validaciones de continuación y estado final de la entrega
+
+| Comprobación de esta continuación | Resultado |
+|---|---|
+| `npm run infra:up` | PostgreSQL 16.15 y Mailpit saludables. |
+| `npm run server:test` y `npm run server:verify` | 317 pruebas cada uno, 0 fallos, 0 errores, 1 benchmark omitido; ArchUnit y empaquetado correctos. |
+| `client:typecheck`, `client:lint`, `client:build` | Correctos; paridad ES/EN, textos visibles y build verificados. |
+| `client:test` | 96 pruebas Vitest y una comprobación Node correctas. |
+| `client:e2e` mediante npm 11.9.0 | 8/8 Chromium, 49,8 s, sin omisiones, reintentos o flaky; fixtures exclusivamente sintéticas. |
+| Limpieza de E2E | Sin contenedores/volumen del proyecto `propractix-e8-408914`; secretos y lock eliminados. |
+| OpenAPI lint y `check-migrations.sh` | Correctos; contrato y migraciones sin cambios. |
+| Hashes y alcance | CSV aprobado idéntico al de `b31eda0`; SHA-256 del CSV y original correctos; corrección Playwright intacta. |
+| `git diff --check`, diff y estado | Revisados; sin cambios en S0, migraciones, OpenAPI, generador ni AWS. |
+
+El servidor efímero de comprobación HTTP se detuvo al terminar. PostgreSQL y
+Mailpit locales permanecen disponibles con el snapshot publicado; el E2E no
+lo sustituye porque usa otra base/proyecto desechable. El siguiente arranque
+normal del backend consultará la versión RUCT activa sin activar ningún import
+administrativo automáticamente.
+El [documento de aceptación H02](aceptacion-i1-h02.md) sigue siendo un borrador.
+La aprobación del mapeo y estas pruebas **no aceptan E9 ni cierran H02**.
+E9 e I1-H02 permanecen `IN_PROGRESS`; PR #19 Draft y sin merge; CL0 `PENDING`.
+CI, Trivy y Build OCI del nuevo SHA los verifica el PO sin espera ni supervisión
+del agente.

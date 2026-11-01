@@ -281,6 +281,30 @@ it('changes ES/EN with results visible without refetching the catalog', async ()
   expect(fetchMock).toHaveBeenCalledTimes(1);
 });
 
+it.each([
+  ['synthetic', snapshot],
+  ['RUCT', {
+    retrievedAt: '2026-11-01T10:38:28.735493Z',
+    sourceUrl: 'https://www.educacion.gob.es/ruct/consultauniversidades?actual=universidades',
+    sourceAttribution: 'Origen de los datos: Ministerio de Ciencia, Innovación y Universidades — Registro de Universidades, Centros y Títulos (RUCT)',
+  }],
+] as const)('keeps neutral ES/EN notice, scope, attribution and retrieval date for %s data', async (_origin, source) => {
+  fetchMock.mockResolvedValue(response(page([first], null, source)));
+  renderWithQuery(<App />);
+  start(); await settle();
+  for (const locale of ['es', 'en']) {
+    await act(async () => { await i18n.changeLanguage(locale); });
+    expect(screen.getByText(i18n.t('academicInstitutions.provenance'))).toBeDefined();
+    expect(screen.getByText(i18n.t('academicInstitutions.scope'))).toBeDefined();
+    expect(screen.getByText(source.sourceAttribution)).toBeDefined();
+    const date = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone: 'UTC' })
+      .format(new Date(source.retrievedAt));
+    expect(screen.getByText(i18n.t('academicInstitutions.retrievedAt', { date }))).toBeDefined();
+    expect(screen.getByRole('link', { name: i18n.t('academicInstitutions.source') }).getAttribute('href')).toBe(source.sourceUrl);
+  }
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+});
+
 
 it('hides already loaded pages on pagination failure and retries from the first page', async () => {
   fetchMock.mockResolvedValueOnce(response(page([first], 'old_cursor')))
