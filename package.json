@@ -12,6 +12,7 @@
     "npm": ">=11.9.0 <11.10.0"
   },
   "scripts": {
+    "client:e2e": "node scripts/client-e2e.mjs",
     "infra:prepare": "./scripts/prepare-local-secrets.sh",
     "infra:config": "npm run infra:prepare && docker compose -f infra/compose.yaml config --quiet",
     "infra:up": "npm run infra:prepare && docker compose -f infra/compose.yaml up -d --wait",

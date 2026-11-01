@@ -1,0 +1,52 @@
+# Disposable local-only stack. No ports for PostgreSQL, backend or JMX.
+services:
+  postgres:
+    image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
+    environment:
+      POSTGRES_DB: propractix_e8
+      POSTGRES_USER: propractix_e8
+      POSTGRES_PASSWORD_FILE: /run/secrets/database.password
+    secrets:
+      - database.password
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U propractix_e8 -d propractix_e8]
+      interval: 1s
+      timeout: 3s
+      retries: 60
+    volumes:
+      - database:/var/lib/postgresql/data
+    command: [postgres, -c, log_statement=none, -c, log_min_error_statement=panic, -c, log_parameter_max_length_on_error=0]
+
+  server:
+    image: eclipse-temurin:21-jdk-alpine@sha256:6ea5548706b60ac0a602eaf48af74792cbab012d90e811ca8db6184b16b5c3d6
+    working_dir: /application
+    entrypoint: [java, -jar, /application/application.jar]
+    environment:
+      SPRING_CONFIG_ADDITIONAL_LOCATION: file:/e2e/application.yaml
+      PROPRACTIX_E2E_TRUSTED_PROXY_CIDR: ${PROPRACTIX_E2E_TRUSTED_PROXY_CIDR:-127.0.0.1/32}
+    secrets:
+      - database.password
+      - rate-limit-hmac-rl-ip-v1
+    volumes:
+      - ../../server/target/propractix-backend-0.0.1-SNAPSHOT.jar:/application/application.jar:ro
+      - ../../docs/catalog/fixtures:/fixtures:ro
+      - ./:/e2e:ro
+
+  caddy:
+    image: caddy:2.10.2-alpine@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d
+    environment:
+      PROPRACTIX_SITE_ADDRESS: :8080
+    ports:
+      - "127.0.0.1::8080"
+    volumes:
+      - ../../client/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../../client/dist:/srv:ro
+
+secrets:
+  database.password:
+    file: ../../.local/e2e/secrets/database.password
+  rate-limit-hmac-rl-ip-v1:
+    file: ../../.local/e2e/secrets/rate-limit-hmac-rl-ip-v1
+
+volumes:
+  database:

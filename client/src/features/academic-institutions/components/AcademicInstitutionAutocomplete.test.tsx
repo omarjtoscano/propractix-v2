@@ -103,7 +103,8 @@ it.each(['pointer', 'keyboard'])('restores focus after paging and selection with
   const more = screen.getByRole('button', { name: 'Cargar más universidades' });
   await user.click(more);
   await screen.findByRole('option', { name: second.officialName });
-  expect(document.activeElement).toBe(more);
+  expect(document.activeElement).toBe(input());
+  expect(input().getAttribute('aria-expanded')).toBe('true');
   expect(fetchMock).toHaveBeenCalledTimes(2);
   expect(new URL(fetchMock.mock.calls[1][0].url).searchParams.get('cursor')).toBe('cursor_1');
 

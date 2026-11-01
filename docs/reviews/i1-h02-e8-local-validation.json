@@ -1,0 +1,256 @@
+{
+  "validatedOn": "2026-11-01",
+  "timeZone": "Europe/Madrid",
+  "baselineCommit": "63034a15c6f3013ac6e826a3171234eef32b7740",
+  "branch": "feature/i1-h02-e8-e2e-observability",
+  "states": {
+    "E7": "ACCEPTED",
+    "E8": "IN_PROGRESS",
+    "I1-H02": "IN_PROGRESS",
+    "S0_PUBLIC_ENDPOINTS": "CLOSED",
+    "CL0_CLOUD_STAGING": "PENDING"
+  },
+  "toolchain": {
+    "node": "24.12.0",
+    "npm": "11.9.0",
+    "java": "21.0.12.1",
+    "mavenWrapper": "3.9.16",
+    "playwright": "1.63.0",
+    "browser": "Chromium",
+    "postgresqlMajor": 16,
+    "caddy": "2.10.2",
+    "applicationTypeScript": "7.0.2",
+    "generatorTypeScript": "6.0.3",
+    "openapiGenerator": "0.99.0"
+  },
+  "backend": {
+    "serverTest": {
+      "tests": 317,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1
+    },
+    "serverVerify": {
+      "tests": 317,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1
+    },
+    "archUnit": "passed"
+  },
+  "client": {
+    "testFiles": 9,
+    "tests": 94,
+    "lint": "passed",
+    "typecheck": "passed",
+    "build": "passed",
+    "generatedClient": "16 files match two regenerations"
+  },
+  "e2e": {
+    "stats": {
+      "startTime": "2026-11-01T09:45:39.858Z",
+      "duration": 49382.216,
+      "expected": 8,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "tests": [
+      {
+        "title": "accent-insensitive search, UUID selection and keyboard navigation (es)",
+        "project": "chromium",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 1804
+          }
+        ]
+      },
+      {
+        "title": "accent-insensitive search, UUID selection and keyboard navigation (en)",
+        "project": "chromium",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 1548
+          }
+        ]
+      },
+      {
+        "title": "pagination has no duplicates and a changed snapshot restarts from page one",
+        "project": "chromium",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 6948
+          }
+        ]
+      },
+      {
+        "title": "manual entry is local, makes no write requests and creates no institution or account",
+        "project": "chromium",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 1334
+          }
+        ]
+      },
+      {
+        "title": "real 429 disables retries until Retry-After, then the browser recovers",
+        "project": "chromium",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 8296
+          }
+        ]
+      },
+      {
+        "title": "changing forged forwarding headers cannot create another quota through Caddy",
+        "project": "chromium",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 550
+          }
+        ]
+      },
+      {
+        "title": "unavailable query and rate-limit adapters fail closed with translated 503s and recover",
+        "project": "chromium",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 2405
+          }
+        ]
+      },
+      {
+        "title": "private metrics, publication signals and logs contain only bounded operational data",
+        "project": "chromium",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 25085
+          }
+        ]
+      }
+    ],
+    "retries": 0,
+    "trace": "off",
+    "video": "off",
+    "screenshot": "off",
+    "cleanup": "passed; isolated containers, network, volume, secrets and lock removed"
+  },
+  "metricsSnapshot": [
+    {
+      "name": "propractix_rate_limit_allowed_total",
+      "firstMeasurement": 63
+    },
+    {
+      "name": "propractix_rate_limit_rejected_total",
+      "firstMeasurement": 3
+    },
+    {
+      "name": "propractix_rate_limit_adapter_errors_total",
+      "firstMeasurement": 2
+    },
+    {
+      "name": "propractix_catalog_search_duration",
+      "firstMeasurement": 63
+    },
+    {
+      "name": "propractix_catalog_snapshot_age_seconds",
+      "firstMeasurement": 899188.852593
+    }
+  ],
+  "additionalChecks": [
+    "infra:up",
+    "openapi:lint",
+    "check-migrations.sh",
+    "check-local-baseline.sh",
+    "deployment-gate-test.sh (local mocks only)",
+    "fixture SHA-256",
+    "node --check orchestration scripts",
+    "git diff --check"
+  ],
+  "unchangedContracts": [
+    "docs/policies/public-endpoint-rate-limits-v1.yaml",
+    "docs/api/openapi.yaml",
+    "server/src/main/resources/db/migration",
+    "tools/openapi-generator",
+    "client/src/shared/api/generated",
+    "docs/adr/ADR-001-monolito-modular.md"
+  ],
+  "syntheticFixtures": [
+    {
+      "artifact": "academic-institutions-e8-synthetic-v1.csv",
+      "schemaVersion": "academic-institution-catalog/v1",
+      "artifactHash": "875ddc3604c16413803f5adaf1fd0448a304d5bdb8575338ebabd4118b3df391",
+      "sourceUrl": "https://example.invalid/propractix/academic-institutions-e8-synthetic-v1.csv",
+      "retrievedAt": "2026-10-21T00:00:00Z",
+      "sourceAttribution": "ProPractix E8 synthetic fixture v1; no real institutions or personal data",
+      "publishedRows": 45
+    },
+    {
+      "artifact": "academic-institutions-e8-synthetic-v2.csv",
+      "schemaVersion": "academic-institution-catalog/v1",
+      "artifactHash": "08b7fe5e3ab62bdd4d4a7cb5ae4dffbb53b1b54ceb0081bb414c522d24ddc91e",
+      "sourceUrl": "https://example.invalid/propractix/academic-institutions-e8-synthetic-v2.csv",
+      "retrievedAt": "2026-10-22T00:00:00Z",
+      "sourceAttribution": "ProPractix E8 synthetic fixture v2; no real institutions or personal data",
+      "publishedRows": 46
+    }
+  ],
+  "dependencyAudit": {
+    "blockingGate": false,
+    "existingVersionsChanged": false,
+    "advisories": [
+      {
+        "package": "@vitest/mocker",
+        "severity": "moderate",
+        "allNodesPresentInBaseline": true
+      },
+      {
+        "package": "source-map-js",
+        "severity": "high",
+        "allNodesPresentInBaseline": true
+      },
+      {
+        "package": "undici",
+        "severity": "high",
+        "allNodesPresentInBaseline": true
+      },
+      {
+        "package": "vite",
+        "severity": "high",
+        "allNodesPresentInBaseline": true
+      },
+      {
+        "package": "vitest",
+        "severity": "moderate",
+        "allNodesPresentInBaseline": true
+      }
+    ]
+  },
+  "sonarQube": {
+    "evidence": "i1-h02-e7-sonarqube-review.md",
+    "newAnalysisClaimed": false,
+    "remoteQualityGateClaimed": false,
+    "newMandatoryGate": false
+  },
+  "remoteChecks": {
+    "CI": "pending Product Owner verification",
+    "Trivy": "pending Product Owner verification",
+    "BuildOCI": "pending Product Owner verification",
+    "agentMonitored": false
+  },
+  "scopeExclusions": [
+    "E8 acceptance",
+    "merge",
+    "E9",
+    "real RUCT publication",
+    "AWS actions"
+  ]
+}

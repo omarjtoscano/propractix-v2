@@ -5,10 +5,18 @@
 - Rama: `feature/i1-h02-e7-academic-institution-ui`.
 - Base: incremento actualizado en `11dda0c9fb267b619c98baabd12465e143c43d53`.
 - Commit funcional aprobado: [`d1db0ddf925a441ba8370d9a10b1f6cac5ffeff2`](https://github.com/omarjtoscano/propractix-v2/commit/d1db0ddf925a441ba8370d9a10b1f6cac5ffeff2).
-- PR: [#16](https://github.com/omarjtoscano/propractix-v2/pull/16), Draft y sin fusionar,
-  hacia `increment/01-company-identity-catalog`.
+- PR: [#16](https://github.com/omarjtoscano/propractix-v2/pull/16), integrada en
+  `increment/01-company-identity-catalog` mediante `63034a15c6f3013ac6e826a3171234eef32b7740`, confirmado por el Product Owner el 2026-10-26.
 - El SHA del nuevo commit exclusivamente documental se comunica en la entrega y
   en el cuerpo de la PR; no sustituye al SHA funcional aprobado.
+
+## Integración posterior y autorización de E8 (2026-10-26)
+
+El Product Owner confirmó la integración mediante `63034a15c6f3013ac6e826a3171234eef32b7740`. E7 permanece
+`ACCEPTED`; E8 e I1-H02 `IN_PROGRESS`. Autorizó exclusivamente E8, con commit,
+push y Draft PR; sin aceptación de E8, merge, E9, RUCT real ni AWS.
+`CL0_CLOUD_STAGING` permanece `PENDING`. La evidencia y las restricciones que
+siguen describen la entrega y aceptación de E7, anteriores a esta autorización.
 
 ## Aprobación expresa y verificación remota confirmada por el PO
 

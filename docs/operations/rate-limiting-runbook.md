@@ -9,7 +9,7 @@ Solo contiene la operación `searchAcademicInstitutions`.
 aprobó E5B el 2026-10-23 sobre
 `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`. I1-H02 permanece `IN_PROGRESS`.
 E5B está integrada mediante `7bd7bf6b4191d92cfe39864333ce5b5c3467115a`
-(PR #13), confirmado por el Product Owner el 2026-10-23. E5C está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `8a0a46a293b9b2d9482e92c05161f8b7b57b04e2`; E6 y posteriores no están autorizadas.
+(PR #13), confirmado por el Product Owner el 2026-10-23. E5C está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `8a0a46a293b9b2d9482e92c05161f8b7b57b04e2`; E6 y E7 están `ACCEPTED`; E7 está integrada mediante `63034a15c6f3013ac6e826a3171234eef32b7740`, confirmado por el Product Owner el 2026-10-26. Solo E8 está autorizada e `IN_PROGRESS`; E9 y posteriores no están autorizadas. `CL0_CLOUD_STAGING` permanece `PENDING`.
 El cierre de S0 no autoriza por sí solo la exposición
 ni amplía la política o el alcance de H02.
 
@@ -283,3 +283,42 @@ operativa y el código técnico. Healthz, readyz y health/liveness/readiness del
 servidor conservan su comportamiento y no consumen cuota.
 
 Véase la [evidencia local E5C](../reviews/i1-h02-e5c-http-rate-limit-evidence.md).
+
+## Consulta local de métricas y señales del catálogo (E8)
+
+La exposición HTTP de Actuator conserva únicamente health. Las métricas de
+Micrometer se consultan mediante el endpoint **JMX local**
+`org.springframework.boot:type=Endpoint,name=Metrics`, operación `metric`, desde
+una herramienta del mismo usuario/JVM (por ejemplo, JConsole). No se habilitan
+opciones de JMX remoto, puertos JMX publicados ni endpoints HTTP nuevos.
+Los permisos del proceso y del host protegen este acceso. El helper local de la
+[suite E2E](local-catalog-e2e.md) demuestra la lectura dentro del contenedor.
+
+S0 conserva exactamente los tres nombres y las etiquetas aprobadas de la tabla
+anterior. El contador `allowed` aumenta antes de ejecutar la consulta: una
+petición admitida puede terminar en error de catálogo. El rechazo y el fallo
+cerrado de S0 no aumentan la duración de búsqueda del catálogo.
+
+| Señal del catálogo | Etiquetas y significado | Acción operativa |
+|---|---|---|
+| `propractix_catalog_search_duration` | Timer; `outcome` en `found`, `snapshot_changed`, `unavailable`, `failed`. Duración del caso de uso con persistencia, sin admisión S0. JMX presenta COUNT/TOTAL_TIME/MAX; la unidad se declara en la respuesta. | Separar contención/cambio de snapshot de indisponibilidad; comparar duración/volumen en el mismo intervalo. No registrar términos ni cursores para diagnosticar latencia. |
+| `propractix_catalog_snapshot_age_seconds` | Gauge sin etiquetas; segundos desde `retrieved_at` del único snapshot publicado. Se consulta PostgreSQL al leer; no se cachea la versión en el proceso. `NaN` indica ausencia o fallo de lectura; una fecha futura se limita a cero. | `NaN` exige comprobar catálogo/almacenamiento. Comparar la edad con la fecha del manifest gobernado; una republicación no rejuvenece datos antiguos. La cadencia de publicación no se inventa ni se convierte en nueva puerta legal. |
+| `propractix_catalog_publication_attempts_total` | Counter de intentos administrativos; solo `outcome=success/failure`. Éxito incluye artefacto activo sin cambios; fallo incluye validación, conflicto y almacenamiento. | En CLI el registro termina con el proceso: agregar el evento JSON de stderr descrito abajo para conservar ambas señales, no intentar scrapear un proceso que ya terminó. |
+
+Cada ejecución de publicación emite una sola línea JSON de telemetría en stderr:
+`{"event":"catalog_publication","outcome":"success"}` o `failure`. No contiene
+CSV, ruta, consulta, referencia individual ni excepción. Un fallo de arranque
+emite `failure` aunque no exista aún MeterRegistry. La salida stdout y los exit
+codes de E4 permanecen independientes: `catalog_published` distingue un cambio
+real; `catalog_active_artifact_unchanged` identifica un no-op. Los contadores
+Micrometer del proceso administrativo son efímeros; la operación debe conservar
+y agregar stderr junto al resultado por código. No se añaden tablas, retención
+ni un servicio de telemetría cloud para ello.
+
+Ante fallo de publicación, conservar la versión publicada anterior, revisar el
+código administrativo y los recuentos/hash permitidos; no copiar el artefacto ni
+una excepción al ticket. Ante `503 academic_institution_catalog_unavailable`,
+comprobar versión publicada, conectividad y estado de PostgreSQL antes de
+reintentar. Ante `503 rate_limiter_unavailable`, seguir el procedimiento S0 de
+fallo cerrado anterior. Los umbrales S0 permanecen intactos; E8 no añade un gate
+obligatorio ni altera la política `CLOSED`, sus límites, TTL o reglas de proxy.

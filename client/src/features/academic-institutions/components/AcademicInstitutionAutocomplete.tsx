@@ -117,7 +117,7 @@ export function AcademicInstitutionAutocomplete({ onChange }: Props) {
         <output>{t('academicInstitutions.waiting', { count: search.waitSeconds })}</output>
       )}
       {/* Options use the combobox keyboard handler and aria-activedescendant; they do not enter the Tab sequence. */}
-      <ul id={`${id}-list`} role="listbox" aria-label={t('academicInstitutions.label')} hidden={!expanded} aria-busy={search.loading}>
+      <ul id={`${id}-list`} role="listbox" tabIndex={-1} aria-label={t('academicInstitutions.label')} hidden={!expanded} aria-busy={search.loading}>
         {search.items.map((item) => (
           <li
             key={item.id}
@@ -130,12 +130,20 @@ export function AcademicInstitutionAutocomplete({ onChange }: Props) {
         ))}
       </ul>
       {expanded && search.hasNextPage && !search.error && (
-        <button type="button" disabled={search.loading || search.waitSeconds > 0} onClick={search.loadMore}>
+        <button type="button" disabled={search.loading || search.waitSeconds > 0} onClick={() => {
+          // A focused button loses browser focus when loading disables/removes it.
+          // Restore the combobox first so its enclosing blur handler keeps results open.
+          inputRef.current?.focus();
+          search.loadMore();
+        }}>
           {t('academicInstitutions.more')}
         </button>
       )}
       {search.error && !manual && (
-        <button type="button" disabled={search.loading || search.waitSeconds > 0} onClick={search.retry}>
+        <button type="button" disabled={search.loading || search.waitSeconds > 0} onClick={() => {
+          inputRef.current?.focus();
+          search.retry();
+        }}>
           {t('academicInstitutions.retry')}
         </button>
       )}
