@@ -54,6 +54,28 @@ cuota y recuperación se usan exclusivamente las ventanas y límites S0 reales.
 La paginación cubre puntero y teclado. La suite descubre y cubre también la
 pérdida de foco de Chromium al deshabilitar/eliminar el botón de carga.
 
+## Descubrimiento en VS Code
+
+VS Code puede cargar `client/playwright.config.ts` y descubrir los ocho
+escenarios sin variables E2E. El equivalente desde la raíz es:
+
+```bash
+node node_modules/playwright/cli.js test -c client/playwright.config.ts --list
+```
+
+El descubrimiento no arranca servicios ni ejecuta SQL. La configuración no lanza
+excepciones al importarse ni proporciona una URL por defecto. `globalSetup`
+valida la URL suministrada por el orquestador y el identificador del proyecto
+`propractix-e8-<pid>` únicamente al iniciar la ejecución, antes de los escenarios
+y sus hooks. Una ejecución directa sin ese entorno falla con un mensaje que
+indica `npm run client:e2e`; no se omiten escenarios para evitar el error.
+
+La ejecución completa sigue realizándose desde la terminal con
+`npm run client:e2e`, que prepara el entorno desechable y lo limpia al terminar.
+El botón de ejecución directa de VS Code no sustituye al orquestador. Se
+conservan el lock, los secretos sintéticos temporales, los controles de proyecto
+en cada operación Compose/SQL y el aislamiento de la base de datos.
+
 ## Evidencia y limpieza
 
 `.local/e2e/results.json`, `stack.log` y `publications.log` conservan evidencia
