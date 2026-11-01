@@ -4,6 +4,8 @@ server:
   forward-headers-strategy: none
 
 spring:
+  jmx:
+    enabled: true
   application:
     name: propractix-backend
   flyway:
@@ -27,6 +29,9 @@ management:
         readiness:
           include: readinessState,db,rateLimit
   endpoints:
+    jmx:
+      exposure:
+        include: health,metrics
     web:
       exposure:
         include: health

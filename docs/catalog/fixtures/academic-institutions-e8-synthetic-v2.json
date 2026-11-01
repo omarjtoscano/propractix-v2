@@ -1,0 +1,9 @@
+{
+  "artifact": "academic-institutions-e8-synthetic-v2.csv",
+  "schemaVersion": "academic-institution-catalog/v1",
+  "artifactHash": "08b7fe5e3ab62bdd4d4a7cb5ae4dffbb53b1b54ceb0081bb414c522d24ddc91e",
+  "sourceUrl": "https://example.invalid/propractix/academic-institutions-e8-synthetic-v2.csv",
+  "retrievedAt": "2026-10-22T00:00:00Z",
+  "sourceAttribution": "ProPractix E8 synthetic fixture v2; no real institutions or personal data",
+  "publishedRows": 46
+}

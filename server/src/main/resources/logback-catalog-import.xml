@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+    <appender name="PUBLICATION" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.err</target>
+        <encoder>
+            <pattern>{"event":"catalog_publication","outcome":"%msg"}%n</pattern>
+        </encoder>
+    </appender>
+    <logger name="com.propractix.academicinstitution.adapter.out.observability.CatalogPublicationMetrics"
+            level="INFO" additivity="false">
+        <appender-ref ref="PUBLICATION" />
+    </logger>
     <root level="OFF" />
 </configuration>

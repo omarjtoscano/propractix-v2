@@ -4,6 +4,8 @@ import com.propractix.academicinstitution.adapter.in.commandline.CatalogImportCo
 import com.propractix.academicinstitution.adapter.in.commandline.CatalogImportCommandLineAdapter.Operation;
 import com.propractix.academicinstitution.application.port.in.PublishInstitutionCatalog;
 import com.propractix.academicinstitution.application.port.out.CatalogArtifactParser;
+import com.propractix.academicinstitution.adapter.out.observability.CatalogPublicationMetrics;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.io.PrintStream;
 import java.util.Optional;
 import org.springframework.boot.WebApplicationType;
@@ -30,9 +32,14 @@ public final class CatalogImportCommandLineApplication {
             Optional<PublishInstitutionCatalog> publisher = operation == Operation.PUBLISH
                     ? Optional.of(context.getBean(PublishInstitutionCatalog.class))
                     : Optional.empty();
-            return new CatalogImportCommandLineAdapter(properties.toDefinition(), parser, publisher)
+            int exitCode = new CatalogImportCommandLineAdapter(properties.toDefinition(), parser, publisher)
                     .execute(operation, output);
+            if (operation == Operation.PUBLISH) {
+                new CatalogPublicationMetrics(context.getBean(MeterRegistry.class)).completed(exitCode);
+            }
+            return exitCode;
         } catch (RuntimeException exception) {
+            if (operation == Operation.PUBLISH) CatalogPublicationMetrics.startupFailed();
             output.println(operation == Operation.DRY_RUN
                     ? "catalog_import_result code=catalog_import_configuration_invalid"
                     : "catalog_import_result code=catalog_publication_failed");

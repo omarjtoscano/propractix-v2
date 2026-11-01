@@ -1,0 +1,24 @@
+spring:
+  config:
+    import: configtree:/run/secrets/
+  datasource:
+    url: jdbc:postgresql://postgres:5432/propractix_e8
+    username: propractix_e8
+    password: ${database.password}
+  docker:
+    compose:
+      enabled: false
+propractix:
+  runtime:
+    environment: local-e2e
+    release-sha: e8-working-tree
+  rate-limit:
+    ip-mode: X_FORWARDED_FOR
+    trusted-proxy-cidrs:
+      - ${PROPRACTIX_E2E_TRUSTED_PROXY_CIDR}
+    caddy-sanitization-configured-and-tested: true
+  academic-institution:
+    catalog-import:
+      enabled: false
+      allowed-source-systems: [SYNTHETIC]
+      allowed-countries: [ES]

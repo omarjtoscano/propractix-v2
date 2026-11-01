@@ -4,7 +4,8 @@ Fecha: 2026-10-25. Base revisada: `4bf0a922b391e2535f91b5bf719f2ffb995366e7`.
 Estado al realizar el análisis: E7 e I1-H02 `IN_PROGRESS`.
 Estado vigente: E7 `ACCEPTED` por aprobación expresa del Product Owner el
 2026-10-26 sobre `d1db0ddf925a441ba8370d9a10b1f6cac5ffeff2`; I1-H02 permanece `IN_PROGRESS`;
-PR #16 Draft y sin merge. Véase la [aceptación y evidencia E7](i1-h02-e7-academic-institution-ui-evidence.md).
+PR #16 integrada mediante `63034a15c6f3013ac6e826a3171234eef32b7740`, confirmado
+por el Product Owner el 2026-10-26. Véase la [aceptación y evidencia E7](i1-h02-e7-academic-institution-ui-evidence.md).
 Esta actualización de estado no modifica los diagnósticos ni representa un
 Quality Gate remoto verde.
 
