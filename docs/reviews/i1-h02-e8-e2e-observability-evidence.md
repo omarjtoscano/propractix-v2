@@ -1,21 +1,50 @@
 # I1-H02 E8 — E2E y observabilidad operable
 
 - Implementación inicial: 2026-10-26; cierre de la entrega técnica: 2026-11-01.
-- Estado: **E8 e I1-H02 `IN_PROGRESS`**, pendientes de aceptación expresa del Product Owner.
+- Estado: **E8 `ACCEPTED`** por aprobación expresa del Product Owner el 2026-11-01;
+  I1-H02 permanece `IN_PROGRESS`.
+- Commit funcional aprobado: [`fc9660e997df990d08677f6a55d91d57f92ef9c7`](https://github.com/omarjtoscano/propractix-v2/commit/fc9660e997df990d08677f6a55d91d57f92ef9c7).
 - Rama: `feature/i1-h02-e8-e2e-observability`.
 - Base e integración de E7 confirmada por el Product Owner el 2026-10-26:
   `63034a15c6f3013ac6e826a3171234eef32b7740` (PR #16). E7 permanece `ACCEPTED`.
-- Destino: Draft PR hacia `increment/01-company-identity-catalog`.
-- El SHA de entrega y la URL de la Draft PR se comunican en la entrega y en su
-  cuerpo, sin sustituir el commit funcional aprobado de E7.
+- PR: [#17](https://github.com/omarjtoscano/propractix-v2/pull/17), Draft y sin fusionar,
+  hacia `increment/01-company-identity-catalog`.
+- El SHA del nuevo commit documental se comunica en la entrega y en el cuerpo
+  de la PR; no sustituye el SHA funcional aprobado de E8.
 
 ## Alcance y autorización
 
 El Product Owner autorizó exclusivamente E8 el 2026-10-26 conforme a los apartados
 15 y 16.7 del plan H02, incluidos validación, evidencia, commit, push y Draft PR.
-Pidió finalizar la tarea el 2026-11-01. No se acepta E8 ni I1-H02, no se hace merge,
-no se inicia E9, no se publica RUCT real y no se ejecuta AWS.
+Pidió finalizar la tarea el 2026-11-01. La autorización de implementación no
+incluía aceptación ni merge; la aprobación posterior de E8 se registra abajo.
+I1-H02 permanece `IN_PROGRESS`; no se hace merge, no se inicia E9, no se publica
+RUCT real y no se ejecuta AWS.
 `CL0_CLOUD_STAGING` permanece `PENDING`; C0 y S0 permanecen `CLOSED`.
+
+## Aprobación expresa y verificación remota confirmada por el PO
+
+El Product Owner aprobó expresamente E8 el 2026-11-01 sobre el commit funcional
+`fc9660e997df990d08677f6a55d91d57f92ef9c7`. E8 queda `ACCEPTED`; I1-H02 permanece `IN_PROGRESS`.
+
+| Comprobación remota | Resultado y procedencia |
+|---|---|
+| CI | Verde sobre el SHA funcional aprobado, confirmado expresamente por el Product Owner el 2026-11-01. |
+| Trivy | Verde sobre el mismo SHA, confirmado expresamente por el Product Owner el 2026-11-01. |
+| Build OCI | Verde sobre el mismo SHA, confirmado expresamente por el Product Owner el 2026-11-01. |
+
+La fuente es la confirmación expresa del Product Owner; el agente no consulta,
+espera ni supervisa esas ejecuciones. La aprobación no aporta identificadores
+de ejecución, por lo que se enlazan el commit aprobado y la PR. No confirma un
+Quality Gate remoto de SonarQube: los hallazgos disponibles siguen siendo
+análisis local de IDE, con los límites documentados más abajo.
+
+Solo se autoriza registrar esta aceptación mediante cambios exclusivamente
+documentales en la misma rama y en el cuerpo de la PR #17, con commit y push.
+La PR permanece Draft y sin fusionar. CI, Trivy y Build OCI del nuevo commit
+documental quedan pendientes de verificación del Product Owner, sin espera ni
+supervisión del agente. No se autorizan E9, cambios funcionales, AWS ni cambios
+en `CL0_CLOUD_STAGING`, que permanece `PENDING`.
 
 ## Implementación
 
@@ -142,6 +171,8 @@ CLI terminan con el proceso: stderr debe conservarse/agregarse como describe el
 runbook. El perfil E2E usa un JDK para el attach local; no cambia las imágenes de
 producto ni su despliegue.
 
-CI, Trivy y Build OCI del SHA de entrega quedan pendientes de verificación del
-Product Owner, sin espera ni supervisión por el agente. La validación local y la
-Draft PR no equivalen a aceptación de E8 ni de I1-H02.
+CI, Trivy y Build OCI del SHA funcional aprobado están en verde según confirmación
+expresa del Product Owner. Los checks del nuevo commit documental quedan
+pendientes de su verificación, sin espera ni supervisión del agente. E8 está
+`ACCEPTED` por esa aprobación expresa; I1-H02 permanece `IN_PROGRESS`, con la
+PR #17 Draft y sin fusionar.

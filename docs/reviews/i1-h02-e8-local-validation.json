@@ -5,7 +5,7 @@
   "branch": "feature/i1-h02-e8-e2e-observability",
   "states": {
     "E7": "ACCEPTED",
-    "E8": "IN_PROGRESS",
+    "E8": "ACCEPTED",
     "I1-H02": "IN_PROGRESS",
     "S0_PUBLIC_ENDPOINTS": "CLOSED",
     "CL0_CLOUD_STAGING": "PENDING"
@@ -241,16 +241,36 @@
     "newMandatoryGate": false
   },
   "remoteChecks": {
-    "CI": "pending Product Owner verification",
-    "Trivy": "pending Product Owner verification",
-    "BuildOCI": "pending Product Owner verification",
+    "commit": "fc9660e997df990d08677f6a55d91d57f92ef9c7",
+    "CI": "green confirmed by Product Owner",
+    "Trivy": "green confirmed by Product Owner",
+    "BuildOCI": "green confirmed by Product Owner",
+    "confirmationSource": "Product Owner explicit approval",
+    "confirmedOn": "2026-11-01",
     "agentMonitored": false
   },
   "scopeExclusions": [
-    "E8 acceptance",
+    "I1-H02 acceptance",
     "merge",
     "E9",
     "real RUCT publication",
-    "AWS actions"
-  ]
+    "AWS actions",
+    "functional changes"
+  ],
+  "acceptance": {
+    "state": "ACCEPTED",
+    "approvedBy": "PRODUCT_OWNER",
+    "approvedOn": "2026-11-01",
+    "functionalCommit": "fc9660e997df990d08677f6a55d91d57f92ef9c7",
+    "pullRequest": 17,
+    "pullRequestStatus": "DRAFT_UNMERGED",
+    "storyState": "IN_PROGRESS"
+  },
+  "documentaryCommitChecks": {
+    "CI": "pending Product Owner verification",
+    "Trivy": "pending Product Owner verification",
+    "BuildOCI": "pending Product Owner verification",
+    "commitIdentification": "reported in delivery and PR body",
+    "agentMonitored": false
+  }
 }

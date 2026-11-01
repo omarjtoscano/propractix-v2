@@ -9,7 +9,7 @@ Solo contiene la operación `searchAcademicInstitutions`.
 aprobó E5B el 2026-10-23 sobre
 `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`. I1-H02 permanece `IN_PROGRESS`.
 E5B está integrada mediante `7bd7bf6b4191d92cfe39864333ce5b5c3467115a`
-(PR #13), confirmado por el Product Owner el 2026-10-23. E5C está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `8a0a46a293b9b2d9482e92c05161f8b7b57b04e2`; E6 y E7 están `ACCEPTED`; E7 está integrada mediante `63034a15c6f3013ac6e826a3171234eef32b7740`, confirmado por el Product Owner el 2026-10-26. Solo E8 está autorizada e `IN_PROGRESS`; E9 y posteriores no están autorizadas. `CL0_CLOUD_STAGING` permanece `PENDING`.
+(PR #13), confirmado por el Product Owner el 2026-10-23. E5C está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `8a0a46a293b9b2d9482e92c05161f8b7b57b04e2`; E6 y E7 están `ACCEPTED`; E7 está integrada mediante `63034a15c6f3013ac6e826a3171234eef32b7740`, confirmado por el Product Owner el 2026-10-26. E8 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-11-01 sobre `fc9660e997df990d08677f6a55d91d57f92ef9c7`; E9 y posteriores no están autorizadas. `CL0_CLOUD_STAGING` permanece `PENDING`.
 El cierre de S0 no autoriza por sí solo la exposición
 ni amplía la política o el alcance de H02.
 

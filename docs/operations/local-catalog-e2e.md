@@ -1,6 +1,7 @@
 # E2E local del catálogo — I1-H02 E8
 
-E8 e I1-H02 `IN_PROGRESS`. E7 `ACCEPTED` e integrada mediante
+E8 `ACCEPTED` por aprobación expresa del Product Owner el 2026-11-01 sobre
+`fc9660e997df990d08677f6a55d91d57f92ef9c7`; I1-H02 permanece `IN_PROGRESS`. E7 `ACCEPTED` e integrada mediante
 `63034a15c6f3013ac6e826a3171234eef32b7740`, confirmado por el Product Owner
 el 2026-10-26. `S0_PUBLIC_ENDPOINTS` `CLOSED`; `CL0_CLOUD_STAGING` `PENDING`.
 Este procedimiento no usa AWS ni publica RUCT real.
@@ -77,5 +78,8 @@ no corre, ejecutar `docker compose -p <proyecto> -f infra/e2e/compose.yaml down
 --volumes --remove-orphans`; eliminar después solo `.local/e2e/run.lock` y
 `.local/e2e/secrets`. No eliminar volúmenes o contenedores del perfil local normal.
 
-CI, Trivy y Build OCI quedan a cargo del Product Owner; el agente no espera ni
-supervisa sus ejecuciones. La validación local no acepta E8 ni I1-H02.
+CI, Trivy y Build OCI están en verde sobre el SHA funcional aprobado de E8,
+confirmados expresamente por el Product Owner el 2026-11-01. Los checks del nuevo
+commit documental quedan pendientes de su verificación, sin espera ni supervisión
+por el agente. La aceptación expresa de E8 no cierra I1-H02 ni autoriza merge: la
+[PR #17](https://github.com/omarjtoscano/propractix-v2/pull/17) permanece Draft y sin fusionar.
