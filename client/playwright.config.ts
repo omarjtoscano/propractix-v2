@@ -1,9 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
-if (!process.env.PROPRACTIX_E2E_BASE_URL) throw new Error('Run npm run client:e2e');
-
 export default defineConfig({
   testDir: './e2e',
+  globalSetup: './e2e/global-setup.ts',
   fullyParallel: false,
   workers: 1,
   retries: 0,
