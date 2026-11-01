@@ -3,7 +3,9 @@
 - Estado del plan: `APPROVED`
 - Aprobación: Product Owner, 2026-09-27
 - Commit aprobado: `5f64aeb9e4ef4fd1c0deae845b0607407fe9133b`
-- Autorización vigente: E1, E2, E3 y `E4 — Parser e importación administrativa` están `ACCEPTED`; E5A está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `6cc21e6c034b9c32db3f22ebb8b977f4250614cd`; E5B está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`; E5C está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `8a0a46a293b9b2d9482e92c05161f8b7b57b04e2`; E6 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-25 sobre `de269313888d912807536b5805e9e2c054955347`; E7 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-26 sobre `d1db0ddf925a441ba8370d9a10b1f6cac5ffeff2`; E8 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-11-01 sobre `fc9660e997df990d08677f6a55d91d57f92ef9c7`; E9 y posteriores no están autorizadas
+- Autorización vigente: E1, E2, E3 y `E4 — Parser e importación administrativa` están `ACCEPTED`; E5A está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `6cc21e6c034b9c32db3f22ebb8b977f4250614cd`; E5B está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`; E5C está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `8a0a46a293b9b2d9482e92c05161f8b7b57b04e2`; E6 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-25 sobre `de269313888d912807536b5805e9e2c054955347`; E7 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-26 sobre `d1db0ddf925a441ba8370d9a10b1f6cac5ffeff2`; E8 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-11-01 sobre `fc9660e997df990d08677f6a55d91d57f92ef9c7`; E9 está `IN_PROGRESS` exclusivamente hasta preparar los artefactos para segunda revisión; publicación y entregas posteriores no están autorizadas
+- Estado de E9: `IN_PROGRESS`, autorización del Product Owner el 2026-11-01 limitada a preparación para segunda revisión
+- Rama de E9: `feature/i1-h02-e9-ruct-first-snapshot`, desde `3d339d1598c4a7deafedea3d4d9d78fc16c87088` (PR #18 integrada, confirmada expresamente por el PO)
 - Historia: `I1-H02`
 - Estado de la historia: `IN_PROGRESS`; E1, E2, E3, E4, E5A, E5B, E5C, E6, E7 y E8 están `ACCEPTED`
 - Rama de ejecución de E1: `feature/i1-h02-e1-domain`
@@ -18,7 +20,7 @@
 - Rama de ejecución de E8: `feature/i1-h02-e8-e2e-observability`
 - Estado de E8: `ACCEPTED`; autorización original del Product Owner el 2026-10-26 y aprobación expresa el 2026-11-01
 - Commit funcional aprobado de E8: `fc9660e997df990d08677f6a55d91d57f92ef9c7`
-- PR de E8: [#17](https://github.com/omarjtoscano/propractix-v2/pull/17), Draft y sin fusionar
+- PR de E8: [#17](https://github.com/omarjtoscano/propractix-v2/pull/17), integrada mediante `866c4c71511c181564b8f8d165c06759fcb4442b`
 - Verificación remota de E8: CI, Trivy y Build OCI en verde sobre el SHA funcional aprobado, confirmados expresamente por el Product Owner el 2026-11-01; checks del commit documental de aceptación pendientes de su verificación, sin espera ni supervisión por el agente
 - Verificación remota de E7: CI, Trivy y Build OCI en verde sobre el SHA funcional aprobado, confirmados expresamente por el Product Owner el 2026-10-26; checks del nuevo commit documental pendientes de su verificación, sin espera ni supervisión por el agente
 - Rama de ejecución de E6: `feature/i1-h02-e6-catalog-rest-api`
@@ -75,7 +77,7 @@ Después confirmó la integración de E5B mediante
 Confirmó después E5C integrada mediante
 `6f8c906448116d621763f8b2e7b7484b2273fb77` y autorizó exclusivamente E6.
 C0 y S0 permanecen cerrados;
-`CL0_CLOUD_STAGING` permanece `PENDING`. E5B está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`; E5C está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `8a0a46a293b9b2d9482e92c05161f8b7b57b04e2`; E6 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-25 sobre `de269313888d912807536b5805e9e2c054955347`; E7 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-26 sobre `d1db0ddf925a441ba8370d9a10b1f6cac5ffeff2`; E8 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-11-01 sobre `fc9660e997df990d08677f6a55d91d57f92ef9c7`; E9 y posteriores no están autorizadas
+`CL0_CLOUD_STAGING` permanece `PENDING`. E5B está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`; E5C está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `8a0a46a293b9b2d9482e92c05161f8b7b57b04e2`; E6 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-25 sobre `de269313888d912807536b5805e9e2c054955347`; E7 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-26 sobre `d1db0ddf925a441ba8370d9a10b1f6cac5ffeff2`; E8 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-11-01 sobre `fc9660e997df990d08677f6a55d91d57f92ef9c7`; E9 está `IN_PROGRESS` exclusivamente hasta preparar los artefactos para segunda revisión; publicación y entregas posteriores no están autorizadas
 y E5C no implementa el endpoint funcional reservado a E6.
 
 ## 1. Fuentes y decisiones aplicables
@@ -807,7 +809,7 @@ ambos correctos; `dependency-and-filesystem-scan`, incluido Trivy, está en
 verde. Esta aceptación parcial mantiene I1-H02 `IN_PROGRESS`; E2 fue autorizada
 y aceptada separadamente el 2026-10-17, E3 fue aceptada el 2026-10-18 y E4 fue
 aceptada el 2026-10-22 sobre `700ac21de60748dce3365ba9209288e8b5108926`. La integración de E4 fue confirmada y E5A autorizada
-separadamente el 2026-10-22; E5B está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`; E5C está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `8a0a46a293b9b2d9482e92c05161f8b7b57b04e2`; E6 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-25 sobre `de269313888d912807536b5805e9e2c054955347`; E7 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-26 sobre `d1db0ddf925a441ba8370d9a10b1f6cac5ffeff2`; E8 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-11-01 sobre `fc9660e997df990d08677f6a55d91d57f92ef9c7`; E9 y posteriores no están autorizadas. `CL0_CLOUD_STAGING` no cambia.
+separadamente el 2026-10-22; E5B está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`; E5C está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `8a0a46a293b9b2d9482e92c05161f8b7b57b04e2`; E6 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-25 sobre `de269313888d912807536b5805e9e2c054955347`; E7 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-26 sobre `d1db0ddf925a441ba8370d9a10b1f6cac5ffeff2`; E8 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-11-01 sobre `fc9660e997df990d08677f6a55d91d57f92ef9c7`; E9 está `IN_PROGRESS` exclusivamente hasta preparar los artefactos para segunda revisión; publicación y entregas posteriores no están autorizadas. `CL0_CLOUD_STAGING` no cambia.
 
 Archivos previstos:
 
@@ -909,7 +911,7 @@ La integración de E4 mediante la PR #10 fue confirmada por el Product Owner
 el 2026-10-22 sobre `9d128cc3df8c2a90177b1f18cea47708d8abfc03`.
 I1-H02 permanece `IN_PROGRESS`; la autorización separada siguiente habilita
 solo E5A en ese momento. E5B se autoriza separadamente el 2026-10-23. E5C, E6 y E7 fueron autorizadas separadamente después. E7 está `ACCEPTED` por el Product Owner el 2026-10-26 sobre `d1db0ddf925a441ba8370d9a10b1f6cac5ffeff2`;
-E9 y posteriores, snapshot RUCT real y AWS continúan fuera de alcance; `CL0_CLOUD_STAGING` permanece `PENDING`.
+E9 solo permite preparar el snapshot RUCT para segunda revisión; publicación, entregas posteriores y AWS continúan fuera de alcance; `CL0_CLOUD_STAGING` permanece `PENDING`.
 
 Archivos previstos:
 
@@ -987,7 +989,7 @@ E5B está `ACCEPTED`; I1-H02 permanece `IN_PROGRESS`. La entrega original no
 autorizaba merge; su integración posterior fue confirmada por el Product Owner.
 E5C fue autorizada separadamente tras confirmar la integración de E5B.
 E6 se autorizó después de integrar E5C. Tras integrar E6 se autorizó exclusivamente
-E7; la autorización posterior habilita exclusivamente E8. E9 y posteriores, RUCT real y AWS siguen fuera de alcance.
+E7; la autorización posterior habilita exclusivamente E8. La autorización vigente permite preparar RUCT real para segunda revisión en E9; publicación, entregas posteriores y AWS siguen fuera de alcance.
 `CL0_CLOUD_STAGING` permanece `PENDING`.
 
 Evidencia: [persistencia y operación E5B](../reviews/i1-h02-e5b-rate-limit-persistence-evidence.md).
@@ -1034,7 +1036,7 @@ se publicó en la misma rama. CI, Trivy y Build OCI sobre su nuevo SHA quedan
 pendientes de verificación del Product Owner; el agente no espera ni supervisa
 esas ejecuciones. S0, sus límites y migraciones
 aplicadas se conservan intactos. La autorización posterior de E6 habilita
-OpenAPI y REST; la autorización posterior de E7 habilita cliente y UI. E9 y posteriores, RUCT real y AWS no están autorizados; `CL0_CLOUD_STAGING` permanece `PENDING`.
+OpenAPI y REST; la autorización posterior de E7 habilita cliente y UI. E9 solo permite preparar RUCT para segunda revisión; publicación, entregas posteriores y AWS no están autorizados; `CL0_CLOUD_STAGING` permanece `PENDING`.
 
 Evidencia: [filtro HTTP y borde E5C](../reviews/i1-h02-e5c-http-rate-limit-evidence.md).
 
@@ -1068,7 +1070,7 @@ El Product Owner autoriza únicamente registrar la aceptación y actualizar la
 evidencia y la PR #15, con commit/push documental en la misma rama. CI, Trivy
 y Build OCI del nuevo SHA documental quedan pendientes de verificación del
 Product Owner, sin espera ni supervisión por el agente.
-E6 está `ACCEPTED` e integrada mediante `11dda0c9fb267b619c98baabd12465e143c43d53`; I1-H02 permanece `IN_PROGRESS`. E7 está `ACCEPTED` por el Product Owner el 2026-10-26 sobre `d1db0ddf925a441ba8370d9a10b1f6cac5ffeff2`; E9 y posteriores, RUCT real y AWS quedan fuera de alcance. Sin cambios en S0,
+E6 está `ACCEPTED` e integrada mediante `11dda0c9fb267b619c98baabd12465e143c43d53`; I1-H02 permanece `IN_PROGRESS`. E7 está `ACCEPTED` por el Product Owner el 2026-10-26 sobre `d1db0ddf925a441ba8370d9a10b1f6cac5ffeff2`; E9 solo permite preparar RUCT para segunda revisión; publicación, entregas posteriores y AWS quedan fuera de alcance. Sin cambios en S0,
 migraciones aplicadas ni `CL0_CLOUD_STAGING` (`PENDING`).
 
 Evidencia de implementación y validación local:
@@ -1102,7 +1104,7 @@ de verificación del Product Owner, sin espera ni supervisión por el agente.
 El análisis local de SonarQube for IDE conserva sus hallazgos y no acredita un
 Quality Gate remoto verde. I1-H02 permanece `IN_PROGRESS`; la integración posterior de E7 fue confirmada por el PO
 el 2026-10-26 mediante `63034a15c6f3013ac6e826a3171234eef32b7740`.
-E8 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-11-01 sobre `fc9660e997df990d08677f6a55d91d57f92ef9c7`; E9 y posteriores no están autorizadas; `CL0_CLOUD_STAGING` permanece `PENDING`.
+E8 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-11-01 sobre `fc9660e997df990d08677f6a55d91d57f92ef9c7`; E9 está `IN_PROGRESS` exclusivamente hasta preparar los artefactos para segunda revisión; publicación y entregas posteriores no están autorizadas; `CL0_CLOUD_STAGING` permanece `PENDING`.
 
 Excepción F0 autorizada expresamente el 2026-10-25 y documentada en ADR-001:
 aplicación TypeScript 7.0.2; generador @hey-api/openapi-ts 0.99.0 con TypeScript
@@ -1137,7 +1139,7 @@ formularios no se incorporan sin uso.
 el commit funcional [`fc9660e997df990d08677f6a55d91d57f92ef9c7`](https://github.com/omarjtoscano/propractix-v2/commit/fc9660e997df990d08677f6a55d91d57f92ef9c7).
 CI, Trivy y Build OCI están en verde sobre ese SHA según confirmación expresa del
 Product Owner; no es una verificación remota realizada por el agente. I1-H02
-permanece `IN_PROGRESS`; [PR #17](https://github.com/omarjtoscano/propractix-v2/pull/17) Draft y sin fusionar.
+permanece `IN_PROGRESS`; [PR #17](https://github.com/omarjtoscano/propractix-v2/pull/17) integrada mediante `866c4c71511c181564b8f8d165c06759fcb4442b`.
 La autorización original del 2026-10-26 permitió exclusivamente E8.
 E7 permanece `ACCEPTED` y está integrada mediante `63034a15c6f3013ac6e826a3171234eef32b7740` (PR #16).
 Rama `feature/i1-h02-e8-e2e-observability` desde ese incremento actualizado.
@@ -1145,12 +1147,12 @@ La entrega incluyó Playwright 1.63.0, orquestación local con servicios reales,
 exclusivamente sintéticos por el flujo administrativo aceptado, escenarios 16.7 y
 observabilidad del apartado 15. La autorización original permitió validación,
 evidencia, commit, push y Draft PR hacia el incremento.
-La aprobación posterior autoriza únicamente registrar la aceptación en documentación
+Aquella aprobación posterior autorizó únicamente registrar la aceptación en documentación
 y cuerpo de la PR, con commit y push en la misma rama. CI, Trivy y Build OCI del
 nuevo commit documental quedan pendientes de verificación del Product Owner, sin
 espera ni supervisión del agente. El análisis local de SonarQube no acredita un
-Quality Gate remoto verde y no añade otro gate obligatorio. No se autorizan merge,
-E9, cambios funcionales, RUCT real ni AWS; `CL0_CLOUD_STAGING` permanece `PENDING`.
+Quality Gate remoto verde y no añade otro gate obligatorio. Aquella aprobación no autorizaba merge,
+E9, cambios funcionales, RUCT real ni AWS; la autorización posterior de E9 se registra a continuación; `CL0_CLOUD_STAGING` permanece `PENDING`.
 
 Evidencia: [E8 — E2E y observabilidad](../reviews/i1-h02-e8-e2e-observability-evidence.md).
 
@@ -1164,6 +1166,32 @@ Archivos previstos:
 - script raíz `client:e2e`; generación y checks reproducibles se adelantan a E7 por autorización expresa.
 
 ### E9 — Primer snapshot real y evidencia de aceptación
+
+**Estado:** `IN_PROGRESS`, por autorización expresa del Product Owner el 2026-11-01.
+E8 permanece `ACCEPTED` e integrada mediante `866c4c71511c181564b8f8d165c06759fcb4442b`
+(PR #17). La PR #18 está integrada mediante `3d339d1598c4a7deafedea3d4d9d78fc16c87088`,
+confirmado expresamente por el Product Owner. La rama E9
+`feature/i1-h02-e9-ruct-first-snapshot` se crea desde ese incremento actualizado.
+
+La primera fase autorizada se limita a obtener la exportación oficial según 8.2
+con original temporal en `.local`, preparar CSV/manifest con claves textuales,
+procedencia, hashes, recuentos, duplicados y omisiones, validar con parser y dry
+run existentes y preparar evidencia y aceptación H02 pendientes. Incluye una
+propuesta documental del ajuste mínimo UI ES/EN conservando alcance informativo.
+Los artefactos se versionan como candidatos para revisión, sin dar por realizada
+la segunda revisión. **No se publica el snapshot en PostgreSQL**. Antes de
+continuar deben quedar registrados persona, fecha UTC, hash exacto revisado y
+decisión de la segunda revisión del mapeo y obtener autorización de continuación.
+
+Se autorizan diff, commit, push y Draft PR hacia el incremento; no merge,
+aceptación de E9 ni cierre H02. CI, Trivy y Build OCI los verifica el Product
+Owner, sin espera ni supervisión del agente. No se reabre C0 ni amplía el
+análisis jurídico; sin cambios en S0, migraciones, OpenAPI, generador o AWS.
+I1-H02 sigue `IN_PROGRESS`; `CL0_CLOUD_STAGING` sigue `PENDING`.
+
+Preparación: [snapshot candidato](../catalog/snapshots/ruct-2026-11-01/manifest.yaml),
+[evidencia](../reviews/i1-h02-first-snapshot-evidence.md) y
+[borrador de aceptación](../reviews/aceptacion-i1-h02.md).
 
 Archivos previstos:
 
@@ -1259,7 +1287,7 @@ están `ACCEPTED` por el Product Owner desde el 2026-10-17, E3 está `ACCEPTED`
 desde el 2026-10-18 y su integración está aceptada mediante
 `1549a4be80c87a1f7639a05ae66cda93efd10f3e`; E4 está `ACCEPTED` desde el
 2026-10-22 sobre `700ac21de60748dce3365ba9209288e8b5108926`. Su integración se confirmó mediante `9d128cc3df8c2a90177b1f18cea47708d8abfc03`.
-E5A está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `6cc21e6c034b9c32db3f22ebb8b977f4250614cd`; E5B está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`; E5C está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `8a0a46a293b9b2d9482e92c05161f8b7b57b04e2`; E6 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-25 sobre `de269313888d912807536b5805e9e2c054955347`; E7 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-26 sobre `d1db0ddf925a441ba8370d9a10b1f6cac5ffeff2`; E8 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-11-01 sobre `fc9660e997df990d08677f6a55d91d57f92ef9c7`; E9 y posteriores no están autorizadas:
+E5A está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `6cc21e6c034b9c32db3f22ebb8b977f4250614cd`; E5B está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`; E5C está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `8a0a46a293b9b2d9482e92c05161f8b7b57b04e2`; E6 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-25 sobre `de269313888d912807536b5805e9e2c054955347`; E7 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-26 sobre `d1db0ddf925a441ba8370d9a10b1f6cac5ffeff2`; E8 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-11-01 sobre `fc9660e997df990d08677f6a55d91d57f92ef9c7`; E9 está `IN_PROGRESS` exclusivamente hasta preparar los artefactos para segunda revisión; publicación y entregas posteriores no están autorizadas:
 
 | Decisión aceptada | Aplicación |
 |---|---|
@@ -1282,8 +1310,8 @@ habilitó exclusivamente E5B. El Product Owner confirmó después su integració
 mediante `7bd7bf6b4191d92cfe39864333ce5b5c3467115a` y autorizó exclusivamente E5C.
 La autorización de E6 habilitó exclusivamente OpenAPI y el endpoint funcional;
 la autorización posterior de E7 incorpora cliente y UI, con la excepción F0
-registrada en ADR-001. La autorización posterior habilita exclusivamente E8; E9 y posteriores, AWS y RUCT real siguen fuera de alcance. E5C fue aceptada expresamente por el Product Owner
+registrada en ADR-001. La autorización vigente permite preparar RUCT real para segunda revisión en E9; publicación, entregas posteriores y AWS siguen fuera de alcance. E5C fue aceptada expresamente por el Product Owner
 sobre `8a0a46a293b9b2d9482e92c05161f8b7b57b04e2` y su integración fue confirmada
 mediante `6f8c906448116d621763f8b2e7b7484b2273fb77`; E6 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-25
 sobre `de269313888d912807536b5805e9e2c054955347`; I1-H02 sigue `IN_PROGRESS`,
-con integración de E6 confirmada mediante `11dda0c9fb267b619c98baabd12465e143c43d53` y aceptación expresa de E7 sobre `d1db0ddf925a441ba8370d9a10b1f6cac5ffeff2` el 2026-10-26 por el Product Owner. E7 está integrada mediante `63034a15c6f3013ac6e826a3171234eef32b7740` por confirmación expresa del Product Owner el 2026-10-26; E8 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-11-01 sobre `fc9660e997df990d08677f6a55d91d57f92ef9c7`; E9 y posteriores no están autorizadas. `CL0_CLOUD_STAGING` permanece `PENDING`.
+con integración de E6 confirmada mediante `11dda0c9fb267b619c98baabd12465e143c43d53` y aceptación expresa de E7 sobre `d1db0ddf925a441ba8370d9a10b1f6cac5ffeff2` el 2026-10-26 por el Product Owner. E7 está integrada mediante `63034a15c6f3013ac6e826a3171234eef32b7740` por confirmación expresa del Product Owner el 2026-10-26; E8 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-11-01 sobre `fc9660e997df990d08677f6a55d91d57f92ef9c7`; E9 está `IN_PROGRESS` exclusivamente hasta preparar los artefactos para segunda revisión; publicación y entregas posteriores no están autorizadas. `CL0_CLOUD_STAGING` permanece `PENDING`.

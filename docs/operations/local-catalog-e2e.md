@@ -81,5 +81,8 @@ no corre, ejecutar `docker compose -p <proyecto> -f infra/e2e/compose.yaml down
 CI, Trivy y Build OCI están en verde sobre el SHA funcional aprobado de E8,
 confirmados expresamente por el Product Owner el 2026-11-01. Los checks del nuevo
 commit documental quedan pendientes de su verificación, sin espera ni supervisión
-por el agente. La aceptación expresa de E8 no cierra I1-H02 ni autoriza merge: la
-[PR #17](https://github.com/omarjtoscano/propractix-v2/pull/17) permanece Draft y sin fusionar.
+por el agente. La aceptación expresa de E8 no cerró I1-H02 ni autorizó merge. Posteriormente la
+[PR #17](https://github.com/omarjtoscano/propractix-v2/pull/17) quedó integrada mediante
+`866c4c71511c181564b8f8d165c06759fcb4442b`. E9 solo prepara RUCT para segunda revisión
+según su [evidencia](../reviews/i1-h02-first-snapshot-evidence.md); este procedimiento
+E2E conserva sus fixtures sintéticas y no publica el snapshot real.
