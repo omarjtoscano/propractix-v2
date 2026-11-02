@@ -1,7 +1,8 @@
 # E2E local del catálogo — I1-H02 E8
 
 E8 `ACCEPTED` por aprobación expresa del Product Owner el 2026-11-01 sobre
-`fc9660e997df990d08677f6a55d91d57f92ef9c7`; I1-H02 permanece `IN_PROGRESS`. E7 `ACCEPTED` e integrada mediante
+`fc9660e997df990d08677f6a55d91d57f92ef9c7`; I1-H02 está `DONE / ACCEPTED` localmente desde el 2026-11-02 sobre
+`9c3c6cdb3ad44fb4b289208f073a1f76694cbf84`, por aprobación expresa del PO. E7 `ACCEPTED` e integrada mediante
 `63034a15c6f3013ac6e826a3171234eef32b7740`, confirmado por el Product Owner
 el 2026-10-26. `S0_PUBLIC_ENDPOINTS` `CLOSED`; `CL0_CLOUD_STAGING` `PENDING`.
 Este procedimiento no usa AWS ni publica RUCT real.
@@ -103,5 +104,18 @@ no corre, ejecutar `docker compose -p <proyecto> -f infra/e2e/compose.yaml down
 CI, Trivy y Build OCI están en verde sobre el SHA funcional aprobado de E8,
 confirmados expresamente por el Product Owner el 2026-11-01. Los checks del nuevo
 commit documental quedan pendientes de su verificación, sin espera ni supervisión
-por el agente. La aceptación expresa de E8 no cierra I1-H02 ni autoriza merge: la
-[PR #17](https://github.com/omarjtoscano/propractix-v2/pull/17) permanece Draft y sin fusionar.
+por el agente. La aceptación expresa de E8 no cerró I1-H02 ni autorizó merge. Posteriormente la
+[PR #17](https://github.com/omarjtoscano/propractix-v2/pull/17) quedó integrada mediante
+`866c4c71511c181564b8f8d165c06759fcb4442b`. E9 dispone de autorización
+para publicación exclusivamente local del RUCT aprobado, según su
+[evidencia](../reviews/i1-h02-first-snapshot-evidence.md). Este procedimiento E2E
+conserva sus fixtures sintéticas y no publica el snapshot real. La corrección
+Playwright de PR #20 está integrada en el incremento mediante
+`15eb4d03ae2e4a0834e5f2a808edb75b416eebc9` y se conserva en E9.
+
+La aceptación local posterior de E9/H02 del 2026-11-02 conserva los resultados
+E8 y E9 originales. El PO confirmó CI, Trivy y Build OCI verdes sobre el SHA
+funcional aprobado de E9. Solo se registra esa aceptación documentalmente;
+PR #19 Draft y sin merge, sin iniciar H03 ni AWS; CL0 permanece `PENDING`.
+Los checks del nuevo SHA documental los verifica el PO, sin espera ni supervisión
+del agente. Véase la [aceptación H02](../reviews/aceptacion-i1-h02.md).

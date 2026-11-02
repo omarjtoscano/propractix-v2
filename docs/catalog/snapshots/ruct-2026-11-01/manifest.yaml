@@ -1,0 +1,277 @@
+manifestVersion: propractix-ruct-snapshot/v1
+schemaVersion: academic-institution-catalog/v1
+sourceSystem: RUCT
+sourceUrl: https://www.educacion.gob.es/ruct/listauniversidades?actual=universidades&cccaa=&tipo_univ=&d-8320336-e=2&6578706f7274=1&codigoUniversidad=&consulta=1
+retrievedAt: '2026-11-01T10:38:28.735493Z'
+sourceAttribution: 'Origen de los datos: Ministerio de Ciencia, Innovación y Universidades — Registro
+  de Universidades, Centros y Títulos (RUCT)'
+artifact: academic-institutions-es.csv
+artifactHash: ad2a9ca6f05dfe35851dcc00f3cf568e034d64db5b63d4009a2029fe78633b04
+sourceDownloadHash: 63e3d2bdff91bb780521a7a5354f6e2e1d7338b75f2d8300627032409024199a
+acquisition:
+  window: 2026-11-01T10:38:02Z/2026-11-01T10:38:29Z
+  authorization: Product Owner, 2026-11-01; E9 primera fase
+  consultationUrl: https://www.educacion.gob.es/ruct/consultauniversidades?actual=universidades
+  method: 'Consulta oficial sin filtros: formulario Consultar y enlace Excel de Opciones de exportación;
+    peticiones HTTP manualmente dirigidas, sin job periódico.'
+  filters:
+    cccaa: ''
+    tipo_univ: ''
+    codigoUniversidad: ''
+    consulta: '1'
+  reportedResultCount: 109
+  httpStatus: 200
+  contentType: application/vnd.ms-excel;charset=ISO-8859-1
+  originalFormat: OLE2/BIFF8 (.xls); el charset del Content-Type no se usa para decodificar el workbook
+    binario.
+  originalBytes: 62976
+  originalLocalPath: .local/catalog-acquisition/20261101T103802Z/universidades.xls
+  originalRetention: Temporal e ignorado por Git. Conservar hasta resolver la segunda revisión; eliminar
+    después según decisión del owner. No es fixture ni se incluye en imágenes.
+mapping:
+  sheet: '-'
+  headerRow: 1
+  dataRows: '2:110'
+  sourceColumns:
+  - Universidad
+  - Código
+  - Acrónimo
+  - Tipo
+  - CIF
+  - Con ánimo de lucro
+  - Modalidad
+  - Administración Educativa Responsable
+  - Domicilio
+  - Código postal
+  - Localidad
+  - Municipio
+  - Provincia
+  - Comunidad Autónoma
+  - URL
+  - EMail
+  - Teléfono 1
+  - Tipo Boletín
+  - Año publicación
+  - Tipo disposición
+  - Fecha disposición
+  - Fecha publicación
+  - Fecha entrada en Vigor
+  columns:
+    sourceSystem:
+      constant: RUCT
+    sourceRecordId:
+      sourceColumn: Código
+      excelColumn: B
+      sourceCellType: text
+      transformation: Copia literal, sin conversión numérica, padding, trim ni derivación de UUID.
+    officialName:
+      sourceColumn: Universidad
+      excelColumn: A
+      sourceCellType: text
+      transformation: Unicode NFC y trim exterior; grafía y tildes conservadas. En esta descarga ninguna
+        celda requirió cambios.
+    countryCode:
+      constant: ES
+      basis: Universidades inequívocas de la consulta española RUCT, conforme a C0.
+    sourceStatus:
+      constant: ''
+      basis: No existe columna de estado inequívoca. Tipo, fechas de disposición/publicación/vigor y mera
+        presencia no se convierten en estado.
+  droppedSourceColumns:
+  - Acrónimo
+  - Tipo
+  - CIF
+  - Con ánimo de lucro
+  - Modalidad
+  - Administración Educativa Responsable
+  - Domicilio
+  - Código postal
+  - Localidad
+  - Municipio
+  - Provincia
+  - Comunidad Autónoma
+  - URL
+  - EMail
+  - Teléfono 1
+  - Tipo Boletín
+  - Año publicación
+  - Tipo disposición
+  - Fecha disposición
+  - Fecha publicación
+  - Fecha entrada en Vigor
+  selection: Revisión explícita de las 109 parejas Código/Universidad. Se excluyen las diez agrupaciones
+    listadas abajo; no se aplica un filtro por prefijo Universidad (se conservan CUNEF, ESIC, IE, Mondragón
+    y Universitat).
+  order: Orden de filas del Excel original, sin reordenar.
+  serialization:
+    encoding: UTF-8 sin BOM
+    delimiter: ','
+    lineEnding: LF
+    finalNewline: true
+    quoting: CSV mínimo; comillas dobles y duplicación de comillas internas cuando corresponda.
+    header: sourceSystem,sourceRecordId,officialName,countryCode,sourceStatus
+    artifactBytes: 4512
+  tooling:
+    reader: xlrd 2.0.2, instalado temporalmente bajo .local/catalog-acquisition/python-deps
+    serializer: Python 3.14, csv.writer(lineterminator="\n"), quoting=QUOTE_MINIMAL
+    reproduction: ../../../reviews/i1-h02-first-snapshot-evidence.md#reproducción-desde-el-original-conservado
+counts:
+  sourceDataRows: 109
+  sourceHeaderRows: 1
+  canonicalRows: 99
+  omittedSourceRows: 10
+  omittedAggregateRows: 10
+  omittedIndividualCenterRows: 0
+  omittedDegreeRows: 0
+  omittedAmbiguousRows: 0
+  omittedIncompleteRows: 0
+  duplicateSourceKeys: 0
+  duplicateCanonicalReferences: 0
+  duplicateCanonicalNames: 0
+  keysWithLeadingZero: 90
+  nonEmptySourceStatuses: 0
+  changedNamesAfterNfcAndTrim: 0
+omissions:
+- sourceRow: 2
+  sourceRecordId: '099'
+  officialName: Centros autorizados para impartir Enseñanzas Artísticas Superiores
+  reasonCode: aggregate_not_university
+  reason: Agrupación de centros; no representa una universidad inequívoca.
+- sourceRow: 3
+  sourceRecordId: '086'
+  officialName: Centros dependientes del Ministerio de Defensa
+  reasonCode: aggregate_not_university
+  reason: Agrupación de centros; no representa una universidad inequívoca.
+- sourceRow: 4
+  sourceRecordId: '105'
+  officialName: Centros extranjeros autorizados por la Comunidad Autónoma de Aragón
+  reasonCode: aggregate_not_university
+  reason: Agrupación de centros; no representa una universidad inequívoca.
+- sourceRow: 5
+  sourceRecordId: '092'
+  officialName: Centros extranjeros autorizados por la Comunidad Autónoma de Cantabria
+  reasonCode: aggregate_not_university
+  reason: Agrupación de centros; no representa una universidad inequívoca.
+- sourceRow: 6
+  sourceRecordId: '101'
+  officialName: Centros extranjeros autorizados por la Comunidad Autónoma de Cataluña
+  reasonCode: aggregate_not_university
+  reason: Agrupación de centros; no representa una universidad inequívoca.
+- sourceRow: 7
+  sourceRecordId: '095'
+  officialName: Centros extranjeros autorizados por la Comunidad Autónoma del País Vasco
+  reasonCode: aggregate_not_university
+  reason: Agrupación de centros; no representa una universidad inequívoca.
+- sourceRow: 8
+  sourceRecordId: '093'
+  officialName: Centros extranjeros autorizados por la Comunidad de Andalucía
+  reasonCode: aggregate_not_university
+  reason: Agrupación de centros; no representa una universidad inequívoca.
+- sourceRow: 9
+  sourceRecordId: '091'
+  officialName: Centros extranjeros autorizados por la Comunidad de Madrid
+  reasonCode: aggregate_not_university
+  reason: Agrupación de centros; no representa una universidad inequívoca.
+- sourceRow: 10
+  sourceRecordId: '096'
+  officialName: Centros extranjeros autorizados por la Comunidad Valenciana
+  reasonCode: aggregate_not_university
+  reason: Agrupación de centros; no representa una universidad inequívoca.
+- sourceRow: 16
+  sourceRecordId: '000'
+  officialName: Otros Centros de Nivel Universitario
+  reasonCode: aggregate_not_university
+  reason: Agrupación de centros; no representa una universidad inequívoca.
+validation:
+  parser: StrictCsvCatalogArtifactParser existente, permitido RUCT/ES
+  status: VALID
+  dryRunStatus: VALID
+  exitCode: 0
+  totalRows: 99
+  candidateRows: 99
+  omittedCanonicalRows: 0
+  resultCode: catalog_artifact_valid
+  note: 'published_rows=99 en el dry run cuenta candidatos válidos; no publica ni conecta a PostgreSQL.'
+secondReview:
+  status: MAPPING_APPROVED_BY_PRODUCT_OWNER
+  reviewedArtifactHash: ad2a9ca6f05dfe35851dcc00f3cf568e034d64db5b63d4009a2029fe78633b04
+  technicalReview:
+    status: FAVORABLE
+    reviewer: ChatGPT
+    type: Revisión técnica asistida en este chat
+    mappingReviewDate: '2026-11-01'
+    finalReviewDate: '2026-11-02'
+    finalOutcome: FAVORABLE
+    traceabilitySource: Identidad, tipo y fechas completados por declaración expresa del Product Owner en
+      este chat el 2026-11-02.
+    note: Revisión técnica asistida, distinta de la aprobación y aceptación del Product Owner. El registro
+      de publicación del 2026-11-01 solo la refería por el PO; se conserva sin reescribir en el JSON original
+      de validación.
+  productOwnerApproval:
+    status: APPROVED
+    approver: Product Owner, aprobación expresa en este chat
+    approvalDate: '2026-11-01'
+    artifactHash: ad2a9ca6f05dfe35851dcc00f3cf568e034d64db5b63d4009a2029fe78633b04
+    scope: 'Mapeo del snapshot RUCT de PR #19 y continuación E9 con publicación exclusivamente local y
+      aviso neutral ES/EN; no aceptación de E9 ni cierre H02.'
+  decision: Publicación local autorizada expresamente por el PO tras su aprobación del mapeo. Revisión
+    técnica asistida de ChatGPT y aprobación PO registradas separadamente.
+publication:
+  status: PUBLISHED_LOCAL
+  authorizedInThisPhase: true
+  environment: local
+  database: PostgreSQL 16.15, 127.0.0.1:5432/propractix
+  method: CLI existente npm run catalog:publish; sin escrituras SQL directas al catálogo
+  catalogImportId: 29ca8394-9878-44ba-82f2-2971534b1ead
+  publishedAt: '2026-11-01T18:16:34.162754Z'
+  artifactHash: ad2a9ca6f05dfe35851dcc00f3cf568e034d64db5b63d4009a2029fe78633b04
+  totalCanonicalRows: 99
+  publishedRows: 99
+  omittedCanonicalRows: 0
+  omittedSourceRowsBeforeCanonicalCsv: 10
+  publishedImportCount: 1
+  visibleSnapshotCount: 1
+  activeInstitutionCount: 99
+  repeatUnchanged: true
+  invalidArtifactRejected: true
+  invalidApplicationExitCode: 6
+  invalidNpmMavenExitCode: 1
+  lastValidSnapshotPreserved: true
+  verificationEvidence: ../../../reviews/i1-h02-first-snapshot-evidence.md#publicación-y-verificaciones-locales-de-continuación
+httpVerification:
+  pageSizes:
+  - 20
+  - 20
+  - 20
+  - 20
+  - 19
+  uniqueUuidV4Institutions: 99
+  sourceNamesMatchExactly: true
+  persistedCanonicalRowsMatchExactly: true
+  persistedKeysWithLeadingZero: 90
+  accentInsensitiveSearchVerified: true
+  snapshotMetadataMatch: true
+  cursorSurvivesRepeat: true
+  cursorSurvivesRejectedArtifact: true
+  evidence: ../../../reviews/i1-h02-e9-local-validation.json
+e9Status: ACCEPTED
+h02Status: DONE / ACCEPTED
+localAcceptance:
+  status: APPROVED
+  date: '2026-11-02'
+  approver: Product Owner, aprobación expresa en este chat
+  approvedCommit: 9c3c6cdb3ad44fb4b289208f073a1f76694cbf84
+  e9Status: ACCEPTED
+  h02Status: DONE / ACCEPTED
+  scope: 'Aceptación exclusivamente local de E9 e I1-H02; PR #19 Draft y sin merge, sin inicio H03 ni
+    AWS. CL0 PENDING.'
+  remoteChecksOnApprovedCommit:
+    ci: GREEN_CONFIRMED_BY_PRODUCT_OWNER
+    trivy: GREEN_CONFIRMED_BY_PRODUCT_OWNER
+    buildOci: GREEN_CONFIRMED_BY_PRODUCT_OWNER
+    confirmedOn: '2026-11-02'
+    agentConsultedOrMonitoredRuns: false
+  documentaryCommitChecks: PENDING_PRODUCT_OWNER_VERIFICATION; sin espera ni supervisión del agente
+  originalValidationEvidence: ../../../reviews/i1-h02-e9-local-validation.json
+  originalValidationEvidenceNote: Resultados y estados históricos del 2026-11-01 conservados byte a byte;
+    no expresan el estado vigente posterior a esta aceptación.

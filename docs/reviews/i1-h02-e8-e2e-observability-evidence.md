@@ -7,8 +7,8 @@
 - Rama: `feature/i1-h02-e8-e2e-observability`.
 - Base e integración de E7 confirmada por el Product Owner el 2026-10-26:
   `63034a15c6f3013ac6e826a3171234eef32b7740` (PR #16). E7 permanece `ACCEPTED`.
-- PR: [#17](https://github.com/omarjtoscano/propractix-v2/pull/17), Draft y sin fusionar,
-  hacia `increment/01-company-identity-catalog`.
+- PR: [#17](https://github.com/omarjtoscano/propractix-v2/pull/17), integrada mediante
+  `866c4c71511c181564b8f8d165c06759fcb4442b` en `increment/01-company-identity-catalog`.
 - El SHA del nuevo commit documental se comunica en la entrega y en el cuerpo
   de la PR; no sustituye el SHA funcional aprobado de E8.
 
@@ -18,8 +18,8 @@ El Product Owner autorizó exclusivamente E8 el 2026-10-26 conforme a los aparta
 15 y 16.7 del plan H02, incluidos validación, evidencia, commit, push y Draft PR.
 Pidió finalizar la tarea el 2026-11-01. La autorización de implementación no
 incluía aceptación ni merge; la aprobación posterior de E8 se registra abajo.
-I1-H02 permanece `IN_PROGRESS`; no se hace merge, no se inicia E9, no se publica
-RUCT real y no se ejecuta AWS.
+Aquella entrega mantuvo I1-H02 `IN_PROGRESS`, sin merge, E9, RUCT real ni AWS.
+La integración posterior y autorización limitada de E9 se registran a continuación.
 `CL0_CLOUD_STAGING` permanece `PENDING`; C0 y S0 permanecen `CLOSED`.
 
 ## Aprobación expresa y verificación remota confirmada por el PO
@@ -39,12 +39,21 @@ de ejecución, por lo que se enlazan el commit aprobado y la PR. No confirma un
 Quality Gate remoto de SonarQube: los hallazgos disponibles siguen siendo
 análisis local de IDE, con los límites documentados más abajo.
 
-Solo se autoriza registrar esta aceptación mediante cambios exclusivamente
+Aquella aprobación solo autorizó registrar esta aceptación mediante cambios exclusivamente
 documentales en la misma rama y en el cuerpo de la PR #17, con commit y push.
-La PR permanece Draft y sin fusionar. CI, Trivy y Build OCI del nuevo commit
+En aquel momento la PR permanecía Draft y sin fusionar. CI, Trivy y Build OCI del nuevo commit
 documental quedan pendientes de verificación del Product Owner, sin espera ni
-supervisión del agente. No se autorizan E9, cambios funcionales, AWS ni cambios
+supervisión del agente. Aquella aprobación no autorizaba E9, cambios funcionales, AWS ni cambios
 en `CL0_CLOUD_STAGING`, que permanece `PENDING`.
+
+## Integración posterior y autorización limitada de E9
+
+La PR #17 está integrada mediante `866c4c71511c181564b8f8d165c06759fcb4442b`,
+contrastado con Git/GitHub. El PO confirma el 2026-11-01 la PR #18 integrada mediante
+`3d339d1598c4a7deafedea3d4d9d78fc16c87088` y autoriza la preparación de artefactos
+RUCT para segunda revisión en E9, sin publicación. E8 permanece `ACCEPTED`;
+E9 e I1-H02 están `IN_PROGRESS`. Véase la [evidencia E9](i1-h02-first-snapshot-evidence.md).
+Esta integración no se usa como confirmación de nuevos checks remotos.
 
 ## Implementación
 

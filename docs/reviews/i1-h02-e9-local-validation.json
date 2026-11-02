@@ -1,0 +1,118 @@
+{
+  "date": "2026-11-01",
+  "branch": "feature/i1-h02-e9-ruct-first-snapshot",
+  "incrementIntegration": "15eb4d03ae2e4a0834e5f2a808edb75b416eebc9",
+  "playwrightCorrectionPreserved": true,
+  "mappingReview": {
+    "technicalReview": "REPORTED_BY_PRODUCT_OWNER",
+    "independentReviewerIdentityProvided": false,
+    "productOwnerApproval": "APPROVED",
+    "approvedArtifactHash": "ad2a9ca6f05dfe35851dcc00f3cf568e034d64db5b63d4009a2029fe78633b04",
+    "approvalScope": "Mapping and local continuation only; E9/H02 remain IN_PROGRESS"
+  },
+  "publication": {
+    "recordedAt": "2026-11-01T18:17:15.149459+00:00",
+    "publication": {
+      "source_url": "https://www.educacion.gob.es/ruct/listauniversidades?actual=universidades&cccaa=&tipo_univ=&d-8320336-e=2&6578706f7274=1&codigoUniversidad=&consulta=1",
+      "published_at": "2026-11-01T18:16:34.162754+00:00",
+      "retrieved_at": "2026-11-01T10:38:28.735493+00:00",
+      "artifact_hash": "ad2a9ca6f05dfe35851dcc00f3cf568e034d64db5b63d4009a2029fe78633b04",
+      "total_row_count": 99,
+      "catalog_import_id": "29ca8394-9878-44ba-82f2-2971534b1ead",
+      "omitted_row_count": 0,
+      "source_attribution": "Origen de los datos: Ministerio de Ciencia, Innovación y Universidades — Registro de Universidades, Centros y Títulos (RUCT)",
+      "published_row_count": 99,
+      "source_download_hash": "63e3d2bdff91bb780521a7a5354f6e2e1d7338b75f2d8300627032409024199a"
+    },
+    "publishedImportCount": 1,
+    "visibleSnapshotCount": 1,
+    "activeInstitutionCount": 99,
+    "repeatUnchanged": true,
+    "invalidArtifactRejected": true,
+    "invalidApplicationExitCode": 6,
+    "invalidNpmMavenExitCode": 1,
+    "lastValidSnapshotPreserved": true,
+    "serverVersion": "16.15",
+    "persistedCanonicalRowsMatchExactly": true,
+    "persistedLeadingZeroKeys": 90
+  },
+  "httpSearch": {
+    "recordedAt": "2026-11-01T18:18:07.941348+00:00",
+    "importId": "29ca8394-9878-44ba-82f2-2971534b1ead",
+    "artifactHash": "ad2a9ca6f05dfe35851dcc00f3cf568e034d64db5b63d4009a2029fe78633b04",
+    "pageSizes": [
+      20,
+      20,
+      20,
+      20,
+      19
+    ],
+    "uniqueInstitutions": 99,
+    "uuidV4Count": 99,
+    "sourceNamesMatchExactly": true,
+    "stableOrder": true,
+    "searches": [
+      {
+        "query": "Alcalá",
+        "normalizedQuery": "alcala",
+        "matches": 1,
+        "sameResults": true
+      },
+      {
+        "query": "València",
+        "normalizedQuery": "valencia",
+        "matches": 5,
+        "sameResults": true
+      },
+      {
+        "query": "Politécnica",
+        "normalizedQuery": "politecnica",
+        "matches": 4,
+        "sameResults": true
+      }
+    ],
+    "attributionSourceAndRetrievalDateMatch": true,
+    "cursorSurvivesRepeat": true,
+    "cursorSurvivesRejectedArtifact": true
+  },
+  "validation": {
+    "backendTest": {
+      "tests": 317,
+      "failures": 0,
+      "errors": 0,
+      "skippedBenchmark": 1
+    },
+    "backendVerify": {
+      "tests": 317,
+      "failures": 0,
+      "errors": 0,
+      "skippedBenchmark": 1
+    },
+    "clientTypecheck": "PASS",
+    "clientLint": "PASS",
+    "clientTests": {
+      "vitestPassed": 96,
+      "nodeChecksPassed": 1
+    },
+    "clientBuild": "PASS",
+    "openapiLint": "PASS",
+    "migrationCheck": "PASS",
+    "e2e": {
+      "startTime": "2026-11-01T18:18:02.551Z",
+      "duration": 49812.656,
+      "expected": 8,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "e2eSecretsAndLockRemoved": true,
+    "approvedCsvBytesUnchanged": true,
+    "originalDownloadHashVerified": true,
+    "e2eContainersAndVolumeRemoved": true,
+    "ephemeralHttpBackendStopped": true
+  },
+  "remoteChecks": "PENDING_PRODUCT_OWNER_VERIFICATION",
+  "e9Status": "IN_PROGRESS",
+  "h02Status": "IN_PROGRESS",
+  "cl0Status": "PENDING"
+}

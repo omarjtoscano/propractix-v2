@@ -38,7 +38,7 @@
     "selected": "Universidad seleccionada: {{name}}",
     "selectedManual": "Universidad indicada manualmente: {{name}}",
     "scope": "El catálogo es informativo: no acredita afiliación, matrícula, elegibilidad, convenio ni cumplimiento.",
-    "synthetic": "Esta versión utiliza datos sintéticos para pruebas. No son datos reales de RUCT.",
+    "provenance": "Consulta la atribución y la fecha del snapshot para conocer el origen de los datos mostrados.",
     "attribution": "Atribución del snapshot",
     "retrievedAt": "Fuente consultada el {{date}}",
     "source": "Consultar fuente del snapshot",
