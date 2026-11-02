@@ -48,11 +48,27 @@ El `operationId` de respuesta identifica la solicitud técnica; no es el `operat
 
 - H03 no recibe contraseña, roles, `tenantId`, estado, IDs de cuenta o memberships. Se propone rechazar propiedades desconocidas como entrada inválida, incluida la inyección de esos campos; nunca se usan como autoridad.
 - `Company` inicia `SELF_DECLARED`; `TenantId` es su único identificador, generado por servidor. Cuenta nueva `PENDING_EMAIL` sin credencial. El rol inicial canónico es `COMPANY_OWNER`; no hay membership activa antes de la ceremonia de H04.
-- Cuenta existente: no cambia credencial ni se enlaza por correo coincidente. Se prepara continuación de propósito `ONBOARDING_CONTINUATION`; autenticación/reautenticación y enlace efectivo quedan para H04/H05. Ante empresa fiscal coincidente no se crea otro tenant ni se reclama el existente.
+- Cuenta existente: no cambia credencial ni se enlaza por correo coincidente. Cuenta activa prepara `ONBOARDING_CONTINUATION`; cuenta `PENDING_EMAIL` sin credencial requiere la recuperación propuesta en la matriz siguiente, sin exigir una contraseña inexistente. Las ceremonias efectivas quedan para H04/H05 y la concreción pendiente de ADR. Ante empresa fiscal coincidente no se crea otro tenant ni se reclama el existente.
 - El dominio exacto después de `@` se evalúa por política versionada. Dominio corporativo propio alojado en Google/Microsoft permitido. No se examina el proveedor MX para admitir empresas.
 - `MAIL_CAPABLE`, `NO_MAIL_ROUTE` e `INDETERMINATE` son resultados técnicos. Los dos últimos conservan el alta y programan reintento; nunca rechazan ni activan una cuenta. El `UNKNOWN` de cumplimiento sigue bloqueando puertas legales.
 - País registral, locale y jurisdicción son distintos. País habilitado y locale/fallback se resuelven desde configuración tipada; estrategias fiscales por país/tipo fuera de `Company`. Un país puede conservarse aunque su jurisdicción no esté soportada; nunca se aplica un fallback jurídico español.
 - [i18n existente](../development/i18n-and-errors.md): ES/EN completos, `ErrorMessage` por código y fallback genérico traducido; no se muestran `Error.message`, `title`, `detail` ni prosa de violations. Textos legales versionados por separado.
+
+### Matriz propuesta de PrepareAdministratorAccount y recuperación futura
+
+`identity` distingue internamente los siguientes casos para un **nuevo** `OnboardingId`. Los nombres de resultado son propuestas de contrato tipado; solo salen IDs y el código necesario por el contrato/evento interno autorizado, nunca estado de credencial, correo o información de existencia por HTTP. Todos conservan el mismo `202` público genérico.
+
+| Cuenta al preparar | Resultado interno propuesto de `PrepareAdministratorAccount` | Efecto permitido en H03 | Ceremonia futura, fuera de H03 |
+|---|---|---|---|
+| No existe | `NEW_ACCOUNT_PREPARED` con `OnboardingId` y `UserId` generado por `identity`. | Crear una sola cuenta `PENDING_EMAIL` sin credencial; intención `INITIAL_CREDENTIAL_SETUP`. `organization` puede crear la empresa candidata `SELF_DECLARED` conforme a unicidad fiscal; no activa membership. | H04 verifica el enlace de propósito `INITIAL_CREDENTIAL_SETUP` y crea la primera credencial directamente en `identity`; no se pide una contraseña anterior. |
+| Existe `PENDING_EMAIL` sin credencial | `PENDING_ACCOUNT_RECOVERY_REQUIRED` con `OnboardingId` y referencia interna a la cuenta existente. | Reutilizar la cuenta sin duplicarla, sin crear credencial ni sobrescribir datos del alta original. Mantener una intención recuperable; el nuevo onboarding no crea empresa ni membership por coincidencia. No se exige login/reautenticación con contraseña. | Recuperar o reemitir de forma controlada una verificación `INITIAL_CREDENTIAL_SETUP` para **esa cuenta pendiente y el mismo correo registrado**. Tras consumirla una sola vez y crear la primera credencial, autenticar y confirmar por separado la continuación del nuevo onboarding; `ONBOARDING_CONTINUATION` no crea ni sustituye contraseñas. |
+| Existe `ACTIVE` con credencial | `ACCOUNT_CONTINUATION_REQUIRED` con `OnboardingId` y referencia interna a la cuenta existente. | Mantener intención `ONBOARDING_CONTINUATION`, sin modificar credencial, crear empresa ni enlazar membership automáticamente. | Actor no autenticado: enlace de continuación y autenticación; actor autenticado: reautenticación antes de vincular. Nunca reutilizar este flujo para sustituir una credencial. |
+
+Repetir el **mismo** `OnboardingId` reproduce el resultado durable original y los mismos IDs: si aquella llamada creó la cuenta, su retry no se reclasifica como recuperación de cuenta pendiente ni vuelve a crear empresa. Dos onboardings distintos concurrentes para un email producen a lo sumo una cuenta nueva; el otro obtiene recuperación pendiente o continuación según el estado autoritativo de `identity`. Estados suspendidos/cerrados o combinaciones inconsistentes no se degradan a «cuenta nueva»; quedan sin provisioning automático ni revelación pública.
+
+La recuperación futura de una cuenta pendiente exige demostrar control del correo mediante el enlace válido, comprobar estado y ausencia de credencial al consumirlo, expiración/invalidación de enlaces anteriores y consumo/creación de la primera credencial atómicos. Si otra operación ya activó la cuenta, se abandona el alta inicial de credencial y se exige la continuación autenticada propia de la cuenta activa; nunca se sobrescribe el hash. Recuperar la cuenta no aprueba automáticamente otro onboarding ni transfiere empresas/memberships; la nueva vinculación exige confirmación verificada/autenticada y comprobación fiscal. Cuenta eliminada por retención no se recupera mediante un token antiguo.
+
+**Decisión pendiente, no modificación de ADR:** [ADR-003, convergencia de cuenta](../adr/ADR-003-multitenancy-tenant-context.md#convergencia-de-cuenta) y [ADR-007, credenciales](../adr/ADR-007-autenticacion-sesiones-csrf.md#credenciales) formulan la continuación de «cuenta existente» sin separar explícitamente la pendiente sin credencial. La rama de recuperación anterior es una propuesta concreta de esa separación y debe quedar aceptada expresamente por Producto + Seguridad + Arquitectura mediante concreción/revisión de ADR-003/007 **antes de implementar esa rama de E5 o su ceremonia en H04**. Esta PR no modifica esos ADR, autoriza la ceremonia ni convierte `ONBOARDING_CONTINUATION` en permiso de alta de contraseña. E5 solo planifica el resultado/intención y sus pruebas con dobles; emisión, reenvío, consumo, autenticación y recuperación efectiva pertenecen a H04/H05.
 
 ## 3. Gates y decisiones que requieren aprobación
 
@@ -66,6 +82,7 @@ El `operationId` de respuesta identifica la solicitud técnica; no es el `operat
 | `E0_EMAIL` | `PENDING` | Correo real y entrega de verificación pertenecen a H04 y a su aprobación separada. |
 | `CL0_CLOUD_STAGING` | `PENDING`, sin cambios | Sin AWS, IaC, promoción, exposición pública ni cierre cloud. |
 | Este plan | `PROPOSED_FOR_APPROVAL` | PO: revisar alcance, secuencia y propuestas; aprobar el plan no equivale a iniciar entregas. |
+| Cuenta pendiente sin credencial | Propuesta pendiente de decisión | Producto + Seguridad + Arquitectura: aceptar expresamente la matriz y concretar ADR-003/007 antes de implementar su rama de E5; sin recuperación efectiva ni implementación H04 en esta PR. |
 | Inicio de cada entrega | `NOT_AUTHORIZED` | Orden posterior expresa del PO, sobre rama de incremento actualizada y con gates aplicables satisfechos; una entrega cada vez. |
 
 Antes de E1 se necesita autorización separada para H03 local y decisiones sobre B0 y la entrada propia de rate limiting. La revisión de B0 exige pruebas: se propone que el PO distinga aprobación del diseño/artefacto y autorización de validación local, de su cierre posterior con evidencia. **No se da B0 por cerrado para romper esa dependencia**: cualquier autorización local condicionada debe ser expresa, y el endpoint permanece deshabilitado hasta satisfacer sus condiciones. Si no se concede, no se inicia E1.
@@ -135,7 +152,23 @@ Propuesta de entrega del aviso sin endpoint adicional: recurso legal ES/EN versi
 
 ## 6. Propuesta de entrada de rate limiting de H03
 
-Se propone `submitCompanyOnboarding`, `POST /api/v1/company-onboardings`, contrato `v1`, en una futura versión 2 de `public-endpoint-rate-limits`. La versión 1 y los límites del catálogo permanecen intactos. La nueva versión conservaría explícitamente la entrada H02 y añadiría la siguiente; requiere aprobación de Seguridad + Operaciones y registro expreso del PO antes de activación.
+Se propone `submitCompanyOnboarding`, `POST /api/v1/company-onboardings`, contrato `v1`, en una futura versión documental 2 de `public-endpoint-rate-limits`. La versión documental agrupa entradas; cada operación conserva una versión efectiva de política independiente para identificar sus contadores. El artefacto aprobado de H02 permanece inmutable. La ampliación incorporaría su entrada sin cambios y añadiría H03; requiere aprobación de Seguridad + Operaciones y registro expreso del PO antes de activación.
+
+### Versionado por operación y continuidad de H02
+
+| Documento/configuración | Operación | Versión efectiva para admisión y persistencia |
+|---|---|---|
+| Documento aprobado v1 actual | `searchAcademicInstitutions` | `1`, igual a la versión que hoy carga H02. |
+| Documento ampliado v2 propuesto | `searchAcademicInstitutions` | **`1` conservada**; la ampliación no cambia su política efectiva. |
+| Documento ampliado v2 propuesto | `submitCompanyOnboarding` | `1` inicial propuesta en su propio namespace de operación; pendiente de aprobación. |
+
+Propuesta de representación: `documentVersion=2` para el conjunto y `operationPolicyVersion` explícita en cada entrada. El loader compatible de v1 resuelve su única entrada con versión efectiva `1`; el nuevo loader valida cada entrada y entrega a admisión su versión efectiva, no la del documento. La columna existente `platform_rate_limit_bucket.policy_version`, `RateLimitPolicy.version` y el label permitido `policy_version` representan esa **versión efectiva por operación**. La versión documental queda como metadato de configuración, fuera de la clave de cuota; no se cambia el significado de las filas v1 ni se actualiza el YAML aprobado en esta PR.
+
+La clave lógica de H02 sigue siendo `(operation_id=searchAcademicInstitutions, policy_version=1, rule_id, hmac_key_version, subject_fingerprint, window_started_at)`. Se mantienen IDs de reglas `burst/sustained`, límites 15/10 s y 60/60 s, TTL 70/120 s, alineación temporal de ventanas, cálculo PostgreSQL, normalización IP, separador/material HMAC y versiones de clave activas. Activar la ampliación no borra, copia, reinicia ni renombra buckets, no recalcula su inicio/expiración, no cambia fingerprints y no crea un namespace H02 con versión `2`. Las peticiones nuevas continúan reclamando las **mismas filas**; H03 añade filas bajo su propio `operation_id`.
+
+El cambio de configuración se valida completo antes de seleccionarlo. Durante un despliegue con instancias antiguas y nuevas, ambas resuelven H02 a la misma versión efectiva `1` y comparten la admisión PostgreSQL atómica. Volver al documento v1 deshabilita H03 pero conserva la cuota de H02; no ejecuta limpieza extraordinaria ni resetea contadores. Una entrada v2 ausente, ambigua o que cambie silenciosamente la semántica de H02 falla cerrada. No se combina esta ampliación con una rotación HMAC ni cambios de reglas H02: tales cambios requieren decisión y transición propias, con continuidad demostrada antes de activarse.
+
+Esta separación y el formato futuro requieren aprobación de Seguridad + Operaciones y revisión de compatibilidad de S0; no es una política publicada ni un cambio ya implementado. Una mera subida de la versión global actual a `2` sería incompatible con la continuidad exigida porque abriría otra clave de contador.
 
 | Sujeto/regla propuestos | Límite | Ventana fija | Primera rechazada | TTL lógico de fila |
 |---|---:|---|---:|---|
@@ -145,7 +178,7 @@ Se propone `submitCompanyOnboarding`, `POST /api/v1/company-onboardings`, contra
 
 Las ventanas alineadas se calculan en servidor; no hay crédito extra ni cuota nueva al cambiar clave de idempotencia, campos, cuenta existente, locale o correlation ID. Dos ventanas adyacentes pueden admitir hasta el doble alrededor de su frontera: estos valores y el impacto de IP compartida/bloqueo dirigido de una dirección deben revisarse con tráfico sintético antes de aprobarlos. No se promete prevención total de abuso distribuido.
 
-- IP: conservar normalización IPv4 `/32`, IPv6 `/64`, HMAC-SHA-256, versiones activas, secretos externos y saneamiento de proxies de S0. Clave por política/operación/regla/versión HMAC/sujeto/ventana.
+- IP: conservar normalización IPv4 `/32`, IPv6 `/64`, HMAC-SHA-256, versiones activas, secretos externos y saneamiento de proxies de S0. Clave por versión efectiva de política de la operación/operación/regla/versión HMAC/sujeto/ventana; nunca por versión documental del conjunto.
 - Dirección: fingerprint del email normalizado sin consultar si existe cuenta, con clave independiente y separador propuesto `propractix:ratelimit-registration-email:v1`. Se calcula solo tras los guards de privacidad y validación; no se persiste email en claro. Limita tanto cuentas nuevas como existentes sin diferencias observables por su existencia.
 - Prebinding: admisión IP protege incluso requests malformados. Después de privacidad/binding, admisión de dirección. Cada admisión reclama atómicamente sus reglas y todas las versiones activas; la etapa IP ya consumida no se revierte si la segunda etapa o la validación posterior rechaza. No se anuncia atomicidad conjunta entre etapas.
 - Los retries idempotentes siguen sujetos a abuso; no evaden cuotas. `429 rate_limited` con `Retry-After` entero, techo hasta que todas las ventanas violadas permitan continuar, mínimo 1; `503 rate_limiter_unavailable` con `Retry-After: 1` ante caída/configuración/clave/IP no resoluble, sin invocar el alta.
@@ -176,7 +209,7 @@ flowchart LR
 |---|---|
 | Admitir solicitud | Guards/políticas y aviso autoritativo antes de claim. `platform.idempotency` reclama operación; creación de onboarding y solicitud outbox de `organization` debe tener vínculo atómico con ese claim o protocolo recuperable verificable. Se propone misma transacción de infraestructura para registro técnico + cambio de un único contexto de negocio; nunca escribir `identity` en ella. |
 | Preparar administrador | Relay, mediante handler propietario de `organization`, carga PII cifrada y la proporciona solo en memoria a `identity.application.port.in.PrepareAdministratorAccount`. La transacción de `organization` ya terminó; `identity` confirma su propia transacción idempotente por `OnboardingId`. |
-| Responder al provisioning | `AdministratorProvisionedV1` o resultado de fallo versionado tras commit. Consumidor `organization` deduplica; cuenta existente conserva solo intención de continuación segura, sin crear empresa ni vínculo por coincidencia. Fallo mantiene estado recuperable. |
+| Responder al provisioning | `AdministratorProvisionedV1` o resultado de fallo versionado tras commit, con el resultado tipado propuesto en la matriz de cuentas. Consumidor `organization` deduplica; cuenta pendiente existente conserva intención de recuperación sin contraseña y cuenta activa intención de continuación autenticada, sin crear empresa ni vínculo por coincidencia. Fallo mantiene estado recuperable. |
 | Crear empresa para cuenta nueva pendiente | Solo con resultado interno de cuenta nueva, `organization` vuelve a comprobar fingerprints de todas las claves fiscales activas e inserta `Company SELF_DECLARED` y todos sus fingerprints en su propia transacción, avanzando a `EMAIL_PENDING` sin activar membership. Conflicto concurrente conserva resultado público genérico, sin otro tenant ni lectura cross-tenant de detalle. |
 | Revisión técnica diferida | `EmailDomainRoutingRecheckRequested` con IDs; handler propietario carga el dominio solo en memoria. Backoff persistido y resultado mínimo; reinicio no pierde el trabajo. |
 | Verificación futura | `EmailVerificationRequested` deja intención durable sin token. H04 prepara verificación/JWS y entrega mediante `identity` → `notifications`; este plan no implementa emisión, envío ni consumo del enlace. |
@@ -232,9 +265,10 @@ Todas las entregas están `NOT_AUTHORIZED / NOT_STARTED`. Las ramas futuras se c
 
 ### E5 — Provisioning mínimo de identity y coordinación
 
-- Dependencias: E4 aceptada.
-- Alcance: `PrepareAdministratorAccount` idempotente por `OnboardingId`, cuenta nueva pendiente sin credencial, resultados versionados, continuación de cuenta existente como intención y handlers `organization` con PII transitoria. Registro propietario de deduplicación antes de su migración.
-- Aceptación/pruebas: avanzar caso nuevo hasta `EMAIL_PENDING`, fallo parcial/reinicio recuperable, dos llamadas mismo onboarding y email concurrente sin duplicar cuenta, cuenta existente sin nuevo vínculo/empresa automática, cada contexto confirma su transacción y el consumidor no reabre efectos al repetir eventos.
+- Dependencias: E4 aceptada y concreción expresa de ADR-003/007 para la rama de cuenta pendiente sin credencial antes de implementarla; la matriz propuesta no sustituye esa decisión.
+- Alcance: `PrepareAdministratorAccount` idempotente por `OnboardingId`, tres resultados de la matriz de cuentas, intenciones de alta inicial/recuperación pendiente/continuación activa y handlers `organization` con PII transitoria. Registro propietario de deduplicación antes de su migración.
+- Aceptación/pruebas: cuenta nueva → `NEW_ACCOUNT_PREPARED`, una cuenta `PENDING_EMAIL` sin credencial y caso nuevo hasta `EMAIL_PENDING`; cuenta pendiente sin credencial y otro onboarding → `PENDING_ACCOUNT_RECOVERY_REQUIRED`, misma cuenta, sin pedir contraseña/login ni crear empresa/vínculo; cuenta activa → `ACCOUNT_CONTINUATION_REQUIRED`, sin alterar credencial ni vincular. Con dobles, verificar que cada resultado deja la intención correcta para la ceremonia futura; reemitir/consumir enlaces o crear contraseña no forma parte de E5.
+- Pruebas adicionales: retry del mismo onboarding reproduce resultado/IDs originales aunque la cuenta ya exista o haya cambiado de estado; onboardings distintos concurrentes con el mismo email crean a lo sumo una cuenta y no dos tenants por coincidencia; fallo parcial/reinicio/evento duplicado conserva intención y transacciones separadas. Mantener las pruebas de integración PostgreSQL del provisioning y su deduplicación; los dobles solo sustituyen las ceremonias futuras excluidas. Un doble de revalidación de la frontera futura que informa activación concurrente exige continuación autenticada, sin sobrescribir credencial ni reclasificar el resultado durable de un retry del mismo onboarding. La especificación de la frontera H04 exige pruebas futuras de enlace expirado/usado, doble consumo y cuenta ya activada, sin ejecutarlas ni acreditar H04 en E5.
 - Excluye: autenticación/reautenticación efectiva, activación, contraseña, JWS, envío de enlace y endpoints de H04/H05. No se simula aceptación de esas historias con un fake en producción.
 
 ### E6 — Idempotencia anónima durable
@@ -253,9 +287,10 @@ Todas las entregas están `NOT_AUTHORIZED / NOT_STARTED`. Las ramas futuras se c
 
 ### E7B — Entrada propia y extensión del rate limiter
 
-- Dependencias: E7A aceptada; entrada de sección 6 aprobada por sus owners y materialización autorizada.
-- Alcance: selección por operación, sujeto email HMAC separado, etapas IP/dirección, TTL, rotación y métricas detrás de puertos existentes.
+- Dependencias: E7A aceptada; entrada de sección 6 y separación de versiones/continuidad aprobadas por sus owners y materialización autorizada.
+- Alcance: selección por operación, distinción entre versión documental y versión efectiva por operación según sección 6, continuidad de buckets H02, sujeto email HMAC separado, etapas IP/dirección, TTL, rotación y métricas detrás de puertos existentes.
 - Aceptación/pruebas: límites/ventanas/Retry-After, concurrencia PostgreSQL, rotación, caída, limpieza, spoof de cabeceras y ausencia de PII; regresión de loader y endpoint H02 con su configuración aprobada. Evidencia de la nueva entrada para revisión de Seguridad + Operaciones.
+- Prueba obligatoria de continuidad, PostgreSQL 16 y tiempo controlado: **cuota H02 agotada → activar ampliación H03 → H02 continúa rechazando con `429 rate_limited` hasta recuperar su ventana**. Ejecutar separadamente para `burst` (15 admitidas, 16.ª rechazada en 10 s) y `sustained` (60 admitidas repartidas sin agotar burst, 61.ª rechazada en 60 s). Activar dentro de la ventana agotada, acreditar mismo sujeto, `policy_version=1`, filas/contadores, `window_started_at` y `expires_at` sin cambios por la activación; `Retry-After` refleja el tiempo restante original, no una ventana nueva. Al vencer la ventana limitante, admitir solo si las demás reglas permiten. Incluir admisión concurrente desde loaders v1/v2 y rollback al documento v1 sin cuota nueva; H03 no consume ni altera buckets H02. Estas pruebas son requisitos futuros, no resultados ejecutados por esta corrección documental.
 - Excluye: modificar límites de H02, activar candidatos no aprobados, bypass, nuevos servicios, exposición pública y AWS.
 
 ### E7C — Ruta de correo y recheck durable
@@ -293,7 +328,7 @@ En la matriz, `E7` agrupa E7A/E7B/E7C; son tres entregas revisables con autoriza
 | Requisito del contrato de H03 | Entregas/evidencia mínima |
 |---|---|
 | Dominio puro, país/locale/jurisdicción y `SELF_DECLARED` | E1/E2; unitarias sin Spring y ArchUnit; configuración alternativa sin modificar aggregate. |
-| Cuenta sin contraseña y sin enlace por coincidencia | E2/E5/E8; nueva/existente, inyección y fronteras de transacción; H04 permanece separada. |
+| Cuenta nueva, pendiente sin credencial y activa | E2/E5/E8; matriz de tres resultados internos, retry mismo onboarding vs onboardings distintos concurrentes, sin login con contraseña inexistente, sin nueva empresa/vínculo por coincidencia y sin cambio de credencial. Inyección de campos y fronteras de transacción conservadas. Concreción ADR-003/007 pendiente antes de implementar recuperación. H04 prueba después las ceremonias efectivas, expiración/doble consumo/activación concurrente; E5 usa dobles para esas ceremonias y mantiene pruebas de integración de provisioning/deduplicación. |
 | Política exacta y hosting Google/Microsoft permitido | E1/E7; case/IDNA, substring y sufijos educativos no implícitos; carga ausente fail-closed y ensayo actualización/rollback. |
 | Ruta principal y recuperación no bloqueante | E2/E7/E10; MX/ruta implícita, NO_MAIL_ROUTE, timeout/SERVFAIL/resolver caído, agotamiento/backoff; resolver determinista. |
 | Proceso durable y mensajes mínimos | E4/E5/E10; replay, lease, dos workers, commit sin relay, caída del consumidor y recuperación; sin PII/token. |
@@ -301,6 +336,7 @@ En la matriz, `E7` agrupa E7A/E7B/E7C; son tres entregas revisables con autoriza
 | Privacidad autoritativa y guard temprano | E2/E3/E7/E8/E9; ausente/expirado/otra finalidad/manipulado/sustituido; cero PII/idempotencia derivada del body antes de validar. |
 | Idempotencia y no enumeración | E6/E8/E10; claim, PROCESSING, terminal, fingerprint distinto, TTL, crash; 202 sin datos de cuenta/empresa. |
 | Seguridad tenant y abuso | E3/E7/E8/E10; A no lee/escribe/lista B, tenant del body no autoriza, límites y Retry-After, proxy spoof, ausencia de PII. No se abre un endpoint empresarial extra para probarlo. |
+| Ampliación del limitador sin reiniciar cuotas H02 | E7B; documento v1 → v2 con política efectiva H02 `1` y misma clave/buckets. Agotar burst y sustained por separado → activar ampliación H03 → mantener `429`/Retry-After hasta la ventana original. PostgreSQL concurrente entre loaders v1/v2, rollback sin reset y separación de buckets H03; sin ejecutar estas pruebas funcionales en la PR documental. |
 | Cliente/API/i18n | E8/E9/E10; contrato design-first, generación reproducible, ES/EN y errores no técnicos, accesibilidad y journey. |
 | Retención y operación local | E3/E4/E6/E7/E10; expiración con reloj, limpieza/deduplicación compatible con replay, rollback de transacción, métricas y runbook. |
 
@@ -330,4 +366,4 @@ Esta entrega no cambia código, OpenAPI, cliente generado, políticas ejecutable
 
 Quedan fuera: H04–H07, contraseña/verificación efectiva, roles editables, claim empresarial automático, verificación jurídica, ofertas, candidaturas, prevalidación, formalización, prácticas, documentos de negocio, universidad como tenant y otros incrementos. No se incorporan reglas jurídicas ni se publica una política por aceptar este plan.
 
-Para continuar, el PO debe pronunciarse sobre el plan y las decisiones explícitas B0, P0 local/real, rate limiting y entrega del aviso; los owners aportan las aprobaciones que correspondan. Después hace falta autorización separada para una primera entrega concreta. Mientras tanto H03 permanece **sin iniciar**, el plan `PROPOSED_FOR_APPROVAL`, B0/P0/E0 `PENDING`, S0 cerrado solo para H02 y CL0 `PENDING`.
+Para continuar, el PO debe pronunciarse sobre el plan y las decisiones explícitas B0, P0 local/real, rate limiting con continuidad por operación, entrega del aviso y concreción ADR-003/007 para cuenta pendiente sin credencial; los owners aportan las aprobaciones que correspondan. Después hace falta autorización separada para una primera entrega concreta. Mientras tanto H03 permanece **sin iniciar**, el plan `PROPOSED_FOR_APPROVAL`, B0/P0/E0 `PENDING`, S0 cerrado solo para H02 y CL0 `PENDING`.
