@@ -1,0 +1,3 @@
+# False positive: public ICU method IDNA.getUTS46Instance in ADR-001.
+# Historical finding confirmed by CI run 41502026084; no credential.
+b688851003cfd14ebf2f157693ae19f22744acc6:docs/adr/ADR-001-monolito-modular.md:generic-api-key:142

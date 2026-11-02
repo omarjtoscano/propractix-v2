@@ -61,13 +61,17 @@ La autorización de aquella aceptación se limitaba a documentación y cuerpo de
 PR #19 en la misma rama, con commit y push, manteniéndola Draft y sin merge.
 La confirmación posterior del PO registra su integración mediante `f387f260acc0b32ed8a85373cf12d45476371ebe`.
 El PO aprueba posteriormente el [plan H03](../plans/i1-h03-execution-plan.md),
-`APPROVED`, el 2026-11-02 sobre `27b404c56b0d918e69c20b0319c6cc29daa92b89`. Solo autoriza registrar
-esa aprobación mediante documentación y cuerpo de PR #21, con commit y push en
-`docs/i1-h03-execution-plan`; PR Draft y sin merge. H03 sigue sin iniciar, E1 y
-otras entregas no autorizadas. B0, P0, la entrada S0 de H03 y la concreción de
-ADR-003/007 conservan su estado pendiente. Sin código, migraciones, políticas
-publicadas, cierre de gates ni AWS. Los checks de esta nueva entrega documental los
-verifica e informa el PO, sin espera ni supervisión del agente.
+`APPROVED`, el 2026-11-02 sobre `27b404c56b0d918e69c20b0319c6cc29daa92b89`.
+El PO confirma después su integración mediante PR #21 / `b398694bf1a68b65c674efa579b9c468a207c464`;
+quedan sustituidas las restricciones históricas de su rama y PR Draft/sin merge.
+El PO aprueba después las [decisiones de entrada local E1](../plans/i1-h03-execution-plan.md#31-decisiones-de-entrada-de-e1--decisiones-locales-aprobadas)
+el 2026-11-02 sobre `b097d0aced1764e88149fa618e598d8891c6b6cf`; solo autoriza registrar esa aprobación,
+actualizar ADR-001 (revisión 5, ICU4J 78.3 fuera del dominio), referencias y cuerpo
+de la misma Draft PR #22, con validación, commit/push en la misma rama documental.
+No autoriza dependencia en `pom.xml` ni implementación: H03/E1 sin iniciar ni autorizar.
+B0/P0/E0/entrada S0 de H03 pendientes; cuotas H02 intactas, concreción ADR-003/007
+pendiente antes de E5, CL0 `PENDING`. Sin código, migraciones, políticas publicadas,
+cambios funcionales H02, merge ni AWS. Checks a cargo del PO sin espera/supervisión del agente.
 
 ## Alcance cloud y funcional
 
