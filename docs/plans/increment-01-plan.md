@@ -6,6 +6,21 @@
 - Resultado: empresa y estudiante con cuentas verificadas, catálogo universitario consultable, declaración académica trazable y aislamiento tenant demostrado.
 - Reemplaza: revisión 6 aprobada en `docs/reviews/resolucion-cloud-staging-revision-6.md`.
 
+**Actualización documental de autorización (2026-11-02):** el PO confirma H02
+integrada y `DONE / ACCEPTED` localmente mediante `f387f260acc0b32ed8a85373cf12d45476371ebe` (PR #19),
+conservando la aceptación funcional sobre `9c3c6cdb3ad44fb4b289208f073a1f76694cbf84`
+y [su evidencia](../reviews/aceptacion-i1-h02.md). Posteriormente, el PO aprueba el
+[plan de ejecución de H03](i1-h03-execution-plan.md), `APPROVED`, sobre
+`27b404c56b0d918e69c20b0319c6cc29daa92b89`. Solo autoriza registrar esa aprobación
+mediante documentación y cuerpo de PR #21, con commit/push en la misma rama
+`docs/i1-h03-execution-plan`; PR Draft y sin merge. B0, P0, la entrada S0 de H03
+y la concreción de ADR-003/007 conservan su estado pendiente. H03 permanece sin
+iniciar; E1 y otras entregas no autorizadas. Sin código, migraciones, políticas
+publicadas, cierre de gates ni AWS. CL0 permanece `PENDING`. Checks remotos a cargo
+del PO, sin espera ni supervisión del agente. Esta actualización no altera la
+revisión 7 aprobada ni las puertas; sustituye únicamente las restricciones
+históricas de rama/PR Draft de E9 que se conservan en los registros siguientes.
+
 ## 1. Decisiones de producto incorporadas
 
 1. La empresa es el tenant principal y la universidad no necesita cuenta.
@@ -247,6 +262,8 @@ La matriz identifica adopción documental. La conformidad de cada ADR se demuest
 
 ### I1-H02 — Catálogo institucional consultable
 
+**Integración confirmada por el PO (2026-11-02):** `f387f260acc0b32ed8a85373cf12d45476371ebe` (PR #19); aceptación local `DONE / ACCEPTED` conservada. Los párrafos siguientes registran las condiciones históricas de cada entrega. La autorización vigente es solo el plan documental de H03 indicado al inicio.
+
 **Estado:** `DONE / ACCEPTED` localmente desde el 2026-11-02 sobre `9c3c6cdb3ad44fb4b289208f073a1f76694cbf84`. E1, E2, E3 y `E4 — Parser e importación administrativa` están `ACCEPTED`. La integración de E4 fue confirmada mediante `9d128cc3df8c2a90177b1f18cea47708d8abfc03` el 2026-10-22; E5A está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `6cc21e6c034b9c32db3f22ebb8b977f4250614cd`, y E5B está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `53d15ffb779d2b8e2a6680cba0388bddd3cebd30`; E5C está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-23 sobre `8a0a46a293b9b2d9482e92c05161f8b7b57b04e2`; E6 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-25 sobre `de269313888d912807536b5805e9e2c054955347`; E7 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-10-26 sobre `d1db0ddf925a441ba8370d9a10b1f6cac5ffeff2`; E8 está `ACCEPTED` por aprobación expresa del Product Owner el 2026-11-01 sobre `fc9660e997df990d08677f6a55d91d57f92ef9c7`; E9 está `ACCEPTED` e I1-H02 `DONE / ACCEPTED` por aprobación expresa del PO el 2026-11-02 sobre `9c3c6cdb3ad44fb4b289208f073a1f76694cbf84`; solo actualización documental en la misma rama/PR #19, sin merge, H03 ni AWS. H01 está `DONE / ACCEPTED`, y `F0_CLIENT_BASELINE`, `C0_CATALOG` y `S0_PUBLIC_ENDPOINTS` están `CLOSED`.
 
 **Aceptación de E1:** el Product Owner aprobó E1 el 2026-10-17 sobre el commit funcional `ff7567a3bed1cd4465925f983f58fcaf09c7c1f1`. [CI #22](https://github.com/omarjtoscano/propractix-v2/actions/runs/39019138180) y [Build OCI release candidate #5](https://github.com/omarjtoscano/propractix-v2/actions/runs/39019138091) terminaron correctamente; `dependency-and-filesystem-scan`, incluido Trivy, está en verde. Esta aceptación parcial no cierra I1-H02 ni modifica `CL0_CLOUD_STAGING`.
@@ -438,6 +455,8 @@ continuación. Véase la [evidencia E9](../reviews/i1-h02-first-snapshot-evidenc
 **Pruebas:** UUID interno y referencia externa, esquema CSV mínimo, metadatos y hashes diferenciados, omisión de filas agregadas o ambiguas, entrada manual separada, publicación atómica, conservación de la última versión válida, persistencia, paginación, OpenAPI, UI ES/EN, accesibilidad, paridad i18n, consulta sin crear usuarios y `429` con `Retry-After` según S0.
 
 ### I1-H03 — Registrar empresa y primer administrador
+
+**Estado de ejecución:** `NOT_STARTED / NOT_AUTHORIZED`. El [plan de ejecución](i1-h03-execution-plan.md) está `APPROVED` por aprobación expresa del PO el 2026-11-02 sobre `27b404c56b0d918e69c20b0319c6cc29daa92b89`. Solo se autoriza registrar documentalmente esa aprobación en la misma rama/PR #21, con commit y push; E1 y otras entregas no están autorizadas. El contrato aprobado que sigue permanece intacto; B0, P0, la entrada propia S0 de H03 y la concreción de ADR-003/007 conservan su estado pendiente. No se cierra ningún gate.
 
 **Actor y valor:** representante empresarial; inicia adopción sin intervención universitaria.
 
@@ -673,6 +692,15 @@ git status --short
 - Catálogo canónico de titulaciones: fuera del Incremento 1.
 
 ## 11. Autorización de ejecución
+
+Vigente tras la confirmación del PO del 2026-11-02: H02 integrada mediante
+`f387f260acc0b32ed8a85373cf12d45476371ebe`; [plan H03](i1-h03-execution-plan.md)
+`APPROVED` sobre `27b404c56b0d918e69c20b0319c6cc29daa92b89`. Solo registrar esa aprobación
+mediante documentación y cuerpo de PR #21, commit y push en la misma rama;
+PR Draft y sin merge. H03 permanece sin iniciar, sin autorizar E1 u otras
+entregas. B0/P0/E0, entrada S0 de H03 y concreción ADR-003/007 siguen pendientes;
+esta aprobación no cierra gates. CL0 sigue `PENDING`, sin AWS. Los puntos siguientes conservan la
+secuencia histórica y sus limitaciones de ejecución funcional.
 
 La revisión 7 conserva resueltos BF-01 a BF-04, acepta ADR-009 revisión 3, ADR-011 revisión 1 y ADR-012 revisión 1, y mantiene `D0_DECISIONS` cerrado. Tras la aceptación documental de H01:
 
