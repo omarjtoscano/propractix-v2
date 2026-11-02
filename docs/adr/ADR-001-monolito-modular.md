@@ -1,9 +1,10 @@
 # ADR-001 — Monolito modular y estrategia de módulos
 
-- Estado: Aceptado — revisión 4
-- Fecha: 2026-09-12
+- Estado: Aceptado — revisión 5
+- Fecha: 2026-11-02
 - Decisores: Producto y Arquitectura
-- Reemplaza: revisión 3 del ADR-001
+- Reemplaza: revisión 4 del ADR-001; conserva sus decisiones y la excepción F0 del generador.
+- Actualización documental autorizada expresamente por el Product Owner el 2026-11-02, al aprobar las decisiones de entrada local E1 sobre `b097d0aced1764e88149fa618e598d8891c6b6cf`. No autoriza incorporar dependencias ni implementar E1.
 
 ## Contexto
 
@@ -43,6 +44,7 @@ com.propractix.platform.idempotency
 com.propractix.platform.audit
 com.propractix.platform.observability
 com.propractix.platform.ratelimit
+com.propractix.platform.emailnormalization
 ```
 
 Los contextos de negocio no importarán implementaciones de `platform`. Definirán puertos en su capa de aplicación y la configuración conectará los adaptadores técnicos.
@@ -130,6 +132,24 @@ Spring Modulith no será obligatorio durante el inicio. Requerirá un ADR poster
 | Tests cliente | Vitest 5.0.0, Testing Library React 16.3.3, user-event 14.6.7 y Playwright 1.63.0 |
 
 Estas versiones constituyen `F0_CLIENT_BASELINE`. El `package-lock.json` fijará el árbol instalado y CI utilizará `npm ci`. Una actualización mayor, una nueva librería estructural o un cambio de generador OpenAPI exige ADR o actualización explícita de uno existente; parches y menores se incorporan mediante pull request con pruebas, revisión del cliente generado y evidencia de compatibilidad.
+
+## Normalización técnica de correo e IDNA
+
+La aprobación expresa del PO del 2026-11-02 sobre `b097d0aced1764e88149fa618e598d8891c6b6cf` y su autorización para actualizar este ADR fijan documentalmente la dependencia y las fronteras siguientes. La [sección 3.1 del plan H03](../plans/i1-h03-execution-plan.md#31-decisiones-de-entrada-de-e1--decisiones-locales-aprobadas) conserva el contrato y los vectores aprobados. Esta decisión no modifica la baseline F0 ni la regla de dominio Java puro de [ADR-002](ADR-002-arquitectura-hexagonal-paquetes.md).
+
+- Dependencia fijada para su futura incorporación autorizada: `com.ibm.icu:icu4j:78.3`, sin rango ni actualización automática. [ICU 78](https://unicode-org.github.io/icu/download/78.html) documenta Unicode 17 y soporte de Java 11–25, compatible con Java 21. No se añade todavía a `pom.xml` ni se instala.
+- Perfil fijado: [UTS #46 estable, revisión 35 / Unicode 17.0.0](https://www.unicode.org/reports/tr46/tr46-35.html), mapping → NFC → validación → ToASCII/Punycode **no transicional**. `Transitional_Processing=false`, `UseSTD3ASCIIRules=true`, `CheckHyphens=true`, `CheckBidi=true`, `CheckJoiners=true`, `VerifyDnsLength=true`, `IgnoreInvalidPunycode=false`, con `CONTEXTO` adicional obligatorio.
+- API fijada: `IDNA.getUTS46Instance` y `nameToASCII`, con `USE_STD3_RULES | CHECK_BIDI | CHECK_CONTEXTJ | CHECK_CONTEXTO | NONTRANSITIONAL_TO_ASCII | NONTRANSITIONAL_TO_UNICODE`, máscara `0x7E`, sin otros flags. La [API del tag 78.3](https://github.com/unicode-org/icu/blob/release-78.3/icu4j/main/core/src/main/java/com/ibm/icu/text/IDNA.java) es la referencia de versión. Cualquier `Info.hasErrors()` rechaza, aunque exista salida parcial; sin fallback a `java.net.IDN`, reparación de A-labels ni algoritmo distinto por contexto.
+- Salida: dominio ASCII en minúsculas, límites y ausencia de etiqueta vacía/punto final comprobados después del mapping; round-trip `nameToASCII(nameToUnicode(canon)) == canon`, sin errores y con `Info` independiente por operación. El local-part conserva case, puntos y `+`, sin NFC/IDNA sobre él. Unicode compuesto/descompuesto y A-label válida de `bücher` convergen; `faß`/`fass` siguen distintos y las A-labels inválidas se rechazan, según los vectores aprobados del plan.
+
+Fronteras arquitectónicas obligatorias para la implementación futura:
+
+1. `platform.emailnormalization` posee la capacidad técnica reutilizable, sin reglas de admisión empresarial ni dependencias de contextos de negocio. No es un bounded context y no contiene aggregates, políticas de proveedores o información de identidad.
+2. Los consumidores declaran puertos de salida en aplicación; `configuration` conecta esos puertos con la capacidad técnica. Dominio y aplicación no importan implementaciones de `platform` ni tipos ICU. La matriz de contratos de negocio entre contextos permanece intacta; no se permite importar dominios internos de otro contexto para normalizar correo.
+3. ICU se encapsula fuera de `domain`, con tipos Java en las fronteras y resultado canónico validado. El dominio conserva value objects ASCII e invariantes en Java puro, sin importar ICU, Spring, JPA, transporte ni configuración. La política empresarial se suministra mediante valores tipados; el normalizador no la carga ni decide qué proveedor admitir.
+4. Admisión, identidad y fingerprint de dirección consumen el mismo contrato versionado y vectores: dominio ASCII exacto para admisión, dirección canónica completa para identidad y sus bytes UTF-8 para HMAC. Claves/separadores y fingerprints permanecen separados por finalidad. Ningún cambio reinicia cuotas H02; cambiar perfil/opciones/datos Unicode requiere nueva decisión y transición explícita de unicidad/fingerprints.
+
+Conformidad futura: resolución efectiva de ICU4J 78.3, vectores aprobados y errores/round-trip, igualdad de canonicalización entre consumidores y ArchUnit sin importaciones ICU en dominio/aplicación. No se acredita ahora su ejecución. La aceptación documental no inicia H03/E1, no cierra B0/P0/E0 ni la entrada S0 de H03, no publica políticas ni habilita el endpoint; CL0 sigue `PENDING`, sin AWS. La incorporación al build, los adapters y cada entrega requieren autorización posterior separada.
 
 ## Excepción de compatibilidad F0 — generador OpenAPI (2026-10-25)
 

@@ -7,21 +7,20 @@
 - Reemplaza: revisión 6 aprobada en `docs/reviews/resolucion-cloud-staging-revision-6.md`.
 
 **Actualización documental de autorización (2026-11-02):** H02 integrada y
-`DONE / ACCEPTED` localmente mediante `f387f260acc0b32ed8a85373cf12d45476371ebe`
-(PR #19), conservando la aceptación funcional sobre `9c3c6cdb3ad44fb4b289208f073a1f76694cbf84`
-y [su evidencia](../reviews/aceptacion-i1-h02.md). El [plan H03](i1-h03-execution-plan.md)
-está `APPROVED` sobre `27b404c56b0d918e69c20b0319c6cc29daa92b89`; el PO confirma
-su integración mediante PR #21 / `b398694bf1a68b65c674efa579b9c468a207c464`. Quedan sustituidas
-sus restricciones históricas de Draft/sin merge y rama. Solo se autoriza preparar
-las [decisiones pendientes de entrada E1](i1-h03-execution-plan.md#31-decisiones-de-entrada-de-e1--propuestas-pendientes-de-aprobación)
-en el mismo plan y sincronizar referencias, con rama documental nueva,
-validación de enlaces/diff, commit/push y nueva Draft PR hacia el incremento.
-Propuestas sin aprobar; H03/E1 sin iniciar ni autorizar. B0/P0 y entrada S0 de H03
-pendientes; concreción ADR-003/007 pendiente antes de E5, sin ampliar recuperación
-de cuentas. Sin código, migraciones, políticas publicadas, cambios funcionales H02,
-cierre de gates ni AWS. CL0 `PENDING`. Checks remotos a cargo del PO sin espera ni
-supervisión del agente. No se altera la revisión 7 aprobada ni las puertas;
-las condiciones históricas de E9 se conservan en los registros siguientes.
+`DONE / ACCEPTED` mediante `f387f260acc0b32ed8a85373cf12d45476371ebe` (PR #19), con
+aceptación funcional sobre `9c3c6cdb3ad44fb4b289208f073a1f76694cbf84` y [evidencia conservada](../reviews/aceptacion-i1-h02.md).
+El [plan H03](i1-h03-execution-plan.md) está `APPROVED` sobre `27b404c56b0d918e69c20b0319c6cc29daa92b89`
+e integrado por PR #21 / `b398694bf1a68b65c674efa579b9c468a207c464`; sus restricciones
+históricas de Draft/sin merge quedan sustituidas. El PO aprueba las [decisiones de entrada local E1](i1-h03-execution-plan.md#31-decisiones-de-entrada-de-e1--decisiones-locales-aprobadas)
+sobre `b097d0aced1764e88149fa618e598d8891c6b6cf`: contrato de correo/IDNA, política tipada, `P7D` para pruebas E1,
+condiciones sintéticas y validación local S0 sin habilitar H03 ni alterar cuotas H02.
+Solo registrar aprobación, actualizar [ADR-001, revisión 5](../adr/ADR-001-monolito-modular.md#normalización-técnica-de-correo-e-idna),
+referencias y cuerpo de la misma Draft PR #22, validar enlaces/diff, commit/push.
+Sin dependencia en `pom.xml`, código ni implementación; H03/E1 `NOT_STARTED / NOT_AUTHORIZED`.
+B0/P0/E0/entrada S0 de H03 siguen pendientes; concreción ADR-003/007 pendiente antes de E5,
+CL0 `PENDING`. Sin políticas publicadas, cambios funcionales H02, merge ni AWS.
+Checks a cargo del PO sin espera/supervisión del agente. Se conserva la revisión 7 del plan;
+las condiciones históricas de E9 permanecen en los registros siguientes.
 
 ## 1. Decisiones de producto incorporadas
 
@@ -458,7 +457,7 @@ continuación. Véase la [evidencia E9](../reviews/i1-h02-first-snapshot-evidenc
 
 ### I1-H03 — Registrar empresa y primer administrador
 
-**Estado de ejecución:** `NOT_STARTED / NOT_AUTHORIZED`. El [plan de ejecución](i1-h03-execution-plan.md) está `APPROVED` sobre `27b404c56b0d918e69c20b0319c6cc29daa92b89`, integrado mediante PR #21 / `b398694bf1a68b65c674efa579b9c468a207c464` según confirmación del PO. Solo se autoriza preparar las [decisiones documentales pendientes de E1](i1-h03-execution-plan.md#31-decisiones-de-entrada-de-e1--propuestas-pendientes-de-aprobación), sin aprobarlas ni iniciar H03/E1. El contrato aprobado que sigue permanece intacto; B0/P0/entrada S0 de H03 y concreción ADR-003/007 antes de E5 siguen pendientes. No se cierra ningún gate.
+**Estado de ejecución:** `NOT_STARTED / NOT_AUTHORIZED`. El [plan de ejecución](i1-h03-execution-plan.md) está `APPROVED` sobre `27b404c56b0d918e69c20b0319c6cc29daa92b89`, integrado mediante PR #21 / `b398694bf1a68b65c674efa579b9c468a207c464`. El PO aprueba las [decisiones de entrada local E1](i1-h03-execution-plan.md#31-decisiones-de-entrada-de-e1--decisiones-locales-aprobadas) sobre `b097d0aced1764e88149fa618e598d8891c6b6cf`, pero solo autoriza registrar su aprobación y actualizar ADR-001/referencias/cuerpo de la misma PR #22. No autoriza implementación ni dependencia en `pom.xml`; el contrato aprobado que sigue se conserva intacto. B0/P0/E0/entrada S0 de H03 siguen pendientes, concreción ADR-003/007 pendiente antes de E5; no se cierra ningún gate.
 
 **Actor y valor:** representante empresarial; inicia adopción sin intervención universitaria.
 
@@ -695,18 +694,17 @@ git status --short
 
 ## 11. Autorización de ejecución
 
-Vigente tras la confirmación del PO del 2026-11-02: H02 integrada mediante
-`f387f260acc0b32ed8a85373cf12d45476371ebe`; [plan H03](i1-h03-execution-plan.md)
-`APPROVED` sobre `27b404c56b0d918e69c20b0319c6cc29daa92b89` e integrado por PR #21 /
-`b398694bf1a68b65c674efa579b9c468a207c464`. Sus restricciones de rama y Draft/sin merge quedan
-sustituidas por la autorización exclusiva para preparar las decisiones documentales
-de entrada de E1 en el mismo plan y sincronizar referencias, con rama documental
-nueva, validación, commit, push y nueva Draft PR hacia el incremento. Propuestas
-sin aprobar, H03/E1 sin iniciar ni autorizar; B0/P0/E0 y entrada S0 de H03 pendientes.
-Concreción ADR-003/007 pendiente antes de E5, sin ampliar recuperación de cuentas.
-Sin código, migraciones, políticas publicadas, cambios funcionales H02, cierre de
-gates ni AWS; CL0 `PENDING`. Checks a cargo del PO sin espera/supervisión del agente.
-Los puntos siguientes conservan la secuencia histórica y sus limitaciones de ejecución funcional.
+Vigente tras la aprobación expresa del PO del 2026-11-02: [entrada local E1](i1-h03-execution-plan.md#31-decisiones-de-entrada-de-e1--decisiones-locales-aprobadas)
+`APPROVED` sobre `b097d0aced1764e88149fa618e598d8891c6b6cf`. Solo registrar aprobación, actualizar ADR-001
+(revisión 5, ICU4J 78.3, perfil/fronteras, dominio sin ICU), referencias y cuerpo de la
+misma Draft PR #22 en la misma rama, validar enlaces/diff, commit/push. No incorporar
+ICU4J a `pom.xml` ni implementar E1/posteriores; H03/E1 `NOT_STARTED / NOT_AUTHORIZED`.
+B0/P0/E0/entrada S0 de H03 pendientes, cuotas H02 intactas y CL0 `PENDING`.
+Concreción ADR-003/007 pendiente antes de E5. Sin código, políticas publicadas,
+cambios funcionales H02, merge ni AWS. Checks a cargo del PO sin espera/supervisión del agente.
+Se conservan H02 integrada por `f387f260acc0b32ed8a85373cf12d45476371ebe`, plan H03
+aprobado sobre `27b404c56b0d918e69c20b0319c6cc29daa92b89` e integrado por PR #21 /
+`b398694bf1a68b65c674efa579b9c468a207c464`. Los puntos siguientes conservan la secuencia histórica.
 
 La revisión 7 conserva resueltos BF-01 a BF-04, acepta ADR-009 revisión 3, ADR-011 revisión 1 y ADR-012 revisión 1, y mantiene `D0_DECISIONS` cerrado. Tras la aceptación documental de H01:
 
