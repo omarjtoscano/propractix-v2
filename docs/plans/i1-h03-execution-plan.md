@@ -1,11 +1,14 @@
 # Plan de ejecución — I1-H03 Registrar empresa y primer administrador
 
-- Estado del plan: `PROPOSED_FOR_APPROVAL`.
+- Estado del plan: `APPROVED`.
+- Aprobación expresa: Product Owner, 2026-11-02, en este chat.
+- Commit del plan aprobado: `27b404c56b0d918e69c20b0319c6cc29daa92b89`.
+- Alcance de la aprobación: el plan de ejecución; B0, P0, la entrada S0 de H03 y la concreción de ADR-003/007 permanecen pendientes. No cierra gates ni autoriza E1 u otras entregas.
 - Fecha: 2026-11-02.
 - Rama documental: `docs/i1-h03-execution-plan`.
 - Base: `increment/01-company-identity-catalog`, commit `f387f260acc0b32ed8a85373cf12d45476371ebe`.
 - H02: integrada mediante ese SHA y `DONE / ACCEPTED` localmente, confirmado expresamente por el Product Owner el 2026-11-02. Se conserva la [aceptación funcional y su evidencia](../reviews/aceptacion-i1-h02.md).
-- Autorización vigente: preparar este plan, registrar la integración, actualizar documentación, commit, push y Draft PR al incremento. **Implementación de H03 no autorizada**; ninguna entrega ha comenzado.
+- Autorización vigente: registrar documentalmente esta aprobación en la misma rama y PR #21, actualizar plan, AGENTS.md, índice, referencias y cuerpo de la PR, validar enlaces/diff, commit y push. **Implementación de H03 no autorizada**; E1 y las demás entregas siguen sin iniciar. PR Draft y sin merge, sin código, migraciones, políticas publicadas ni AWS; CL0 permanece `PENDING`.
 - Checks remotos de esta entrega: los verifica e informa el PO; el agente no los espera ni supervisa.
 
 ## 1. Fuentes y límites de la propuesta
@@ -81,7 +84,7 @@ La recuperación futura de una cuenta pendiente exige demostrar control del corr
 | `S0_PUBLIC_ENDPOINTS` | `CLOSED`, exclusivo H02 | Seguridad + Operaciones: aprobar entrada propia `submitCompanyOnboarding`, sujetos, ventanas, TTL, rotación y pruebas. La nueva entrada está **pendiente**, no autorizada por S0 cerrado. |
 | `E0_EMAIL` | `PENDING` | Correo real y entrega de verificación pertenecen a H04 y a su aprobación separada. |
 | `CL0_CLOUD_STAGING` | `PENDING`, sin cambios | Sin AWS, IaC, promoción, exposición pública ni cierre cloud. |
-| Este plan | `PROPOSED_FOR_APPROVAL` | PO: revisar alcance, secuencia y propuestas; aprobar el plan no equivale a iniciar entregas. |
+| Este plan | `APPROVED` | Aprobación expresa del PO el 2026-11-02 sobre `27b404c56b0d918e69c20b0319c6cc29daa92b89`. Las propuestas expresamente pendientes conservan su estado; no cierra gates ni autoriza E1 u otras entregas. |
 | Cuenta pendiente sin credencial | Propuesta pendiente de decisión | Producto + Seguridad + Arquitectura: aceptar expresamente la matriz y concretar ADR-003/007 antes de implementar su rama de E5; sin recuperación efectiva ni implementación H04 en esta PR. |
 | Inicio de cada entrega | `NOT_AUTHORIZED` | Orden posterior expresa del PO, sobre rama de incremento actualizada y con gates aplicables satisfechos; una entrega cada vez. |
 
@@ -366,4 +369,4 @@ Esta entrega no cambia código, OpenAPI, cliente generado, políticas ejecutable
 
 Quedan fuera: H04–H07, contraseña/verificación efectiva, roles editables, claim empresarial automático, verificación jurídica, ofertas, candidaturas, prevalidación, formalización, prácticas, documentos de negocio, universidad como tenant y otros incrementos. No se incorporan reglas jurídicas ni se publica una política por aceptar este plan.
 
-Para continuar, el PO debe pronunciarse sobre el plan y las decisiones explícitas B0, P0 local/real, rate limiting con continuidad por operación, entrega del aviso y concreción ADR-003/007 para cuenta pendiente sin credencial; los owners aportan las aprobaciones que correspondan. Después hace falta autorización separada para una primera entrega concreta. Mientras tanto H03 permanece **sin iniciar**, el plan `PROPOSED_FOR_APPROVAL`, B0/P0/E0 `PENDING`, S0 cerrado solo para H02 y CL0 `PENDING`.
+El plan está `APPROVED` por el PO el 2026-11-02 sobre `27b404c56b0d918e69c20b0319c6cc29daa92b89`. Las decisiones explícitas B0, P0 local/real, entrada S0 de H03 con continuidad por operación, entrega del aviso y concreción ADR-003/007 para cuenta pendiente sin credencial conservan su estado pendiente; los owners aportarán las aprobaciones que correspondan. Sigue siendo necesaria autorización separada para una primera entrega concreta. H03 permanece **sin iniciar**; E1 y las demás entregas `NOT_AUTHORIZED / NOT_STARTED`, B0/P0/E0 `PENDING`, S0 cerrado solo para H02 y CL0 `PENDING`. Solo se autoriza registrar esta aprobación mediante documentación y cuerpo de PR #21, con commit y push en la misma rama; PR Draft y sin merge, sin código, migraciones, políticas publicadas ni AWS. Los checks remotos los verifica e informa el PO sin espera ni supervisión del agente.

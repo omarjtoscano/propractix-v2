@@ -9,12 +9,14 @@
 **Actualización documental de autorización (2026-11-02):** el PO confirma H02
 integrada y `DONE / ACCEPTED` localmente mediante `f387f260acc0b32ed8a85373cf12d45476371ebe` (PR #19),
 conservando la aceptación funcional sobre `9c3c6cdb3ad44fb4b289208f073a1f76694cbf84`
-y [su evidencia](../reviews/aceptacion-i1-h02.md). Autoriza exclusivamente preparar
-el [plan de ejecución de H03](i1-h03-execution-plan.md), `PROPOSED_FOR_APPROVAL`,
-en `docs/i1-h03-execution-plan` desde incremento actualizado, con registro de
-integración, índice, enlaces/diff, commit, push y Draft PR al incremento.
-Implementación H03 no autorizada; sin código, migraciones, políticas publicadas,
-cierre de gates, merge ni AWS. CL0 permanece `PENDING`. Checks remotos a cargo
+y [su evidencia](../reviews/aceptacion-i1-h02.md). Posteriormente, el PO aprueba el
+[plan de ejecución de H03](i1-h03-execution-plan.md), `APPROVED`, sobre
+`27b404c56b0d918e69c20b0319c6cc29daa92b89`. Solo autoriza registrar esa aprobación
+mediante documentación y cuerpo de PR #21, con commit/push en la misma rama
+`docs/i1-h03-execution-plan`; PR Draft y sin merge. B0, P0, la entrada S0 de H03
+y la concreción de ADR-003/007 conservan su estado pendiente. H03 permanece sin
+iniciar; E1 y otras entregas no autorizadas. Sin código, migraciones, políticas
+publicadas, cierre de gates ni AWS. CL0 permanece `PENDING`. Checks remotos a cargo
 del PO, sin espera ni supervisión del agente. Esta actualización no altera la
 revisión 7 aprobada ni las puertas; sustituye únicamente las restricciones
 históricas de rama/PR Draft de E9 que se conservan en los registros siguientes.
@@ -454,7 +456,7 @@ continuación. Véase la [evidencia E9](../reviews/i1-h02-first-snapshot-evidenc
 
 ### I1-H03 — Registrar empresa y primer administrador
 
-**Estado de ejecución:** `NOT_STARTED / NOT_AUTHORIZED`. El PO autoriza exclusivamente preparar el [plan de ejecución](i1-h03-execution-plan.md), `PROPOSED_FOR_APPROVAL`, después de confirmar la integración de H02 el 2026-11-02. El contrato aprobado que sigue permanece intacto; B0/P0 y la entrada propia de rate limiting no se cierran ni aprueban con este documento.
+**Estado de ejecución:** `NOT_STARTED / NOT_AUTHORIZED`. El [plan de ejecución](i1-h03-execution-plan.md) está `APPROVED` por aprobación expresa del PO el 2026-11-02 sobre `27b404c56b0d918e69c20b0319c6cc29daa92b89`. Solo se autoriza registrar documentalmente esa aprobación en la misma rama/PR #21, con commit y push; E1 y otras entregas no están autorizadas. El contrato aprobado que sigue permanece intacto; B0, P0, la entrada propia S0 de H03 y la concreción de ADR-003/007 conservan su estado pendiente. No se cierra ningún gate.
 
 **Actor y valor:** representante empresarial; inicia adopción sin intervención universitaria.
 
@@ -692,11 +694,12 @@ git status --short
 ## 11. Autorización de ejecución
 
 Vigente tras la confirmación del PO del 2026-11-02: H02 integrada mediante
-`f387f260acc0b32ed8a85373cf12d45476371ebe`; solo preparación documental del
-[plan H03](i1-h03-execution-plan.md), en `PROPOSED_FOR_APPROVAL`, commit, push y
-Draft PR al incremento. H03 no está autorizada para implementación. B0/P0/E0
-siguen pendientes; la nueva entrada S0 de H03 necesita aprobación independiente;
-CL0 sigue `PENDING`, sin AWS ni merge. Los puntos siguientes conservan la
+`f387f260acc0b32ed8a85373cf12d45476371ebe`; [plan H03](i1-h03-execution-plan.md)
+`APPROVED` sobre `27b404c56b0d918e69c20b0319c6cc29daa92b89`. Solo registrar esa aprobación
+mediante documentación y cuerpo de PR #21, commit y push en la misma rama;
+PR Draft y sin merge. H03 permanece sin iniciar, sin autorizar E1 u otras
+entregas. B0/P0/E0, entrada S0 de H03 y concreción ADR-003/007 siguen pendientes;
+esta aprobación no cierra gates. CL0 sigue `PENDING`, sin AWS. Los puntos siguientes conservan la
 secuencia histórica y sus limitaciones de ejecución funcional.
 
 La revisión 7 conserva resueltos BF-01 a BF-04, acepta ADR-009 revisión 3, ADR-011 revisión 1 y ADR-012 revisión 1, y mantiene `D0_DECISIONS` cerrado. Tras la aceptación documental de H01:
