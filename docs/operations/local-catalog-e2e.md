@@ -1,7 +1,8 @@
 # E2E local del catálogo — I1-H02 E8
 
 E8 `ACCEPTED` por aprobación expresa del Product Owner el 2026-11-01 sobre
-`fc9660e997df990d08677f6a55d91d57f92ef9c7`; I1-H02 permanece `IN_PROGRESS`. E7 `ACCEPTED` e integrada mediante
+`fc9660e997df990d08677f6a55d91d57f92ef9c7`; I1-H02 está `DONE / ACCEPTED` localmente desde el 2026-11-02 sobre
+`9c3c6cdb3ad44fb4b289208f073a1f76694cbf84`, por aprobación expresa del PO. E7 `ACCEPTED` e integrada mediante
 `63034a15c6f3013ac6e826a3171234eef32b7740`, confirmado por el Product Owner
 el 2026-10-26. `S0_PUBLIC_ENDPOINTS` `CLOSED`; `CL0_CLOUD_STAGING` `PENDING`.
 Este procedimiento no usa AWS ni publica RUCT real.
@@ -111,3 +112,10 @@ para publicación exclusivamente local del RUCT aprobado, según su
 conserva sus fixtures sintéticas y no publica el snapshot real. La corrección
 Playwright de PR #20 está integrada en el incremento mediante
 `15eb4d03ae2e4a0834e5f2a808edb75b416eebc9` y se conserva en E9.
+
+La aceptación local posterior de E9/H02 del 2026-11-02 conserva los resultados
+E8 y E9 originales. El PO confirmó CI, Trivy y Build OCI verdes sobre el SHA
+funcional aprobado de E9. Solo se registra esa aceptación documentalmente;
+PR #19 Draft y sin merge, sin iniciar H03 ni AWS; CL0 permanece `PENDING`.
+Los checks del nuevo SHA documental los verifica el PO, sin espera ni supervisión
+del agente. Véase la [aceptación H02](../reviews/aceptacion-i1-h02.md).

@@ -1,7 +1,9 @@
 # I1-H02 E9 — Primer snapshot RUCT y evidencia de publicación local
 
-- Fecha: 2026-11-01. E9 e I1-H02: `IN_PROGRESS`.
-- Mapeo: `MAPPING_APPROVED_BY_PRODUCT_OWNER`; revisión independiente referida por el PO.
+- Validación original: 2026-11-01. Aceptación expresa del PO: 2026-11-02.
+- Estado vigente: E9 `ACCEPTED`; I1-H02 `DONE / ACCEPTED` localmente.
+- Commit funcional aprobado: [`9c3c6cdb3ad44fb4b289208f073a1f76694cbf84`](https://github.com/omarjtoscano/propractix-v2/commit/9c3c6cdb3ad44fb4b289208f073a1f76694cbf84).
+- Mapeo: `MAPPING_APPROVED_BY_PRODUCT_OWNER`; revisión técnica asistida de ChatGPT trazada abajo.
 - Publicación local: autorizada; resultados registrados abajo.
 - Rama: `feature/i1-h02-e9-ruct-first-snapshot`.
 - Base inicial: `3d339d1598c4a7deafedea3d4d9d78fc16c87088`.
@@ -22,28 +24,39 @@ publicar. El Product Owner aprueba después expresamente en este chat, el
 2026-11-01, el mapeo revisado en la PR #19 sobre el hash exacto
 `ad2a9ca6f05dfe35851dcc00f3cf568e034d64db5b63d4009a2029fe78633b04` y autoriza continuar E9 tras integrar la PR #20.
 
-Se registran por separado dos hechos:
+Se registran por separado la revisión técnica y la decisión de producto:
 
-1. **Revisión técnica independiente:** el PO refiere que se realizó en este
-   chat. El contexto accesible y la PR #19 no contienen identidad del revisor,
-   dictamen ni fecha/hora de esa revisión. Se conserva como revisión referida
-   por el PO (`REPORTED_BY_PRODUCT_OWNER`), sin inventar autor, hallazgos ni
-   atribuir independencia a las comprobaciones del agente. Ante la solicitud
-   de referencia, el PO indicó continuar con lo planteado.
-2. **Aprobación del PO:** expresa sobre el hash anterior, con fecha 2026-11-01,
-   y autorización de publicación exclusivamente local, verificaciones, aviso
-   neutral ES/EN, evidencia, commit y push en la misma rama/PR #19. La aprobación
-   del mapeo y la revisión técnica no se confunden con aceptación de E9/H02.
+1. **ChatGPT, revisión técnica asistida en este chat:** contraste del mapeo el
+   **2026-11-01** y revisión final **favorable el 2026-11-02**. Identidad, tipo y
+   fechas completados por declaración expresa del PO el 2026-11-02. La versión
+   original de la evidencia solo la registraba como referida por el PO; esta
+   actualización completa esa trazabilidad sin inventar una revisión humana
+   ni convertir las comprobaciones del agente en aprobación de producto.
+2. **Aprobaciones del PO:** aprobación del mapeo y autorización de continuación
+   local el 2026-11-01; aprobación expresa de **E9 y aceptación local de I1-H02
+   el 2026-11-02** sobre `9c3c6cdb3ad44fb4b289208f073a1f76694cbf84`. E9 queda
+   `ACCEPTED`; I1-H02 `DONE / ACCEPTED`. El PO confirma CI, Trivy y Build OCI
+   verdes sobre ese SHA; es su confirmación, no una consulta remota del agente.
 
 El manifest conserva ambos registros con procedencia separada. No se asignan
-instantes ni identidades no aportados. La publicación se realiza por la CLI
-existente contra PostgreSQL de loopback, sin inserts o updates directos del
-catálogo. Las consultas SQL de evidencia son de solo lectura. Las pruebas E2E
-sintéticas conservan su proyecto Compose desechable, separado del snapshot RUCT.
-C0 y S0 continúan `CLOSED`; E9 e I1-H02 `IN_PROGRESS` y CL0 `PENDING`.
-Sin aceptación de E9/H02, merge de PR #19, cambios en S0, migraciones, OpenAPI,
-generador ni AWS. CI, Trivy y Build OCI los verifica el PO sin espera ni
-supervisión del agente.
+horas de revisión no aportadas. Los resultados originales de validación del
+2026-11-01 y sus estados de entonces se conservan **byte a byte** en
+[i1-h02-e9-local-validation.json](i1-h02-e9-local-validation.json), correspondientes
+al commit funcional aprobado. Son evidencia histórica de aquella ejecución; la
+aceptación vigente posterior se registra aquí, en el manifest y en el
+[documento de aceptación H02](aceptacion-i1-h02.md).
+
+La publicación original se realizó por la CLI existente contra PostgreSQL de
+loopback, sin inserts/updates directos del catálogo; las consultas SQL de
+comprobación fueron de solo lectura. El E2E sintético utilizó su proyecto
+Compose desechable separado. No se repiten esas operaciones para este registro
+documental. C0/S0 siguen `CLOSED`; CL0 sigue `PENDING`.
+
+Solo se autoriza documentación y cuerpo de PR #19 en la misma rama, con commit
+y push. Código y bytes del CSV aprobado intactos; sin merge, inicio H03 ni AWS.
+La PR continúa Draft. CI, Trivy y Build OCI del nuevo SHA documental los verifica
+el PO, sin espera ni supervisión del agente; no condicionan retroactivamente
+la aceptación local expresa del SHA funcional.
 
 ## Adquisición oficial y procedencia
 
@@ -87,7 +100,7 @@ Artefactos preparados: [CSV canónico](../catalog/snapshots/ruct-2026-11-01/acad
 y [manifest](../catalog/snapshots/ruct-2026-11-01/manifest.yaml).
 El manifest registra las 23 columnas originales, las 21 descartadas, tipos de
 celda, transformación por columna, orden, serialización, recuentos, todas las
-omisiones y los campos pendientes de segunda revisión/publicación.
+omisiones, trazabilidad de revisión, publicación y aceptación local posterior.
 
 - `Código` (B) → `sourceRecordId`: las 109 celdas son texto en el XLS. Copia
   literal, sin conversión numérica ni padding; 90 de las 99 claves incluidas
@@ -203,9 +216,10 @@ por el procedimiento anterior, pues el dry run no recibe el XLS.
 
 El estado inicial `PENDING_REVIEW` del commit `b31eda0` queda sustituido por
 la aprobación expresa del mapeo del PO registrada arriba, que autoriza la
-publicación local. La revisión independiente se conserva como referida por el
-PO, con sus límites de atribución. Las comprobaciones reproducibles del agente
-se mantienen separadas y no se presentan como una segunda persona.
+publicación local. La trazabilidad completada el 2026-11-02 identifica la
+revisión técnica asistida de ChatGPT, separada de la aprobación PO. Las
+comprobaciones reproducibles y la muestra siguientes conservan su procedencia
+del 2026-11-01 y no se presentan como una revisión humana independiente.
 
 Muestra conservada para trazabilidad del contraste B/A del XLS, CSV y fuente RUCT:
 
@@ -373,8 +387,25 @@ Mailpit locales permanecen disponibles con el snapshot publicado; el E2E no
 lo sustituye porque usa otra base/proyecto desechable. El siguiente arranque
 normal del backend consultará la versión RUCT activa sin activar ningún import
 administrativo automáticamente.
-El [documento de aceptación H02](aceptacion-i1-h02.md) sigue siendo un borrador.
-La aprobación del mapeo y estas pruebas **no aceptan E9 ni cierran H02**.
-E9 e I1-H02 permanecen `IN_PROGRESS`; PR #19 Draft y sin merge; CL0 `PENDING`.
-CI, Trivy y Build OCI del nuevo SHA los verifica el PO sin espera ni supervisión
-del agente.
+El [documento de aceptación H02](aceptacion-i1-h02.md) registra la aprobación
+expresa del PO del 2026-11-02 sobre `9c3c6cdb3ad44fb4b289208f073a1f76694cbf84`:
+E9 `ACCEPTED`; I1-H02 `DONE / ACCEPTED` localmente. Las tablas anteriores
+conservan sus resultados originales y su fecha/procedencia de ejecución, sin
+simular validaciones nuevas. PR #19 Draft y sin merge; CL0 `PENDING`.
+
+## Verificación remota y actualización documental de aceptación
+
+| Elemento | Resultado y procedencia |
+|---|---|
+| CI sobre `9c3c6cdb3ad44fb4b289208f073a1f76694cbf84` | Verde, confirmado expresamente por el PO el 2026-11-02. |
+| Trivy sobre el mismo SHA | Verde, confirmado expresamente por el PO el 2026-11-02. |
+| Build OCI sobre el mismo SHA | Verde, confirmado expresamente por el PO el 2026-11-02. |
+| Checks del nuevo commit documental | Pendientes de verificación del PO; el agente no espera ni supervisa. |
+
+No se añaden IDs de ejecuciones ni enlaces a checks no aportados. No se consultan
+sus ejecuciones. El SHA documental se comunica en la entrega y cuerpo de PR;
+no sustituye el SHA funcional aprobado. Se revisan enlaces, coherencia YAML/JSON,
+alcance exclusivamente documental, hashes, diff y `git diff --check`: 97 enlaces
+locales y sus anclas correctos; YAML/JSON y conservación de resultados verificados. No se
+modifican código, CSV ni JSON original, ni se repiten suites o publicación para
+esta actualización documental. Sin merge, H03 ni AWS; CL0 sigue `PENDING`.

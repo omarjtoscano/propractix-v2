@@ -1,10 +1,12 @@
 # Aceptación de I1-H02 — Catálogo institucional consultable
 
 - Fecha de preparación: 2026-11-01.
-- Estado del documento: `DRAFT / PENDING_REVIEW_AND_ACCEPTANCE`.
-- Estado de I1-H02: `IN_PROGRESS`.
-- E1–E8: `ACCEPTED`; E9: `IN_PROGRESS`, continuación y publicación exclusivamente local autorizadas.
-- Aceptación expresa de H02: **pendiente**. Persona y fecha: **pendientes**.
+- Fecha de aceptación local: 2026-11-02.
+- Estado del documento: `ACCEPTED`, por aprobación expresa del Product Owner.
+- Estado de I1-H02: `DONE / ACCEPTED` localmente.
+- E1–E9: `ACCEPTED`.
+- Aceptación expresa de H02 y E9: **Product Owner, 2026-11-02**, en este chat.
+- Commit funcional aprobado: [`9c3c6cdb3ad44fb4b289208f073a1f76694cbf84`](https://github.com/omarjtoscano/propractix-v2/commit/9c3c6cdb3ad44fb4b289208f073a1f76694cbf84).
 - Rama candidata: `feature/i1-h02-e9-ruct-first-snapshot`.
 - SHA de esta entrega y Draft PR: se registran en la PR y el mensaje de entrega.
 
@@ -23,33 +25,41 @@
 | Hash del original temporal | `63e3d2bdff91bb780521a7a5354f6e2e1d7338b75f2d8300627032409024199a` |
 | Parser/dry run | `catalog_artifact_valid`, salida 0, 99 candidatos, sin publicación. |
 | Validación local de continuación | Backend 317 pruebas por suite, 0 fallos/errores, 1 benchmark omitido; cliente 96 pruebas Vitest y 1 comprobación Node; E2E 8/8; typecheck, lint, build, OpenAPI y migraciones correctos. |
-| Revisión técnica independiente | Referida por el PO en este chat; identidad/dictamen no aportados, sin atribución inventada ni confusión con comprobaciones del agente. |
+| Revisión técnica asistida | ChatGPT, en este chat: contraste del mapeo el 2026-11-01 y revisión final favorable el 2026-11-02, según trazabilidad completada por el PO. Separada de su aprobación. |
 | Aprobación del mapeo por el PO | Expresa el 2026-11-01 sobre el hash anterior; publicación local autorizada, separada de la revisión técnica y de la aceptación H02. |
 | Publicación local del RUCT real | `29ca8394-9878-44ba-82f2-2971534b1ead`, 2026-11-01T18:16:34.162754Z; 99 filas, única versión visible; hash y metadatos verificados. |
 | Búsqueda y paginación real | 99 UUID v4; páginas 20/20/20/20/19; tildes, nombres y metadatos verificados. |
 | Repetición y fallo | No-op completo; CSV sin LF final rechazado; estado de catálogo y cursores conservados. |
 | PR #20 | Integrada mediante `15eb4d03ae2e4a0834e5f2a808edb75b416eebc9`; corrección Playwright conservada al actualizar E9. |
 | Aviso neutral UI ES/EN | Implementado; atribución, fecha y alcance conservados; pruebas con metadatos sintéticos y RUCT. |
-| CI, Trivy y Build OCI de esta entrega | Pendientes de verificación del PO, sin espera ni supervisión por el agente. |
+| CI, Trivy y Build OCI del SHA funcional aprobado | Verdes sobre `9c3c6cdb3ad44fb4b289208f073a1f76694cbf84`, confirmados expresamente por el PO el 2026-11-02; sin consulta ni supervisión del agente. |
+| Checks del nuevo commit documental de aceptación | Pendientes de verificación del PO, sin espera ni supervisión del agente. |
 
 La [evidencia del primer snapshot](i1-h02-first-snapshot-evidence.md) contiene
 procedencia, transformación reproducible, recuentos, omisiones, validaciones y
 muestra trazable. El [manifest](../catalog/snapshots/ruct-2026-11-01/manifest.yaml)
-diferencia revisión técnica referida, aprobación expresa del PO y resultados de publicación local.
+diferencia revisión técnica asistida de ChatGPT, aprobación expresa del PO y resultados de publicación local.
 
-## Condiciones todavía pendientes para aceptar H02
+## Aceptación expresa y conservación de evidencia
 
-1. Registrar la verificación de CI, Trivy y Build OCI que comunique el PO para
-   el SHA final de esta continuación; el agente no espera ni supervisa esos checks.
-2. Recibir aceptación expresa del PO para E9 y H02 sobre un SHA concreto.
+El Product Owner aprueba expresamente E9 y la aceptación local de I1-H02 el
+2026-11-02 sobre `9c3c6cdb3ad44fb4b289208f073a1f76694cbf84`, confirmando CI, Trivy y
+Build OCI verdes sobre ese SHA. E9 queda `ACCEPTED` e I1-H02 `DONE / ACCEPTED`.
+La revisión asistida de ChatGPT es técnica; la decisión de aceptación es del PO.
+No se atribuyen horas, dictámenes adicionales ni verificaciones remotas del
+agente que no se hayan aportado.
 
-La preparación inicial de `b31eda0` no publicaba el snapshot; la continuación
-posterior autorizada aporta la publicación y las verificaciones descritas.
-La aprobación del mapeo, su revisión técnica referida y las pruebas locales se
-registran sin convertirlas en aceptación de E9/H02. El detalle de identidad y
-acta del revisor independiente no se inventa ni se sustituye por el agente.
-Este documento permanece `DRAFT / PENDING_REVIEW_AND_ACCEPTANCE`, E9 e I1-H02
-`IN_PROGRESS`; no habilita historias posteriores ni merge de PR #19.
+Los resultados anteriores corresponden a la ejecución original del 2026-11-01.
+El [JSON original](i1-h02-e9-local-validation.json) se conserva byte a byte,
+incluidos sus estados históricos `IN_PROGRESS` y revisión inicialmente referida
+por el PO; la aceptación y trazabilidad completadas después quedan en este
+documento, la evidencia y el manifest. El nuevo SHA documental no reemplaza al
+funcional aprobado ni simula una repetición de las suites.
+
+La única autorización vigente es actualizar documentación y cuerpo de la PR
+#19 en la misma rama, con commit y push. La PR permanece Draft y sin merge;
+H03 no está autorizada. CI, Trivy y Build OCI del nuevo SHA documental los
+verifica el PO, sin espera ni supervisión del agente.
 
 ## Alcance cloud y funcional
 
