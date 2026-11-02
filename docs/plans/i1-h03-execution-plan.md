@@ -5,10 +5,11 @@
 - Commit del plan aprobado: `27b404c56b0d918e69c20b0319c6cc29daa92b89`.
 - Alcance de la aprobación: el plan de ejecución; B0, P0, la entrada S0 de H03 y la concreción de ADR-003/007 permanecen pendientes. No cierra gates ni autoriza E1 u otras entregas.
 - Fecha: 2026-11-02.
-- Rama documental: `docs/i1-h03-execution-plan`.
-- Base: `increment/01-company-identity-catalog`, commit `f387f260acc0b32ed8a85373cf12d45476371ebe`.
-- H02: integrada mediante ese SHA y `DONE / ACCEPTED` localmente, confirmado expresamente por el Product Owner el 2026-11-02. Se conserva la [aceptación funcional y su evidencia](../reviews/aceptacion-i1-h02.md).
-- Autorización vigente: registrar documentalmente esta aprobación en la misma rama y PR #21, actualizar plan, AGENTS.md, índice, referencias y cuerpo de la PR, validar enlaces/diff, commit y push. **Implementación de H03 no autorizada**; E1 y las demás entregas siguen sin iniciar. PR Draft y sin merge, sin código, migraciones, políticas publicadas ni AWS; CL0 permanece `PENDING`.
+- Integración del plan aprobado: [PR #21](https://github.com/omarjtoscano/propractix-v2/pull/21), commit `b398694bf1a68b65c674efa579b9c468a207c464`, confirmada expresamente por el PO el 2026-11-02. Sus restricciones anteriores de Draft/sin merge y rama documental quedan sustituidas por esta autorización.
+- Rama documental actual: `docs/i1-h03-e1-entry-decisions`.
+- Base actual: `increment/01-company-identity-catalog`, commit `b398694bf1a68b65c674efa579b9c468a207c464`.
+- H02: integrada mediante `f387f260acc0b32ed8a85373cf12d45476371ebe` y `DONE / ACCEPTED` localmente, confirmado expresamente por el Product Owner el 2026-11-02. Se conserva la [aceptación funcional y su evidencia](../reviews/aceptacion-i1-h02.md).
+- Autorización vigente: preparar exclusivamente las decisiones documentales de entrada de E1 en este plan y sincronizar sus referencias; validar enlaces/diff, commit, push y nueva Draft PR hacia el incremento. **Implementación de H03 no autorizada**; H03 y E1 siguen sin iniciar. Las propuestas añadidas en la sección 3.1 están pendientes de aprobación; no se cierran gates. Sin código, migraciones, políticas publicadas, cambios funcionales H02 ni AWS; CL0 permanece `PENDING`.
 - Checks remotos de esta entrega: los verifica e informa el PO; el agente no los espera ni supervisa.
 
 ## 1. Fuentes y límites de la propuesta
@@ -91,6 +92,33 @@ La recuperación futura de una cuenta pendiente exige demostrar control del corr
 Antes de E1 se necesita autorización separada para H03 local y decisiones sobre B0 y la entrada propia de rate limiting. La revisión de B0 exige pruebas: se propone que el PO distinga aprobación del diseño/artefacto y autorización de validación local, de su cierre posterior con evidencia. **No se da B0 por cerrado para romper esa dependencia**: cualquier autorización local condicionada debe ser expresa, y el endpoint permanece deshabilitado hasta satisfacer sus condiciones. Si no se concede, no se inicia E1.
 
 P0 permite trabajar únicamente con fixtures sintéticas de local/test según ADR-012; no habilita datos reales. La [fixture de staging](../policies/staging-synthetic-privacy-fixture-v1.yaml) permanece exclusiva de staging: no se reutiliza cambiando su scope. Una fixture local distinta deberá aprobarse con la autorización local, rechazar procedencia desconocida y no simular aprobación jurídica. Producción falla cerrada sin aviso real `APPROVED` vigente.
+
+### 3.1 Decisiones de entrada de E1 — propuestas pendientes de aprobación
+
+**Esta sección no está aprobada ni autoriza E1.** Reutiliza las propuestas de las secciones [4](#4-propuesta-b0-política-y-comprobación-técnica-de-correo), [5](#5-propuesta-p0-minimización-aviso-y-retención) y [6](#6-propuesta-de-entrada-de-rate-limiting-de-h03).
+
+**B0 — Producto + Seguridad, pendiente.** Propuesta de contrato único de normalización: retirar solo espacios exteriores U+0020, rechazar controles/espacios interiores y exigir una sola `@`; local-part ASCII de tipo dot-atom, conservando mayúsculas, puntos y `+`, sin alias específicos de proveedor. Dominio a minúsculas y forma IDNA canónica; comparación exacta, sin wildcards, herencia a subdominios ni inspección de MX. Propuesta de límites tras canonicalizar: local-part 1–64 octetos, etiquetas de dominio 1–63, dominio hasta 253 y dirección completa hasta 254; sin punto final, etiquetas vacías, literales IP, comentarios, comillas ni SMTPUTF8 en local-part. Son límites sintácticos tipados, no parámetros libres de la política.
+
+Falta aprobar el contrato, incluida la sensibilidad a mayúsculas del local-part, y **fijar perfil/algoritmo IDNA, vectores sensibles al perfil y compatibilidad con la baseline antes de E1**; sin elegir una librería nueva tácitamente. La política se suministra al dominio como valor tipado e inmutable con ID/versión y dominios canonicalizados; sin YAML/entorno, loader ni listas incrustadas. E1 usa fixtures sintéticas en memoria; el seed sigue `DRAFT`.
+
+| Vectores mínimos propuestos de E1 | Resultado esperado sujeto a aprobación |
+|---|---|
+| ` Persona+qa@EMPRESA.TEST ` | `Persona+qa@empresa.test`; conservar `+` y case del local-part. `persona+qa` sigue siendo otra dirección según la propuesta. |
+| `persona@bloqueado.test`; dominio incluido solo en la fixture suministrada | Rechazar por coincidencia exacta; sustituir la fixture cambia el resultado sin modificar el aggregate. |
+| `persona@no-bloqueado.test`, `persona@sub.bloqueado.test` | No coinciden con `bloqueado.test`; sin bloqueo por substring o subdominio. |
+| `persona@empresa.test`, suponiendo hosting Google/Microsoft | Admisión idéntica, independiente del hosting; E1 no consulta DNS. |
+| `persona@bücher.test` / `persona@xn--bcher-kva.test`; Unicode NFC/descompuesto | Mismo dominio canónico. Para `faß.test` frente a `fass.test` falta fijar equivalencia o distinción según el perfil IDNA elegido. |
+| Vacío, sin local/dominio, dos `@`, CR/LF/TAB, espacios interiores, puntos consecutivos o finales, local Unicode, A-label inválida | Rechazo sintáctico; no reinterpretación permisiva ni consulta de política sobre una dirección inválida. |
+| Local 64/65, etiqueta 63/64, dominio 253/254, dirección 254/255 octetos | Aceptar el límite solo si cumple los demás; rechazar el exceso. Medir después de IDNA y combinar límites, no validar cada uno aisladamente. |
+| Política no suministrada/inválida; tres resultados técnicos de ruta | Sin admisión permisiva por lista vacía; `MAIL_CAPABLE`, `NO_MAIL_ROUTE` e `INDETERMINATE` separados, sin activar cuenta ni rechazar por los dos últimos. |
+
+Cobertura de los 84 dominios, hash final, aprobadores, vigencia, publicación y evidencia de carga/actualización/rollback siguen pendientes para cerrar B0. La posible autorización condicionada permitiría pruebas puras antes de ese cierre. `P7D` de E1 también requiere aprobación; los parámetros técnicos posteriores siguen propuestos en la sección 4.
+
+**P0 local — Producto + Privacidad/Legal + Seguridad, pendiente.** Reutilizar la ficha de la sección 5: `local-synthetic-company-onboarding`, versión candidata `2026-11-02.1`, finalidad `COMPANY_ONBOARDING`, scope `LOCAL_TEST`, estado `TEST_ONLY`. Datos exclusivamente sintéticos: nombres ficticios, correos `.test`/`.invalid`, fiscales generados para la ejecución; rechazar procedencia desconocida y copias reales, anonimizadas o de producción. Limpieza tras cada ejecución, máximo `P7D`, incluidas copias/artefactos; sin DNS público, correo externo ni promoción a staging/producción. Fixture separada de `STAGING_ONLY`, que permanece intacta. Falta aprobar estas condiciones; textos ES/EN y hash deberán aprobarse antes de materializar la fixture en E3/E7A. E1 solo usa valores en memoria; P0 real sigue `PENDING`.
+
+**S0 local — Seguridad + Operaciones, pendiente.** Reutilizar los candidatos de la sección 6: IP 5/`PT1M` y 20/`PT1H`, dirección HMAC 3/`PT1H`, TTL `PT2M`/`PT61M`/`PT61M`, doble etapa y fail-closed. E1 no implementa limitador ni habilita `submitCompanyOnboarding`, siquiera por HTTP local. Una futura validación autorizada usa loopback, datos sintéticos y prueba continuidad H02: versión efectiva `1`, mismas claves/buckets, 15/`PT10S`, 60/`PT60S` y TTL `PT70S`/`PT120S`; ampliación documental y rollback nunca reinician cuotas. Faltan aprobación de la entrada/formato y evidencia posterior E7B; S0 sigue cerrado exclusivamente para H02, sin modificar su YAML ni su comportamiento.
+
+**Autorización local condicionada — propuesta, no concedida.** Tras decidir B0 de E1, P0 local y las condiciones S0 anteriores, el PO podría autorizar solo E1 y sus pruebas JUnit de dominio Java puro, desde el incremento actualizado y en rama funcional separada. Se conserva el alcance de E1 de la sección 8: sin adapters, BD/migraciones, loaders/publicación, endpoint, UI, provisioning ni recuperación de cuentas. No cierra B0/P0/S0 ni autoriza E2; los cierres requieren aprobaciones de owners y evidencia posterior. Concreción ADR-003/007 pendiente antes de E5, sin ampliar su propuesta. **H03/E1 `NOT_STARTED / NOT_AUTHORIZED`; B0/P0/E0 y CL0 `PENDING`.**
 
 ## 4. Propuesta B0: política y comprobación técnica de correo
 
@@ -240,7 +268,7 @@ Todas las entregas están `NOT_AUTHORIZED / NOT_STARTED`. Las ramas futuras se c
 
 ### E1 — Dominio empresarial e invariantes
 
-- Dependencias: plan aprobado, autorización expresa y decisiones de entrada de la sección 3.
+- Dependencias: plan aprobado, autorización expresa y decisiones de entrada de la sección 3, incluidas las propuestas pendientes de la [sección 3.1](#31-decisiones-de-entrada-de-e1--propuestas-pendientes-de-aprobación).
 - Alcance: `Company`, `CompanyOnboarding`, IDs, estados, fiscal/country/locale/timezone, política pura de admisión y resultado técnico separado. Sin listas incrustadas ni frameworks en dominio.
 - Aceptación/pruebas: transiciones válidas/ilegales, `SELF_DECLARED`, rol fijo, normalización exacta, cambio de configuración sin cambiar aggregate, locale/fallback sin jurisdicción implícita, tres resultados de ruta, reloj fijo y expiración `P7D`; JUnit sin Spring ni BD.
 - Excluye: JPA, migraciones, DNS real, API, cuentas activas, H04 y UI.
@@ -369,4 +397,4 @@ Esta entrega no cambia código, OpenAPI, cliente generado, políticas ejecutable
 
 Quedan fuera: H04–H07, contraseña/verificación efectiva, roles editables, claim empresarial automático, verificación jurídica, ofertas, candidaturas, prevalidación, formalización, prácticas, documentos de negocio, universidad como tenant y otros incrementos. No se incorporan reglas jurídicas ni se publica una política por aceptar este plan.
 
-El plan está `APPROVED` por el PO el 2026-11-02 sobre `27b404c56b0d918e69c20b0319c6cc29daa92b89`. Las decisiones explícitas B0, P0 local/real, entrada S0 de H03 con continuidad por operación, entrega del aviso y concreción ADR-003/007 para cuenta pendiente sin credencial conservan su estado pendiente; los owners aportarán las aprobaciones que correspondan. Sigue siendo necesaria autorización separada para una primera entrega concreta. H03 permanece **sin iniciar**; E1 y las demás entregas `NOT_AUTHORIZED / NOT_STARTED`, B0/P0/E0 `PENDING`, S0 cerrado solo para H02 y CL0 `PENDING`. Solo se autoriza registrar esta aprobación mediante documentación y cuerpo de PR #21, con commit y push en la misma rama; PR Draft y sin merge, sin código, migraciones, políticas publicadas ni AWS. Los checks remotos los verifica e informa el PO sin espera ni supervisión del agente.
+El plan está `APPROVED` por el PO el 2026-11-02 sobre `27b404c56b0d918e69c20b0319c6cc29daa92b89` e integrado mediante PR #21 / `b398694bf1a68b65c674efa579b9c468a207c464`; quedan sustituidas sus restricciones históricas de Draft/sin merge. Las decisiones explícitas B0, P0 local/real, entrada S0 de H03 con continuidad por operación, entrega del aviso y concreción ADR-003/007 para cuenta pendiente sin credencial conservan su estado pendiente; los owners aportarán las aprobaciones que correspondan. La sección 3.1 prepara decisiones, **no las aprueba** ni concede la autorización local condicionada que describe. H03 permanece **sin iniciar**; E1 y las demás entregas `NOT_AUTHORIZED / NOT_STARTED`, B0/P0/E0 `PENDING`, S0 cerrado solo para H02 y CL0 `PENDING`. Solo se autoriza esta preparación documental en rama nueva, validación de enlaces/diff, commit, push y nueva Draft PR hacia el incremento; sin código, migraciones, políticas publicadas, cambios funcionales H02 ni AWS. Los checks remotos los verifica e informa el PO sin espera ni supervisión del agente.
