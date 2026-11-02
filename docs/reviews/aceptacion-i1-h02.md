@@ -7,8 +7,9 @@
 - E1–E9: `ACCEPTED`.
 - Aceptación expresa de H02 y E9: **Product Owner, 2026-11-02**, en este chat.
 - Commit funcional aprobado: [`9c3c6cdb3ad44fb4b289208f073a1f76694cbf84`](https://github.com/omarjtoscano/propractix-v2/commit/9c3c6cdb3ad44fb4b289208f073a1f76694cbf84).
-- Rama candidata: `feature/i1-h02-e9-ruct-first-snapshot`.
-- SHA de esta entrega y Draft PR: se registran en la PR y el mensaje de entrega.
+- Rama funcional de origen: `feature/i1-h02-e9-ruct-first-snapshot`.
+- Integración y aceptación local confirmadas por el PO el 2026-11-02: [`f387f260acc0b32ed8a85373cf12d45476371ebe`](https://github.com/omarjtoscano/propractix-v2/commit/f387f260acc0b32ed8a85373cf12d45476371ebe) en `increment/01-company-identity-catalog`, mediante la [PR #19](https://github.com/omarjtoscano/propractix-v2/pull/19).
+- Esta confirmación conserva la aceptación funcional y las evidencias originales; no atribuye checks nuevos al SHA de integración.
 
 ## Evidencia disponible
 
@@ -56,10 +57,14 @@ por el PO; la aceptación y trazabilidad completadas después quedan en este
 documento, la evidencia y el manifest. El nuevo SHA documental no reemplaza al
 funcional aprobado ni simula una repetición de las suites.
 
-La única autorización vigente es actualizar documentación y cuerpo de la PR
-#19 en la misma rama, con commit y push. La PR permanece Draft y sin merge;
-H03 no está autorizada. CI, Trivy y Build OCI del nuevo SHA documental los
-verifica el PO, sin espera ni supervisión del agente.
+La autorización de aquella aceptación se limitaba a documentación y cuerpo de
+PR #19 en la misma rama, con commit y push, manteniéndola Draft y sin merge.
+La confirmación posterior del PO registra su integración mediante `f387f260acc0b32ed8a85373cf12d45476371ebe`.
+Solo autoriza preparar el [plan H03](../plans/i1-h03-execution-plan.md),
+`PROPOSED_FOR_APPROVAL`, en `docs/i1-h03-execution-plan`, con commit, push y Draft
+PR al incremento. No autoriza implementar H03, migraciones, publicar políticas,
+cerrar gates, merge ni AWS. Los checks de esta nueva entrega documental los
+verifica e informa el PO, sin espera ni supervisión del agente.
 
 ## Alcance cloud y funcional
 
