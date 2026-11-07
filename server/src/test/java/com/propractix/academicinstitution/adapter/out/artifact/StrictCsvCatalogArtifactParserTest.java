@@ -1,12 +1,5 @@
 package com.propractix.academicinstitution.adapter.out.artifact;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import com.propractix.academicinstitution.application.port.out.CatalogArtifactParser;
-import com.propractix.academicinstitution.application.port.out.CatalogInstitutionCandidate;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -15,9 +8,16 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.Normalizer;
 import java.util.HexFormat;
-import java.util.List;
 import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
+
+import com.propractix.academicinstitution.application.port.out.CatalogArtifactParser;
+import com.propractix.academicinstitution.application.port.out.CatalogInstitutionCandidate;
 
 class StrictCsvCatalogArtifactParserTest {
 
