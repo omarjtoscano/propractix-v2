@@ -1,6 +1,5 @@
 package com.propractix.organization.domain.model;
 
-import com.propractix.organization.domain.service.CompanyRegistrationPolicy;
 import java.util.Objects;
 
 /** Immutable self-declared company/tenant. Business verification and memberships are outside E1. */
@@ -19,11 +18,12 @@ public final class Company {
         this.initialLocale = initialLocale;
     }
 
-    public static Company selfDeclared(TenantId id, CompanyProfile profile, CompanyRegistrationPolicy policy) {
+    /** Uses the profile and initial locale captured at admission; never re-evaluates the current catalog. */
+    public static Company selfDeclared(TenantId id, CompanyProfile profile, LocaleCode initialLocale) {
         Objects.requireNonNull(id, "id must not be null");
         Objects.requireNonNull(profile, "profile must not be null");
-        Objects.requireNonNull(policy, "policy must not be null");
-        return new Company(id, profile, policy.initialLocale(profile));
+        Objects.requireNonNull(initialLocale, "initialLocale must not be null");
+        return new Company(id, profile, initialLocale);
     }
 
     public TenantId id() {

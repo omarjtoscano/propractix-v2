@@ -42,7 +42,8 @@ public final class SyntheticCompany {
     }
 
     public static Company company() {
-        return Company.selfDeclared(TENANT, profile(), registration());
+        var onboarding = submitted();
+        return Company.selfDeclared(TENANT, onboarding.profile(), onboarding.initialLocale());
     }
 
     public static CompanyOnboarding submitted() {

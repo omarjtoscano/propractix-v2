@@ -4,11 +4,13 @@ import static com.propractix.organization.domain.model.SyntheticCompany.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.propractix.organization.domain.service.CompanyEmailAdmissionPolicy;
+import com.propractix.organization.domain.service.CompanyRegistrationPolicy;
 import java.time.Clock;
 import java.time.DateTimeException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -53,13 +55,53 @@ class CompanyOnboardingTest {
     }
 
     @Test
+    void mappingChangeAffectsNewSubmissionsWithoutBlockingTheAdmittedOnboarding() {
+        var onboarding = submitted();
+        onboarding.awaitIdentity(AT);
+        var changedMapping = new CompanyRegistrationPolicy(Set.of(ES, DE), Set.of(SPANISH, ENGLISH),
+                Map.of(ES, ENGLISH), SPANISH);
+        var laterOnboarding = CompanyOnboarding.submit(
+                new OnboardingId(UUID.fromString("123e4567-e89b-42d3-a456-426614174003")),
+                profile(), new EmailAddress("persona@empresa.test"), admission(), changedMapping,
+                AT.plusSeconds(1), VALIDITY);
+        assertEquals(ENGLISH, laterOnboarding.initialLocale());
+
+        var reResolvedCompany = Company.selfDeclared(TENANT, onboarding.profile(), laterOnboarding.initialLocale());
+        assertThrows(IllegalArgumentException.class,
+                () -> onboarding.awaitEmailVerification(reResolvedCompany, AT.plusSeconds(2)));
+        assertEquals(CompanyOnboarding.Status.IDENTITY_PENDING, onboarding.status());
+        assertEquals(Optional.empty(), onboarding.tenantId());
+        assertEquals(1, onboarding.version());
+
+        var company = Company.selfDeclared(TENANT, onboarding.profile(), onboarding.initialLocale());
+        assertEquals(onboarding.profile(), company.profile());
+        assertEquals(SPANISH, company.initialLocale());
+        assertEquals(SPANISH, onboarding.initialLocale());
+        assertEquals(1, onboarding.version());
+        onboarding.awaitEmailVerification(company, AT.plusSeconds(2));
+        assertEquals(CompanyOnboarding.Status.EMAIL_PENDING, onboarding.status());
+        assertEquals(Optional.of(TENANT), onboarding.tenantId());
+        assertEquals(2, onboarding.version());
+        assertEquals(Company.Status.SELF_DECLARED, company.status());
+        var laterCompany = Company.selfDeclared(TENANT, laterOnboarding.profile(), laterOnboarding.initialLocale());
+        assertEquals(ENGLISH, laterCompany.initialLocale());
+
+        var otherTenant = new TenantId(UUID.fromString("123e4567-e89b-42d3-a456-426614174002"));
+        var otherCompany = Company.selfDeclared(otherTenant, company.profile(), company.initialLocale());
+        assertThrows(IllegalStateException.class,
+                () -> onboarding.awaitEmailVerification(otherCompany, AT.plusSeconds(3)));
+        assertEquals(Optional.of(TENANT), onboarding.tenantId());
+        assertEquals(2, onboarding.version());
+    }
+
+    @Test
     void cannotSubstituteAnotherCompanyOrRelinkAnAlreadyBoundOnboarding() {
         var onboarding = submitted();
         onboarding.awaitIdentity(AT);
         var otherProfile = new CompanyProfile(new CompanyName("Otra empresa sintética"), Optional.empty(), DE,
                 new TaxIdentifier("SYNTHETIC", "SYNTHETIC-E1-0002"), Optional.empty(), new CompanyTimeZone("Europe/Berlin"));
         var otherId = new TenantId(UUID.fromString("123e4567-e89b-42d3-a456-426614174002"));
-        var otherCompany = Company.selfDeclared(otherId, otherProfile, registration());
+        var otherCompany = Company.selfDeclared(otherId, otherProfile, registration().initialLocale(otherProfile));
         assertThrows(IllegalArgumentException.class, () -> onboarding.awaitEmailVerification(otherCompany, AT));
         assertEquals(Optional.empty(), onboarding.tenantId());
         assertEquals(CompanyOnboarding.Status.IDENTITY_PENDING, onboarding.status());

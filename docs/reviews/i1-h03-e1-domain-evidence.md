@@ -1,6 +1,7 @@
 # Evidencia local — I1-H03 E1: dominio empresarial e invariantes
 
-- Fecha de validación: 2026-11-07 (Europe/Madrid).
+- Fecha de validación inicial y corrección: 2026-11-07 (Europe/Madrid).
+- Evidencia inicial: commit `28f34168c725d20baf51be5a1c3861029d131ddb`; la corrección de locale y sus resultados se registran por separado al final de la validación.
 - Estado: H03 y E1 `IN_PROGRESS`, sin aceptación; E2 y posteriores `NOT_AUTHORIZED / NOT_STARTED`.
 - Autorización: PO, 2026-11-02, después de confirmar la integración de [PR #22](https://github.com/omarjtoscano/propractix-v2/pull/22) mediante `2e797ebfd5c22481ec0a21f4c0ca8d9933fffbbd`.
 - Rama: `feature/i1-h03-e1-company-domain`, creada desde `increment/01-company-identity-catalog` actualizado en ese SHA.
@@ -10,7 +11,7 @@
 
 `organization.domain` contiene `Company`, `CompanyOnboarding`, `TenantId` como único identificador empresarial, `OnboardingId`, perfil y value objects para nombre, país, fiscal, locale, zona, correo/dominio canónicos y referencia de política. UUID v4 externos al aggregate; sin generador, reloj real, persistencia ni configuración de entorno.
 
-`Company` es inmutable e inicia exclusivamente `SELF_DECLARED`; no existe método de aprobación empresarial. `CompanyOnboarding` guarda el candidato admitido, dirección canónica, versión de política evaluada, locale inicial, instantes explícitos y versión `long` que aumenta tras cada cambio válido. El rol inicial fijo `COMPANY_OWNER` representa una intención; no crea ni activa una membership.
+`Company` es inmutable e inicia exclusivamente `SELF_DECLARED`; no existe método de aprobación empresarial. Su factoría recibe el perfil y el `LocaleCode` ya resueltos al admitir el onboarding; no recibe ni reevalúa `CompanyRegistrationPolicy`. `CompanyOnboarding` guarda el candidato admitido, dirección canónica, versión de política evaluada, locale inicial, instantes explícitos y versión `long` que aumenta tras cada cambio válido. El rol inicial fijo `COMPANY_OWNER` representa una intención; no crea ni activa una membership.
 
 | Origen | Operación E1 | Resultado / guard |
 |---|---|---|
@@ -24,7 +25,7 @@
 
 `READY` queda reservado en la enum para la ceremonia verificada futura de H04. E1 no ofrece una transición a `READY`, reenvío desde `EXPIRED`, activación de cuenta, credencial o vínculo de una cuenta existente. Los métodos representan invariantes de estado en memoria; no acreditan las ceremonias de H04/H05 ni la coordinación durable de entregas posteriores.
 
-`CompanyRegistrationPolicy` es una instantánea inmutable suministrada: valida país habilitado y referencias de sus catálogos; resuelve preferencia soportada → correspondencia país/locale → fallback configurado. Cambiar el catálogo permite otros países/locales sin modificar el aggregate. Conserva país y preferencia declarados; la resolución de presentación no devuelve jurisdicción ni `LegalPolicyPack`. La zona es explícita y no se infiere del locale o país. `TaxIdentifier` exige tipo estable y valor normalizado no vacío, sin validadores españoles, pruebas de existencia ni algoritmo fiscal: la estrategia específica futura sigue fuera de `Company`.
+`CompanyRegistrationPolicy` es una instantánea inmutable suministrada: valida país habilitado y referencias de sus catálogos; resuelve preferencia soportada → correspondencia país/locale → fallback configurado. Cambiar el catálogo permite otros países/locales sin modificar el aggregate y afecta a las nuevas admisiones; las solicitudes ya admitidas conservan su perfil y locale inicial durante la creación de empresa. Conserva país y preferencia declarados; la resolución de presentación no devuelve jurisdicción ni `LegalPolicyPack`. La zona es explícita y no se infiere del locale o país. `TaxIdentifier` exige tipo estable y valor normalizado no vacío, sin validadores españoles, pruebas de existencia ni algoritmo fiscal: la estrategia específica futura sigue fuera de `Company`.
 
 `CompanyEmailAdmissionPolicy` recibe referencia ID/versión y conjunto inmutable no vacío de dominios canónicos. Comparación exacta con `EmailAddress.domain()`, sin listas de proveedores en producción, reglas de substring/subdominio/sufijo educativo, comodines o inspección de hosting/MX. Una política ausente, inválida o vacía no se convierte en permiso general. Una nueva instancia cambia la admisión de nuevas solicitudes; el onboarding anterior conserva la versión que lo admitió. Carga, publicación, vigencia y selección de versión pertenecen a entregas posteriores.
 
@@ -42,7 +43,7 @@ Las pruebas E1 de `xn--bcher-kva.test`, `xn--fa-hia.test` y `fass.test` verifica
 
 Fixtures `LOCAL_TEST / TEST_ONLY` exclusivamente en memoria, con nombres ficticios, fiscal `SYNTHETIC-*`, correos `.test` y catálogos sintéticos. No se materializan avisos, textos/hash legales ni políticas publicadas; no se reutiliza la fixture de staging. Las pruebas no escriben estos datos de E1 a BD, Mailpit o archivos ni consultan DNS público.
 
-| Suite nueva JUnit, sin Spring ni BD | Casos | Cobertura |
+| Suite inicial JUnit, sin Spring ni BD (commit `28f3416`) | Casos | Cobertura |
 |---|---:|---|
 | `CanonicalEmailTest` | 42 | Valores canónicos, sensibilidad local, ASCII/A-label, entradas inválidas, límites local/etiqueta/dominio/dirección y combinación de límites. |
 | `CompanyValueObjectsTest` | 17 | UUID v4/variante, nulos, país, locale canónico, zona nombrada, fiscal opaco y diagnósticos redactados. |
@@ -50,13 +51,13 @@ Fixtures `LOCAL_TEST / TEST_ONLY` exclusivamente en memoria, con nombres fictici
 | `CompanyEmailAdmissionPolicyTest` | 12 | Coincidencia exacta, sustitución de versión, copias defensivas, ausencia de reglas de hosting/sufijos/subdominios y política inválida/ausente/vacía. |
 | `CompanyOnboardingTest` | 15 | Transiciones, rol fijo, sustitución de política/empresa, tres resultados técnicos, fallo terminal, tiempo monotónico, duración suministrada, límite exacto de expiración y ausencia de cambios parciales. |
 
-Total nuevo: **93 casos**, todos correctos. El escenario local aprobado usa `P7D` desde `2026-11-02T10:00:00Z`; otro escenario suministra `PT0.000000001S` para demostrar que el aggregate no fija siete días. Se admite una operación en `expiresAt - 1 ns`, se bloquea en `expiresAt` y la expiración explícita se permite exactamente en ese instante. `Clock.fixed`/`Clock.offset` se usan en tests; el dominio solo recibe `Instant` y `Duration`.
+Total inicial: **93 casos**, todos correctos en `28f3416`. El escenario local aprobado usa `P7D` desde `2026-11-02T10:00:00Z`; otro escenario suministra `PT0.000000001S` para demostrar que el aggregate no fija siete días. Se admite una operación en `expiresAt - 1 ns`, se bloquea en `expiresAt` y la expiración explícita se permite exactamente en ese instante. `Clock.fixed`/`Clock.offset` se usan en tests; el dominio solo recibe `Instant` y `Duration`.
 
 Negativo A/B de consistencia: un onboarding no admite otra empresa con perfil distinto ni puede reasignar el tenant después de llegar a `EMAIL_PENDING`; el rechazo conserva la referencia original. **No acredita autorización cross-tenant en aplicación/HTTP/SQL**: no hay aún recursos accesibles, repositorios ni actor autenticado en E1. Las pruebas de acceso negativas reales siguen asignadas a E2/E3 y posteriores en el plan, sin introducir esas capas en esta entrega.
 
 Las reglas ArchUnit existentes comprueban frameworks, límites/ciclos y contratos entre contextos. Se añaden dos reglas sobre `organization.domain`: solo Java y su propio dominio; sin red/IO, normalizador técnico, ICU, `platform`, aplicación, adapters ni configuración.
 
-| Comando ejecutado localmente | Resultado |
+| Comando de validación inicial (`28f3416`) | Resultado |
 |---|---|
 | `npm run infra:up` | Correcto; PostgreSQL y Mailpit saludables en el Compose local. Acceso Docker concedido fuera del sandbox. |
 | `./server/mvnw -q -f server/pom.xml -Dtest='com.propractix.organization.domain.**,com.propractix.architecture.*' test` | Correcto tras corregir una cuenta de longitud en el test y unificar el rechazo diagnóstico de locale inválido; 93 casos nuevos y suites arquitectónicas. |
@@ -69,6 +70,27 @@ Las reglas ArchUnit existentes comprueban frameworks, límites/ciclos y contrato
 | `git diff --check`, revisión de diff y `git status --short` antes del commit | Correcto: diff revisado, sin errores de whitespace; solo dominio E1, tests, arquitectura y documentación. |
 
 JDK disponible: OpenJDK `21.0.12.1`. Logs de ejecución locales en `/tmp/h03-e1-unit.log`, `/tmp/h03-e1-server-test.log` y `/tmp/h03-e1-server-verify.log`; no se incorporan al repositorio ni se presentan logs de entregas anteriores como resultados nuevos. La suite completa ejecuta las pruebas existentes de H02 con su propia infraestructura sintética Testcontainers como regresión, sin cambiar su código o configuración.
+
+## Corrección de revisión — locale admitido estable (Draft PR #23)
+
+Petición expresa del PO: la empresa se crea desde el perfil y el locale ya resueltos al admitir la solicitud. Cambiar posteriormente el mapeo país→locale no debe bloquear el alta en curso; el nuevo mapeo se aplica a nuevas solicitudes. Se conserva el alcance exclusivo E1, sin dependencias nuevas, E2, cambios funcionales H02, merge o aceptación.
+
+El fallo se reprodujo antes de la corrección con `mappingChangeAffectsNewSubmissionsWithoutBlockingTheAdmittedOnboarding`: alta admitida bajo `ES → es`, cambio a `ES → en`, creación por la antigua factoría con la política nueva. La regresión falló esperando `es` y obteniendo `en` (16 casos de `CompanyOnboardingTest`, 1 fallo). Log local: `/tmp/h03-e1-locale-regression-before.log`.
+
+La factoría `Company.selfDeclared(TenantId, CompanyProfile, LocaleCode)` copia el perfil y el locale suministrados desde `onboarding.profile()` y `onboarding.initialLocale()`. Elimina su dependencia de `CompanyRegistrationPolicy`; las validaciones de catálogo y la resolución siguen ocurriendo en `CompanyOnboarding.submit`. La fixture de empresa usa esos valores admitidos. `awaitEmailVerification` permanece sin cambios: exige coincidencia de perfil y locale y solo permite la transición desde `IDENTITY_PENDING`; no puede reasignar un tenant ya vinculado.
+
+La regresión comprueba, en un único escenario: nuevo mapeo entre solicitud y creación; nueva solicitud con `en`; rechazo de una empresa creada con locale distinto al admitido sin mutación parcial; empresa original creada con su perfil y `es`, avance a `EMAIL_PENDING`; y rechazo de otro `TenantId` incluso con el mismo perfil/locale, conservando referencia y versión. La prueba previa de perfil diferente sigue ejecutándose. `CompanyOnboardingTest` pasa a 16 casos y el dominio E1 suma **94 casos**.
+
+| Validación de la corrección | Resultado |
+|---|---|
+| `npm run infra:up` | Correcto: PostgreSQL y Mailpit saludables. |
+| JUnit de dominio E1 y arquitectura, selección igual a la inicial | Correcto: 94 casos de dominio y suites arquitectónicas, sin Spring/BD en las pruebas E1. |
+| `javac --release 21` sin classpath y `jdeps -s /tmp/h03-e1-locale-java-only` | Correcto; solo `java.base`. |
+| `npm run server:test` | Correcto: **413 pruebas, 0 fallos, 0 errores, 1 benchmark BCrypt omitido**, `BUILD SUCCESS`. |
+| `npm run server:verify` | Correcto: **413 pruebas, 0 fallos, 0 errores, 1 benchmark BCrypt omitido**, empaquetado JAR y `BUILD SUCCESS`. |
+| Enlaces, `git diff --check`, revisión de diff y estado antes del commit | Correcto: 66 enlaces/anclas locales, 0 errores; diff revisado y sin errores de whitespace. Solo se incluyen los cinco archivos de dominio/pruebas/evidencia de esta corrección; las dos correcciones del PO en H02 permanecen sin incluir. |
+
+Logs locales nuevos: `/tmp/h03-e1-locale-unit.log`, `/tmp/h03-e1-locale-server-test.log` y `/tmp/h03-e1-locale-server-verify.log`. Las cifras anteriores de 412 casos corresponden a la entrega inicial; no sustituyen la ejecución de esta corrección. Durante el trabajo el PO confirmó sus correcciones de imports en `StrictCsvCatalogArtifactParserTest.java` y `PublishInstitutionCatalogServiceTest.java`. Se conservan en el workspace y quedan fuera del commit E1; las suites completas se ejecutan sobre ese workspace. No se cambia la lógica de H02 en esta entrega.
 
 ## Entrega y límites conservados
 
