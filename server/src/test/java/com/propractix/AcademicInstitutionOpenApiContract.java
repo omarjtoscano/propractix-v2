@@ -25,7 +25,7 @@ final class AcademicInstitutionOpenApiContract {
         var spec = OPERATION.path("responses").path(Integer.toString(response.getStatus()));
         assertThat(spec.isMissingNode()).isFalse();
         assertThat(response.getHeader("X-Correlation-ID")).matches(
-                CONTRACT.at("/components/schemas/CorrelationId/pattern").asText());
+                CONTRACT.at("/components/schemas/CorrelationId/pattern").asString());
         assertThat(spec.path("headers").has("X-Correlation-ID")).isTrue();
         String media = response.getContentType();
         var schema = spec.path("content").path(media).path("schema");
@@ -33,10 +33,10 @@ final class AcademicInstitutionOpenApiContract {
         var body = JSON.readTree(response.getContentAsByteArray());
         assertValue(body, schema);
         if (response.getStatus() >= 400) {
-            assertThat(body.path("correlationId").asText()).isEqualTo(response.getHeader("X-Correlation-ID"));
-            assertThat(body.path("instance").asText()).isEqualTo("/api/v1/academic-institutions");
-            assertThat(body.path("type").asText()).isEqualTo("urn:propractix:problem:" + body.path("code").asText());
-            if (response.getStatus() == 429 || body.path("code").asText().equals("rate_limiter_unavailable")) {
+            assertThat(body.path("correlationId").asString()).isEqualTo(response.getHeader("X-Correlation-ID"));
+            assertThat(body.path("instance").asString()).isEqualTo("/api/v1/academic-institutions");
+            assertThat(body.path("type").asString()).isEqualTo("urn:propractix:problem:" + body.path("code").asString());
+            if (response.getStatus() == 429 || body.path("code").asString().equals("rate_limiter_unavailable")) {
                 assertThat(response.getHeader("Retry-After")).matches("[1-9][0-9]*");
                 if (response.getStatus() == 503) assertThat(response.getHeader("Retry-After")).isEqualTo("1");
             } else {
@@ -49,7 +49,7 @@ final class AcademicInstitutionOpenApiContract {
 
     private static void assertValue(JsonNode value, JsonNode schema) {
         if (schema.has("$ref")) {
-            assertValue(value, CONTRACT.at(schema.path("$ref").asText().substring(1)));
+            assertValue(value, CONTRACT.at(schema.path("$ref").asString().substring(1)));
             return;
         }
         for (JsonNode part : schema.path("allOf")) assertValue(value, part);
@@ -58,14 +58,14 @@ final class AcademicInstitutionOpenApiContract {
         if (schema.has("type")) {
             var type = schema.path("type");
             if (type.isArray()) {
-                assertThat(type).anySatisfy(item -> assertType(value, item.asText()));
+                assertThat(type).anySatisfy(item -> assertType(value, item.asString()));
             } else {
-                assertType(value, type.asText());
+                assertType(value, type.asString());
             }
         }
         if (value.isNull()) return;
         if (value.isObject()) {
-            for (JsonNode required : schema.path("required")) assertThat(value.has(required.asText())).isTrue();
+            for (JsonNode required : schema.path("required")) assertThat(value.has(required.asString())).isTrue();
             var properties = schema.path("properties");
             if (schema.path("additionalProperties").isBoolean() && !schema.path("additionalProperties").asBoolean()) {
                 assertThat(value.propertyNames()).isSubsetOf(properties.propertyNames());
@@ -79,12 +79,12 @@ final class AcademicInstitutionOpenApiContract {
             for (JsonNode item : value) assertValue(item, schema.path("items"));
         }
         if (value.isString()) {
-            String text = value.asText();
+            String text = value.asString();
             int length = text.codePointCount(0, text.length());
             if (schema.has("minLength")) assertThat(length).isGreaterThanOrEqualTo(schema.path("minLength").asInt());
             if (schema.has("maxLength")) assertThat(length).isLessThanOrEqualTo(schema.path("maxLength").asInt());
-            if (schema.has("pattern")) assertThat(text).matches(schema.path("pattern").asText());
-            switch (schema.path("format").asText()) {
+            if (schema.has("pattern")) assertThat(text).matches(schema.path("pattern").asString());
+            switch (schema.path("format").asString()) {
                 case "uuid" -> assertThat(UUID.fromString(text).version()).isEqualTo(4);
                 case "date-time" -> Instant.parse(text);
                 case "uri" -> assertThat(URI.create(text).isAbsolute()).isTrue();
