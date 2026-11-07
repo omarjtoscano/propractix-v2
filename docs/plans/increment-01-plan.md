@@ -6,7 +6,7 @@
 - Resultado: empresa y estudiante con cuentas verificadas, catálogo universitario consultable, declaración académica trazable y aislamiento tenant demostrado.
 - Reemplaza: revisión 6 aprobada en `docs/reviews/resolucion-cloud-staging-revision-6.md`.
 
-**Actualización documental de autorización (2026-11-02):** H02 integrada y
+**Registro histórico de autorización (2026-11-02, anterior a la aceptación E1):** H02 integrada y
 `DONE / ACCEPTED` mediante `f387f260acc0b32ed8a85373cf12d45476371ebe` (PR #19), con
 aceptación funcional sobre `9c3c6cdb3ad44fb4b289208f073a1f76694cbf84` y [evidencia conservada](../reviews/aceptacion-i1-h02.md).
 El [plan H03](i1-h03-execution-plan.md) está `APPROVED` sobre `27b404c56b0d918e69c20b0319c6cc29daa92b89`
@@ -25,6 +25,8 @@ B0/P0/E0/entrada S0 de H03 siguen pendientes; concreción ADR-003/007 pendiente 
 CL0 `PENDING`. Sin políticas publicadas, cambios funcionales H02, merge ni AWS.
 Checks a cargo del PO sin espera/supervisión del agente. Se conserva la revisión 7 del plan;
 las condiciones históricas de E9 permanecen en los registros siguientes.
+
+**Aceptación vigente de I1-H03 E1 (PO, 2026-11-07):** E1 `ACCEPTED` por aprobación expresa del Product Owner el 2026-11-07 sobre `58c5a047708a5380ea6b8cecbbfc8c133b9f88d6`; H03 sigue `IN_PROGRESS` y E2/posteriores `NOT_AUTHORIZED / NOT_STARTED`. La revisión técnica asistida por Codex en este chat (2026-11-07) y la regresión del locale son distintas de la aprobación del PO. CI, Trivy y Build OCI en verde sobre `58c5a047708a5380ea6b8cecbbfc8c133b9f88d6` según confirmación expresa del PO; no se atribuye esa comprobación al agente. Las suites locales anteriores (`server:test` y `server:verify`: 413 pruebas, 0 fallos, 0 errores y 1 benchmark omitido; 94 casos de dominio) se ejecutaron en un workspace que incluía dos ajustes de imports del PO en pruebas H02 fuera del commit/PR. Se conservan esos ajustes fuera de la PR. Los checks del nuevo SHA documental los verificará e informará el PO, sin espera ni supervisión del agente. Solo se autoriza registrar la aceptación documental y actualizar el cuerpo de la misma Draft PR #23, con commit y push en `feature/i1-h03-e1-company-domain`. Sin código, nuevas suites funcionales, E2, merge ni cambios de gates. B0/P0/E0 y entrada S0 de H03 pendientes; S0 cerrado solo para H02, CL0 `PENDING`, sin AWS.
 
 ## 1. Decisiones de producto incorporadas
 
@@ -461,7 +463,9 @@ continuación. Véase la [evidencia E9](../reviews/i1-h02-first-snapshot-evidenc
 
 ### I1-H03 — Registrar empresa y primer administrador
 
-**Estado de ejecución:** H03 y E1 `IN_PROGRESS`, sin aceptación. El [plan de ejecución](i1-h03-execution-plan.md) está `APPROVED` sobre `27b404c56b0d918e69c20b0319c6cc29daa92b89`, integrado por PR #21 / `b398694bf1a68b65c674efa579b9c468a207c464`. Las decisiones locales E1 aprobadas sobre `b097d0aced1764e88149fa618e598d8891c6b6cf` están integradas por PR #22 / `2e797ebfd5c22481ec0a21f4c0ca8d9933fffbbd`, confirmado por el PO el 2026-11-02. El PO autoriza exclusivamente dominio y pruebas E1 locales con datos sintéticos en `feature/i1-h03-e1-company-domain`, documentación, commit/push y Draft PR, sin merge. [Evidencia E1](../reviews/i1-h03-e1-domain-evidence.md). Sin dependencia ICU/normalizador ni E2 y posteriores; el contrato completo que sigue se conserva como alcance futuro. B0/P0/E0/entrada S0 de H03 pendientes, concreción ADR-003/007 pendiente antes de E5; ningún gate cerrado por E1, CL0 `PENDING`, sin AWS.
+**Estado de ejecución:** H03 `IN_PROGRESS`; E1 `ACCEPTED` por el PO el 2026-11-07 sobre `58c5a047708a5380ea6b8cecbbfc8c133b9f88d6`; E2/posteriores no autorizadas. El [plan de ejecución](i1-h03-execution-plan.md) está `APPROVED` sobre `27b404c56b0d918e69c20b0319c6cc29daa92b89`, integrado por PR #21 / `b398694bf1a68b65c674efa579b9c468a207c464`. Las decisiones locales E1 aprobadas sobre `b097d0aced1764e88149fa618e598d8891c6b6cf` están integradas por PR #22 / `2e797ebfd5c22481ec0a21f4c0ca8d9933fffbbd`, confirmado por el PO el 2026-11-02. La autorización inicial del PO del 2026-11-02 permitió exclusivamente dominio y pruebas E1 locales con datos sintéticos en `feature/i1-h03-e1-company-domain`, documentación, commit/push y Draft PR, sin merge. [Evidencia E1](../reviews/i1-h03-e1-domain-evidence.md). Sin dependencia ICU/normalizador ni E2 y posteriores; el contrato completo que sigue se conserva como alcance futuro. B0/P0/E0/entrada S0 de H03 pendientes, concreción ADR-003/007 pendiente antes de E5; ningún gate cerrado por E1, CL0 `PENDING`, sin AWS.
+
+**Aceptación de E1 y evidencia:** La revisión técnica asistida por Codex en este chat (2026-11-07) y la regresión del locale son distintas de la aprobación del PO. CI, Trivy y Build OCI en verde sobre `58c5a047708a5380ea6b8cecbbfc8c133b9f88d6` según confirmación expresa del PO; no se atribuye esa comprobación al agente. Las suites locales anteriores (`server:test` y `server:verify`: 413 pruebas, 0 fallos, 0 errores y 1 benchmark omitido; 94 casos de dominio) se ejecutaron en un workspace que incluía dos ajustes de imports del PO en pruebas H02 fuera del commit/PR. Se conservan esos ajustes fuera de la PR. Los checks del nuevo SHA documental los verificará e informará el PO, sin espera ni supervisión del agente. La aprobación corresponde exclusivamente al dominio E1; la PR #23 sigue Draft y sin merge. Solo se registra su aceptación documental, sin modificar gates ni autorizar E2. Véase la [evidencia E1](../reviews/i1-h03-e1-domain-evidence.md).
 
 **Actor y valor:** representante empresarial; inicia adopción sin intervención universitaria.
 

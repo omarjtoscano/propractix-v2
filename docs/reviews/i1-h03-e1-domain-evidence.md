@@ -2,7 +2,7 @@
 
 - Fecha de validación inicial y corrección: 2026-11-07 (Europe/Madrid).
 - Evidencia inicial: commit `28f34168c725d20baf51be5a1c3861029d131ddb`; la corrección de locale y sus resultados se registran por separado al final de la validación.
-- Estado: H03 y E1 `IN_PROGRESS`, sin aceptación; E2 y posteriores `NOT_AUTHORIZED / NOT_STARTED`.
+- Estado: H03 `IN_PROGRESS`; E1 `ACCEPTED` por el Product Owner el 2026-11-07 sobre `58c5a047708a5380ea6b8cecbbfc8c133b9f88d6`; E2 y posteriores `NOT_AUTHORIZED / NOT_STARTED`.
 - Autorización: PO, 2026-11-02, después de confirmar la integración de [PR #22](https://github.com/omarjtoscano/propractix-v2/pull/22) mediante `2e797ebfd5c22481ec0a21f4c0ca8d9933fffbbd`.
 - Rama: `feature/i1-h03-e1-company-domain`, creada desde `increment/01-company-identity-catalog` actualizado en ese SHA.
 - Fuentes: [especificación](../ProPractix-V2-MVP-Espana-Especificacion-Arquitectura-y-Tecnica-para-Codex.md), [blueprint](../ProPractix-V2-Blueprint-Dominio-y-Mapas-Legales-Espana.md), ADR-001/002/003/004/005/006/007/008/012 y [plan H03](../plans/i1-h03-execution-plan.md). No se cambian sus decisiones de producto ni se aprueban políticas nuevas.
@@ -73,7 +73,7 @@ JDK disponible: OpenJDK `21.0.12.1`. Logs de ejecución locales en `/tmp/h03-e1-
 
 ## Corrección de revisión — locale admitido estable (Draft PR #23)
 
-Petición expresa del PO: la empresa se crea desde el perfil y el locale ya resueltos al admitir la solicitud. Cambiar posteriormente el mapeo país→locale no debe bloquear el alta en curso; el nuevo mapeo se aplica a nuevas solicitudes. Se conserva el alcance exclusivo E1, sin dependencias nuevas, E2, cambios funcionales H02, merge o aceptación.
+Petición expresa del PO: la empresa se crea desde el perfil y el locale ya resueltos al admitir la solicitud. Cambiar posteriormente el mapeo país→locale no debe bloquear el alta en curso; el nuevo mapeo se aplica a nuevas solicitudes. Al publicar la corrección se conservó el alcance exclusivo E1, sin dependencias nuevas, E2, cambios funcionales H02, merge ni aceptación automática; el PO aceptó E1 posteriormente según el registro siguiente.
 
 El fallo se reprodujo antes de la corrección con `mappingChangeAffectsNewSubmissionsWithoutBlockingTheAdmittedOnboarding`: alta admitida bajo `ES → es`, cambio a `ES → en`, creación por la antigua factoría con la política nueva. La regresión falló esperando `es` y obteniendo `en` (16 casos de `CompanyOnboardingTest`, 1 fallo). Log local: `/tmp/h03-e1-locale-regression-before.log`.
 
@@ -92,10 +92,24 @@ La regresión comprueba, en un único escenario: nuevo mapeo entre solicitud y c
 
 Logs locales nuevos: `/tmp/h03-e1-locale-unit.log`, `/tmp/h03-e1-locale-server-test.log` y `/tmp/h03-e1-locale-server-verify.log`. Las cifras anteriores de 412 casos corresponden a la entrega inicial; no sustituyen la ejecución de esta corrección. Durante el trabajo el PO confirmó sus correcciones de imports en `StrictCsvCatalogArtifactParserTest.java` y `PublishInstitutionCatalogServiceTest.java`. Se conservan en el workspace y quedan fuera del commit E1; las suites completas se ejecutan sobre ese workspace. No se cambia la lógica de H02 en esta entrega.
 
+## Aceptación expresa del Product Owner — 2026-11-07
+
+**E1 `ACCEPTED` sobre `58c5a047708a5380ea6b8cecbbfc8c133b9f88d6`.** El PO aprueba exclusivamente I1-H03 E1 — Dominio empresarial e invariantes; H03 sigue `IN_PROGRESS` y E2/posteriores `NOT_AUTHORIZED / NOT_STARTED`. La aceptación comprende la corrección del locale admitido y conserva la frontera ASCII/adapter IDNA y todas las exclusiones.
+
+| Evidencia / decisión | Procedencia y alcance |
+|---|---|
+| Revisión técnica | Revisión asistida por Codex en este chat el 2026-11-07: reproducción del fallo, revisión de la corrección del locale y de las comprobaciones de perfil/tenant, con regresión local favorable. No se presenta como aprobación del PO ni como revisión independiente. |
+| Suites locales | Ejecuciones anteriores de `server:test` y `server:verify`: cada una 413 pruebas, 0 fallos, 0 errores, 1 benchmark omitido; 94 casos de dominio, arquitectura y compilación Java independiente correctos. El workspace incluía los dos ajustes de imports H02 del PO en `StrictCsvCatalogArtifactParserTest.java` y `PublishInstitutionCatalogServiceTest.java`. Permanecen fuera de `58c5a047708a5380ea6b8cecbbfc8c133b9f88d6` y de la PR; las suites no se describen como ejecutadas sobre un checkout limpio de ese SHA. |
+| Checks remotos del SHA funcional | CI, Trivy y Build OCI en verde sobre `58c5a047708a5380ea6b8cecbbfc8c133b9f88d6`, confirmados expresamente por el PO en este chat el 2026-11-07. Se registra su confirmación sin inventar números/URLs de ejecuciones ni atribuir la verificación al agente. |
+| Aprobación | Decisión expresa del PO sobre el SHA funcional anterior; es distinta de revisión técnica, resultados locales y checks remotos. |
+| Nuevo commit documental | Solo AGENTS, planes, esta evidencia y cuerpo de la misma Draft PR #23; sin ejecución nueva de suites funcionales. El PO verificará e informará los checks del nuevo SHA, sin espera ni supervisión del agente. |
+
+La validación de esta actualización documental se limita a coherencia de estados/SHA/procedencia, enlaces/anclas locales, diff y estado Git. Se comprueba que las dos correcciones H02 del PO se conservan sin incluir en el commit ni en el diff acumulado de la PR. Los resultados originales y sus logs se mantienen diferenciados.
+
 ## Entrega y límites conservados
 
-Cambios: `AGENTS.md`, plan H03, sincronización del estado en el plan del incremento, esta evidencia, `organization.domain` y sus pruebas, más reglas arquitectónicas. La entrega corresponde al commit que incorpora este documento; su SHA y el enlace de Draft PR se informan al PO y quedan en Git/PR, evitando una autorreferencia imposible del hash dentro del mismo commit.
+Cambios de la entrega funcional E1: `AGENTS.md`, plan H03, sincronización del estado en el plan del incremento, esta evidencia, `organization.domain` y sus pruebas, más reglas arquitectónicas. La actualización de aceptación solo cambia los cuatro documentos anteriores y el cuerpo de PR #23. La entrega corresponde al commit que incorpora este documento; su SHA y el enlace de Draft PR se informan al PO y quedan en Git/PR, evitando una autorreferencia imposible del hash dentro del mismo commit.
 
-B0/P0/E0 y entrada S0 de H03 permanecen pendientes. S0 continúa cerrado solo para H02; CL0 `PENDING`. H03 no está expuesta por HTTP ni siquiera localmente. Sin E2+, puertos, casos de uso, adapters, JPA, migraciones, DNS, OpenAPI, frontend, provisioning, credenciales, recuperación ni publicación de políticas. Sin AWS, merge o aceptación de E1. Se conservan las aprobaciones y evidencia histórica de H02 y PR #21/#22. La concreción ADR-003/007 sigue pendiente antes de E5.
+B0/P0/E0 y entrada S0 de H03 permanecen pendientes. S0 continúa cerrado solo para H02; CL0 `PENDING`. H03 no está expuesta por HTTP ni siquiera localmente. Sin E2+, puertos, casos de uso, adapters, JPA, migraciones, DNS, OpenAPI, frontend, provisioning, credenciales, recuperación ni publicación de políticas. Sin AWS ni merge. La aceptación expresa de E1 no acepta H03 ni autoriza E2. Se conservan las aprobaciones y evidencia histórica de H02 y PR #21/#22. La concreción ADR-003/007 sigue pendiente antes de E5.
 
-CI, Trivy y Build OCI del commit entregado quedan a cargo del PO, quien verificará e informará sus resultados. El agente no espera ni supervisa esas ejecuciones.
+CI, Trivy y Build OCI están en verde sobre `58c5a047708a5380ea6b8cecbbfc8c133b9f88d6` según confirmación expresa del PO. Los checks del nuevo commit exclusivamente documental quedan a cargo del PO, quien verificará e informará sus resultados. El agente no espera ni supervisa esas ejecuciones.
