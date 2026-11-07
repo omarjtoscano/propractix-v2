@@ -88,9 +88,11 @@ public final class SubmitCompanyOnboardingService implements SubmitCompanyOnboar
                     submission.onboarding().submittedAt(), command.correlationId()));
         });
         Objects.requireNonNull(outcome, "commit outcome must not be null");
-        // UNKNOWN is not a license to submit again. The local boundary owns reconciliation.
-        return outcome == OnboardingUnitOfWork.CommitOutcome.ROLLED_BACK
-                ? new TemporarilyUnavailable() : new Received(submission.operationId());
+        return switch (outcome) {
+            case COMMITTED -> new Received(submission.operationId());
+            case ROLLED_BACK -> new TemporarilyUnavailable();
+            case UNKNOWN -> new CommitUncertain(submission.operationId());
+        };
     }
 
     private Prepared prepare(SubmitCompanyOnboardingCommand command, Instant at) {

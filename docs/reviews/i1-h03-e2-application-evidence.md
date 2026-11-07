@@ -9,7 +9,7 @@
 
 ## Implementación y orden de efectos
 
-`SubmitCompanyOnboarding` recibe un comando tipado con perfil E1, nombre/correo canónico del administrador, referencia no confiable al aviso y correlación. No recibe tenant, rol, cuenta ni contraseña. La salida recibida contiene únicamente un ID opaco de operación, distinto del ID de onboarding. Los rechazos y la indisponibilidad son resultados tipados; no hay contrato HTTP ni textos de presentación.
+`SubmitCompanyOnboarding` recibe un comando tipado con perfil E1, nombre/correo canónico del administrador, referencia no confiable al aviso y correlación. No recibe tenant, rol, cuenta ni contraseña. Solo un commit confirmado devuelve `Received` con un ID opaco de operación, distinto del ID de onboarding. Un rollback confirmado devuelve `TemporarilyUnavailable`; un commit incierto devuelve `CommitUncertain`, cuyo ID identifica el intento y no acredita recepción durable ni habilita reintento sin reconciliación. Los rechazos y la indisponibilidad son resultados tipados; no hay contrato HTTP ni textos de presentación.
 
 Secuencia comprobada:
 
@@ -17,7 +17,7 @@ Secuencia comprobada:
 2. Consultar `compliance.application.port.in.ResolveApplicablePrivacyNotice` por finalidad empresarial, jurisdicción e instante del servidor. Comprobar estado/scope, vigencia `[validFrom, validUntil)` y coincidencia exacta de ID/versión. Solo `APPROVED / OPERATIONAL` es admisible en scope operativo; `TEST_ONLY / LOCAL_TEST` se admite exclusivamente en ejecución `LOCAL_TEST` explícita. No hay wiring ejecutable de estos scopes en E2.
 3. Aplicar admisión exacta del dominio y validar el catálogo E1. Solo después se derivan cifrado/fingerprints fiscales a través del puerto. El índice global restringido devuelve únicamente coincidencia booleana; no revela IDs ni datos de otro tenant. Se consultan todas las versiones suministradas por protección fiscal.
 4. Construir el onboarding `IDENTITY_PENDING`, capturando perfil, locale, política y expiración suministrados. Consultar ruta técnica mediante doble. `NO_MAIL_ROUTE` e `INDETERMINATE` conservan la solicitud pendiente y añaden intención diferida de recheck si cabe antes de expirar. Una indisponibilidad técnica tipada del resolver se convierte en `INDETERMINATE`.
-5. Dentro del puerto de unidad de trabajo local, insertar onboarding/evidencia autoritativa, eventos y auditoría. El doble prueba rollback conjunto ante fallo de repositorio, outbox o auditoría. La evidencia conserva el objeto resuelto por el servidor y su instante de registro; no copia la referencia del cliente como fuente de verdad.
+5. Dentro del puerto de unidad de trabajo local, insertar onboarding/evidencia autoritativa, eventos y auditoría. El doble prueba rollback conjunto ante fallo de repositorio, outbox o auditoría. La evidencia conserva el objeto resuelto por el servidor, incluida la huella SHA-256 obligatoria de su contenido, y su instante de registro; no copia la referencia del cliente como fuente de verdad.
 
 El submit no crea empresa, cuenta ni membership. Si hay coincidencia fiscal, conserva `COMPANY_REVIEW_REQUIRED` sin reclamar el tenant ni solicitar provisioning automático. En otro caso deja una petición de provisioning para consumo posterior al commit. El submit no depende de `identity` ni de `CompanyRepository`; ArchUnit lo verifica. Dos solicitudes con el mismo correo quedan separadas y pendientes, también bajo concurrencia lógica con dobles; ninguna coincidencia autoriza un vínculo.
 
@@ -34,7 +34,7 @@ El submit no crea empresa, cuenta ni membership. Si hay coincidencia fiscal, con
 | Índice anti-duplicado | Consulta global excepcional de `organization`, país/tipo/fingerprints, solo booleano. No es lectura de empresa ajena. |
 | Empresas | Lectura por tenant y escritura mediante `ScopedCompany`, cuyo constructor rechaza scope/empresa distintos antes de alcanzar el adapter. |
 | Onboarding | Acceso interno por proceso antes de tener tenant; lookup tenant-aware no expone registros pre-tenant ni de otro tenant. No hay consulta pública. |
-| Unidad de trabajo | Onboarding, outbox y auditoría locales. `ROLLED_BACK` garantiza cero escrituras; `UNKNOWN` conserva respuesta genérica con ID para reconciliación por el boundary, sin reejecución automática. |
+| Unidad de trabajo | Onboarding, outbox y auditoría locales. `COMMITTED` confirma recepción durable y produce `Received`; `ROLLED_BACK` confirma cero escrituras y produce `TemporarilyUnavailable`; `UNKNOWN` produce `CommitUncertain`, sin confirmar recepción ni rollback, incluso si no se conserva ninguna escritura. Exige reconciliación antes de cualquier reintento; sin reejecución automática. |
 | Ruta | Resultado tipado; doble determinista, sin DNS ni inspección del hosting. |
 
 `CompanyOnboardingEventV1` contiene exclusivamente `eventId`, tipo, `onboardingId`, versión de aggregate, instantes de ocurrencia/disponibilidad y `correlationId`. Versión de evento `1`, productor `organization`, aggregate `CompanyOnboarding`. El tenant se omite porque aún no existe. Tipos: `COMPANY_ONBOARDING_SUBMITTED`, `ADMINISTRATOR_PROVISIONING_REQUESTED`, `EMAIL_DOMAIN_ROUTING_RECHECK_REQUESTED`. Sin nombres, correo/dominio, fiscales, fingerprints, ciphertext ni credenciales. La auditoría preautenticada conserva recurso/correlación/instante y códigos fijos de actor, acción y resultado, sin PII. Las pruebas verifican una lista exacta de campos permitidos y ausencia de valores sensibles sintéticos.
@@ -44,17 +44,21 @@ El submit no crea empresa, cuenta ni membership. Si hay coincidencia fiscal, con
 | Escenario | Evidencia |
 |---|---|
 | Aviso ausente, expirado, futuro, sustituido, manipulado, suspendido, otra finalidad/jurisdicción o scope incorrecto | Cero onboarding, outbox y auditoría; ningún cálculo fiscal ni consulta de ruta. ID/versión antiguos no se aceptan ni migran automáticamente. |
-| Aviso correcto | Se conserva la instancia autoritativa, no la referencia suministrada por el cliente; instante fijo del servidor. |
+| Aviso correcto | Se conserva la instancia autoritativa con su huella de contenido, no la referencia suministrada por el cliente; instante fijo del servidor. Referencia textual local `local-synthetic-company-onboarding` / `2026-11-02.1`, sin fixture materializada. |
 | Política ausente / dominio bloqueado / país deshabilitado | Fail-closed y cero efectos; privacidad precede protección fiscal. |
 | Ruta capaz / sin ruta / indeterminada / resolver indisponible | Alta pendiente, sin activación; intención de recheck para resultados no concluyentes, con demora suministrada. |
 | Cuenta/correo coincidente | Submit sin dependencia ni llamada a `identity`, IDs de intención distintos y ningún vínculo/tenant. Los resultados propuestos del contrato se prueban solo mediante dobles. Resolución de cuentas y deduplicación futura: E5. |
 | Empresa fiscal coincidente | Misma forma pública de recepción, retención para revisión sin empresa/membership nueva ni revelación del tenant coincidente. |
-| Fallos y concurrencia lógica | Fallo previo sin escrituras, rollback conjunto y reintento seguro cuando se garantiza rollback; commit desconocido sin repetir; error de programación propagado tras rollback del doble; dos candidatos simultáneos sin vínculo. |
+| Fallos y concurrencia lógica | Fallo previo sin escrituras, rollback conjunto y reintento seguro cuando se garantiza rollback; commit desconocido con escrituras conservadas o totalmente perdidas, sin afirmar recepción ni rollback y sin repetir; error de programación propagado tras rollback del doble; dos candidatos simultáneos sin vínculo. |
 | Tenant A/B | Lectura ajena vacía, escritura cruzada rechazada por el scope tipado; onboarding pre-tenant no visible por tenant y asociado visible solo a su tenant. |
 | Perfil / locale | Conservación de nombre comercial, país, fiscal, timezone, preferencia y correo case/puntos/`+`; locale soportado y fallback E1 sin selección de jurisdicción por idioma. |
 | Arquitectura | Matriz cross-context ADR-001, ausencia de ciclos, aplicación sin frameworks/I/O/ICU/platform, submit sin identity/repositorio empresarial. |
 
-| Comando | Resultado local de esta entrega |
+### Validación inicial — `fbfffce4e2111439a7039129bab0d962b530b4e3`
+
+Estos resultados iniciales se conservan como histórico; los resultados de las correcciones se registran debajo.
+
+| Comando | Resultado local inicial |
 |---|---|
 | `npm run infra:up` | Correcto; PostgreSQL 16 y Mailpit saludables, infraestructura local existente. |
 | Compilación `javac --release 21` sin classpath de dependencias | Correcta: 34 archivos de dominio/aplicación/contratos de organization, compliance e identity. |
@@ -70,10 +74,29 @@ Entorno: JDK 21.0.12.1. La primera ejecución completa de `server:test` dentro d
 
 Logs locales: `/tmp/h03-e2-focused.log`, `/tmp/h03-e2-server-test.log` (intento aislado), `/tmp/h03-e2-server-test-unrestricted.log` (461 casos), `/tmp/h03-e2-server-test-final.log` y `/tmp/h03-e2-server-verify-final.log`. Los logs de `/tmp` son auxiliares del workspace y no se versionan.
 
+## Corrección de hallazgos de PR #25 — 2026-11-07
+
+Autorizada expresamente por el PO en este chat dentro de la misma Draft PR y rama, sin ampliar E2 ni aceptar la entrega. Se corrigen ambos hallazgos:
+
+- El switch del caso de uso distingue confirmación de commit, confirmación de rollback e incertidumbre. `UNKNOWN` devuelve exclusivamente `CommitUncertain`; no se transforma en éxito ni en indisponibilidad reintentable. Su ID es diagnóstico del intento y no prueba que exista un registro durable. El doble reproduce tanto escrituras conservadas como pérdida total; en ambos casos se comprueba el resultado incierto y una sola ejecución del boundary. Se añade regresión separada del rollback confirmado.
+- `ResolveApplicablePrivacyNotice.Notice` exige `ContentHash`, un SHA-256 canónico, y la evidencia conserva esa huella dentro de la resolución autoritativa. El doble de compliance devuelve una huella diferente para la misma referencia; la prueba verifica que la evidencia contiene exactamente esa huella e instancia del servidor, sin derivarla del ID/versión ni recibirla en el comando. Se rechazan huellas ausentes o malformadas antes de poder formar una resolución válida.
+- `Reference.noticeId` pasa de UUID a identificador textual; las pruebas usan el ID local previsto y versión candidata de las [secciones 3.1 y 5 del plan](../plans/i1-h03-execution-plan.md#5-propuesta-p0-minimización-aviso-y-retención): `local-synthetic-company-onboarding` / `2026-11-02.1`. No se crea alias UUID, archivo de política, texto ES/EN, hash aprobado ni fixture ejecutable. Los cambios de ID/versión siguen provocando rechazo.
+
+| Validación de la corrección | Resultado |
+|---|---|
+| `npm run infra:up` | PostgreSQL y Mailpit saludables. |
+| `npm run server:test` | **466 pruebas, 0 fallos, 0 errores, 1 benchmark BCrypt omitido; BUILD SUCCESS**. |
+| `npm run server:verify` | **466 pruebas, 0 fallos, 0 errores, 1 benchmark BCrypt omitido; BUILD SUCCESS**. JAR empaquetado/reempaquetado; Failsafe sin suites adicionales. |
+| Regresiones / ArchUnit | Submit: 42 casos; 4 más que en el SHA inicial. Contratos/aplicación E2: 51 casos en total. ArchUnit: 15 reglas + 2 pruebas de matriz/transacciones + 1 detector negativo, correctos. |
+| Compilación Java 21 sin classpath / `jdeps` | 34 archivos de dominio/aplicación/contratos; solo `java.base`. |
+| Enlaces locales / diff | 3 destinos del informe comprobados; `git diff --check` correcto. |
+
+Logs locales nuevos: `/tmp/h03-e2-fixes-focused.log`, `/tmp/h03-e2-fixes-server-test.log`, `/tmp/h03-e2-fixes-server-verify.log`. CI, Trivy y Build OCI del nuevo SHA los verificará e informará el PO, sin espera ni supervisión del agente.
+
 ## Límites conservados
 
-Solo datos sintéticos en memoria. Los dobles de aviso son metadatos construidos dentro de las pruebas, sin textos jurídicos, hashes ni fixture publicada. No se modifica ninguna política existente. Los valores `APPROVED` usados para probar el contrato son datos sintéticos, no una aprobación jurídica.
+Solo datos sintéticos en memoria. Los dobles de aviso son metadatos construidos dentro de las pruebas, sin textos jurídicos, huellas aprobadas ni fixture publicada. Las huellas de pruebas (`a` o `b` repetidas 64 veces) son metadatos sintéticos suministrados por el doble de compliance, no hashes de una fixture local aprobada. No se modifica ninguna política existente. Los valores `APPROVED` usados para probar el contrato son datos sintéticos, no una aprobación jurídica.
 
-El agregado/perfil que recibe el repositorio es **entrada transitoria** del adapter; el contrato exige proteger PII al persistir y usar la representación fiscal protegida. Las pruebas E2 no acreditan cifrado real, separación de claves, unicidad fiscal concurrente ni predicados SQL: E3 deberá demostrarlo con PostgreSQL. No hay implementación del boundary transaccional, outbox/inbox/relay, backoff ejecutable, reconciliación durable, deduplicación de provisioning ni idempotencia durable. Tampoco se acredita todavía igualdad temporal de respuestas ante coincidencias: el adapter público y su coordinación asíncrona se validarán en E8. La respuesta `UNKNOWN` solo expresa el contrato futuro del boundary; no acredita durabilidad E3/E6.
+El agregado/perfil que recibe el repositorio es **entrada transitoria** del adapter; el contrato exige proteger PII al persistir y usar la representación fiscal protegida. Las pruebas E2 no acreditan cifrado real, separación de claves, unicidad fiscal concurrente ni predicados SQL: E3 deberá demostrarlo con PostgreSQL. No hay implementación del boundary transaccional, outbox/inbox/relay, backoff ejecutable, reconciliación durable, deduplicación de provisioning ni idempotencia durable. Tampoco se acredita todavía igualdad temporal de respuestas ante coincidencias: el adapter público y su coordinación asíncrona se validarán en E8. `CommitUncertain` expresa la incertidumbre del intento, sin constancia durable ni permiso de reintento; la reconciliación e idempotencia durables no se implementan ni se acreditan en E2.
 
 E3 y posteriores `NOT_AUTHORIZED / NOT_STARTED`. Sin SQL/JPA, migraciones, normalizador ICU4J, DNS real, HTTP/OpenAPI, frontend, provisioning, credenciales, envío de correo, AWS, merge ni aceptación E2. B0/P0/E0 y entrada S0 propia de H03 siguen pendientes; S0 continúa cerrado solo para H02 y `CL0_CLOUD_STAGING` sigue `PENDING`. CI, Trivy y Build OCI de esta entrega los verificará e informará el PO, sin espera ni supervisión del agente.

@@ -7,9 +7,9 @@ import java.util.UUID;
 public interface SubmitCompanyOnboarding {
     Result submit(SubmitCompanyOnboardingCommand command);
 
-    sealed interface Result permits Received, Rejected, TemporarilyUnavailable { }
+    sealed interface Result permits Received, Rejected, TemporarilyUnavailable, CommitUncertain { }
 
-    /** The operation ID is opaque; it is neither a tenant nor an account identifier. */
+    /** Confirmed durable receipt. The opaque operation ID is neither a tenant nor an account ID. */
     record Received(UUID operationId) implements Result {
         public Received {
             Objects.requireNonNull(operationId, "operationId must not be null");
@@ -32,4 +32,14 @@ public interface SubmitCompanyOnboarding {
 
     /** Only returned when the boundary guarantees that no write committed. */
     record TemporarilyUnavailable() implements Result { }
+
+    /**
+     * Neither receipt nor rollback is confirmed. This ID identifies the attempted operation,
+     * not a durable receipt. Reconciliation is required before any retry; no blind resubmission.
+     */
+    record CommitUncertain(UUID operationId) implements Result {
+        public CommitUncertain {
+            Objects.requireNonNull(operationId, "operationId must not be null");
+        }
+    }
 }

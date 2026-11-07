@@ -3,7 +3,6 @@ package com.propractix.compliance.application.port.in;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 
 /** Read-only server resolution. No personal data or client reference enters the query. */
 public interface ResolveApplicablePrivacyNotice {
@@ -22,12 +21,23 @@ public interface ResolveApplicablePrivacyNotice {
         }
     }
 
-    record Reference(UUID noticeId, String version) {
+    /** Public notice identifier; supports the planned local notice without a UUID alias. */
+    record Reference(String noticeId, String version) {
         public Reference {
             Objects.requireNonNull(noticeId, "noticeId must not be null");
             Objects.requireNonNull(version, "version must not be null");
-            if (version.isBlank()) {
-                throw new IllegalArgumentException("notice version must not be blank");
+            if (noticeId.isBlank() || version.isBlank()) {
+                throw new IllegalArgumentException("notice ID and version must not be blank");
+            }
+        }
+    }
+
+    /** SHA-256 of the notice content supplied by compliance, independent of the client reference. */
+    record ContentHash(String sha256) {
+        public ContentHash {
+            Objects.requireNonNull(sha256, "content hash must not be null");
+            if (!sha256.matches("[0-9a-f]{64}")) {
+                throw new IllegalArgumentException("content hash must be canonical SHA-256");
             }
         }
     }
@@ -40,10 +50,11 @@ public interface ResolveApplicablePrivacyNotice {
         }
     }
 
-    record Notice(Reference reference, Purpose purpose, Jurisdiction jurisdiction,
+    record Notice(Reference reference, ContentHash contentHash, Purpose purpose, Jurisdiction jurisdiction,
             Status status, Scope scope, Instant validFrom, Instant validUntil) {
         public Notice {
             Objects.requireNonNull(reference, "reference must not be null");
+            Objects.requireNonNull(contentHash, "contentHash must not be null");
             Objects.requireNonNull(purpose, "purpose must not be null");
             Objects.requireNonNull(jurisdiction, "jurisdiction must not be null");
             Objects.requireNonNull(status, "status must not be null");

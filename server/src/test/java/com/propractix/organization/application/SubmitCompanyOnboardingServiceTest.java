@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.propractix.compliance.application.port.in.ResolveApplicablePrivacyNotice;
+import com.propractix.compliance.application.port.in.ResolveApplicablePrivacyNotice.ContentHash;
 import com.propractix.compliance.application.port.in.ResolveApplicablePrivacyNotice.Jurisdiction;
 import com.propractix.compliance.application.port.in.ResolveApplicablePrivacyNotice.Notice;
 import com.propractix.compliance.application.port.in.ResolveApplicablePrivacyNotice.Purpose;
@@ -67,7 +68,9 @@ class SubmitCompanyOnboardingServiceTest {
     static final LocaleCode SPANISH = new LocaleCode("es");
     static final LocaleCode ENGLISH = new LocaleCode("en");
     static final Jurisdiction JURISDICTION = new Jurisdiction("SYNTHETIC-ONBOARDING-JURISDICTION");
-    static final Reference REFERENCE = new Reference(UUID.fromString("00000000-0000-4000-8000-000000000001"), "test-v1");
+    static final Reference REFERENCE = new Reference("local-synthetic-company-onboarding", "2026-11-02.1");
+    // Synthetic metadata only, not the hash of a materialized or approved local notice fixture.
+    static final ContentHash CONTENT_HASH = new ContentHash("a".repeat(64));
     static final ProtectedTaxIdentity PROTECTED = new ProtectedTaxIdentity("synthetic-encryption-v1", "test-ciphertext",
             List.of(new Fingerprint("synthetic-hmac-v2", "test-index-v2"),
                     new Fingerprint("synthetic-hmac-v1", "test-index-v1")));
@@ -94,6 +97,7 @@ class SubmitCompanyOnboardingServiceTest {
         assertThat(stored.protectedTaxIdentity()).isEqualTo(PROTECTED);
         assertThat(stored.privacyEvidence().resolvedNotice()).isSameAs(fixture.notice.orElseThrow());
         assertThat(stored.privacyEvidence().resolvedNotice().reference()).isNotSameAs(clientReference);
+        assertThat(stored.privacyEvidence().resolvedNotice().contentHash()).isSameAs(CONTENT_HASH);
         assertThat(stored.privacyEvidence().recordedAt()).isEqualTo(NOW);
         assertThat(fixture.calls).containsExactly("policies", "privacy", "protect", "match", "routing", "transaction",
                 "repository", "outbox", "outbox", "audit");
@@ -149,7 +153,7 @@ class SubmitCompanyOnboardingServiceTest {
     @ValueSource(booleans = {true, false})
     void tamperedIdOrStaleVersionCannotBecomeEvidence(boolean tamperId) {
         Fixture fixture = new Fixture();
-        var reference = new Reference(tamperId ? UUID.randomUUID() : REFERENCE.noticeId(),
+        var reference = new Reference(tamperId ? "tampered-local-notice" : REFERENCE.noticeId(),
                 tamperId ? REFERENCE.version() : "superseded-test-v0");
         assertThat(fixture.service().submit(command(profile(ES, Optional.empty()), reference))).isEqualTo(
                 new SubmitCompanyOnboarding.Rejected(Failure.PRIVACY_NOTICE_CHANGED));
@@ -160,7 +164,7 @@ class SubmitCompanyOnboardingServiceTest {
     @Test
     void replacementBetweenPresentationAndSubmitIsNotAutomaticallyAccepted() {
         Fixture fixture = new Fixture();
-        fixture.notice = Optional.of(new Notice(new Reference(REFERENCE.noticeId(), "test-v2"),
+        fixture.notice = Optional.of(new Notice(new Reference(REFERENCE.noticeId(), "2026-11-02.2"), CONTENT_HASH,
                 Purpose.COMPANY_ONBOARDING, JURISDICTION, Status.TEST_ONLY, Scope.LOCAL_TEST,
                 NOW.minusSeconds(1), NOW.plusSeconds(60)));
         assertThat(fixture.service().submit(command())).isEqualTo(
@@ -338,13 +342,64 @@ class SubmitCompanyOnboardingServiceTest {
         assertThat(fixture.audits).hasSize(1);
     }
 
-    @Test
-    void unknownCommitDoesNotAdvertiseSafeRetryOrExecuteAgain() {
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void unknownCommitNeverConfirmsReceiptOrSafeRetryEvenWhenAllWritesAreLost(boolean retainWrites) {
         Fixture fixture = new Fixture();
         fixture.commitOutcome = OnboardingUnitOfWork.CommitOutcome.UNKNOWN;
-        var result = (SubmitCompanyOnboarding.Received) fixture.service().submit(command());
-        assertThat(fixture.onlySubmission().operationId()).isEqualTo(result.operationId());
+        fixture.retainWritesOnUnknown = retainWrites;
+        var result = fixture.service().submit(command());
+        assertThat(result).isInstanceOf(SubmitCompanyOnboarding.CommitUncertain.class)
+                .isNotInstanceOf(SubmitCompanyOnboarding.Received.class)
+                .isNotInstanceOf(SubmitCompanyOnboarding.TemporarilyUnavailable.class);
+        var uncertain = (SubmitCompanyOnboarding.CommitUncertain) result;
+        assertThat(uncertain.operationId()).isNotNull();
+        if (retainWrites) {
+            assertThat(fixture.onlySubmission().operationId()).isEqualTo(uncertain.operationId());
+            assertThat(fixture.events).hasSize(2);
+            assertThat(fixture.audits).hasSize(1);
+        } else {
+            fixture.assertNoEffects();
+        }
         assertThat(fixture.calls.stream().filter("transaction"::equals)).hasSize(1);
+    }
+
+    @Test
+    void confirmedRollbackIsDistinctFromReceiptAndUncertainty() {
+        Fixture fixture = new Fixture();
+        fixture.commitOutcome = OnboardingUnitOfWork.CommitOutcome.ROLLED_BACK;
+        assertThat(fixture.service().submit(command()))
+                .isEqualTo(new SubmitCompanyOnboarding.TemporarilyUnavailable());
+        fixture.assertNoEffects();
+    }
+
+    @Test
+    void evidenceKeepsTheContentHashFromComplianceRatherThanAssumingOneFromTheReference() {
+        Fixture fixture = new Fixture();
+        var serverHash = new ContentHash("b".repeat(64));
+        var resolved = fixture.notice.orElseThrow();
+        fixture.notice = Optional.of(new Notice(REFERENCE, serverHash, resolved.purpose(), resolved.jurisdiction(),
+                resolved.status(), resolved.scope(), resolved.validFrom(), resolved.validUntil()));
+
+        fixture.service().submit(command());
+
+        var evidence = fixture.onlySubmission().privacyEvidence().resolvedNotice();
+        assertThat(evidence).isSameAs(fixture.notice.orElseThrow());
+        assertThat(evidence.contentHash()).isSameAs(serverHash).isNotEqualTo(CONTENT_HASH);
+        assertThat(evidence.reference()).isEqualTo(REFERENCE);
+        assertThat(Arrays.stream(Reference.class.getRecordComponents()).map(c -> c.getName()))
+                .containsExactly("noticeId", "version");
+    }
+
+    @Test
+    void missingOrMalformedContentHashCannotBecomeAuthoritativeNotice() {
+        var resolved = new Fixture().notice.orElseThrow();
+        assertThatThrownBy(() -> new Notice(REFERENCE, null, resolved.purpose(), resolved.jurisdiction(),
+                resolved.status(), resolved.scope(), resolved.validFrom(), resolved.validUntil()))
+                .isInstanceOf(NullPointerException.class);
+        for (String invalidHash : List.of("", "not-a-digest", "a".repeat(63), "A".repeat(64))) {
+            assertThatThrownBy(() -> new ContentHash(invalidHash)).isInstanceOf(IllegalArgumentException.class);
+        }
     }
 
     @Test
@@ -419,7 +474,7 @@ class SubmitCompanyOnboardingServiceTest {
 
     static Notice notice(Purpose purpose, Jurisdiction jurisdiction, Status status, Scope scope,
             Instant validFrom, Instant validUntil) {
-        return new Notice(REFERENCE, purpose, jurisdiction, status, scope, validFrom, validUntil);
+        return new Notice(REFERENCE, CONTENT_HASH, purpose, jurisdiction, status, scope, validFrom, validUntil);
     }
 
     /** All implementations are in tests, in memory, with synthetic values and no cryptographic claim. */
@@ -440,6 +495,7 @@ class SubmitCompanyOnboardingServiceTest {
         String failAt = "";
         boolean programmingFailure;
         CommitOutcome commitOutcome = CommitOutcome.COMMITTED;
+        boolean retainWritesOnUnknown = true;
         List<String> calls = Collections.synchronizedList(new ArrayList<>());
         List<PendingSubmission> submissions = new ArrayList<>();
         List<CompanyOnboardingEventV1> events = new ArrayList<>();
@@ -498,7 +554,8 @@ class SubmitCompanyOnboardingServiceTest {
             List<OnboardingAudit.Entry> previousAudits = new ArrayList<>(audits);
             try {
                 writes.run();
-                if (commitOutcome == CommitOutcome.ROLLED_BACK) {
+                if (commitOutcome == CommitOutcome.ROLLED_BACK
+                        || (commitOutcome == CommitOutcome.UNKNOWN && !retainWritesOnUnknown)) {
                     restore(previousSubmissions, previousEvents, previousAudits);
                 }
                 return commitOutcome;
