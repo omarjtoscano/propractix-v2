@@ -65,26 +65,26 @@ class AcademicInstitutionRestIntegrationTest {
         assertThat(AcademicInstitutionOpenApiContract.paths().propertyNames()).containsExactly(PATH);
         assertThat(AcademicInstitutionOpenApiContract.paths().path(PATH).propertyNames()).containsExactly("get");
         var operation = AcademicInstitutionOpenApiContract.OPERATION;
-        assertThat(operation.path("operationId").asText()).isEqualTo("searchAcademicInstitutions");
+        assertThat(operation.path("operationId").asString()).isEqualTo("searchAcademicInstitutions");
         assertThat(operation.path("security").isEmpty()).isTrue();
         assertThat(operation.path("responses").propertyNames()).containsExactlyInAnyOrder("200", "400", "409", "429", "503");
         for (JsonNode parameter : operation.path("parameters")) {
-            if (parameter.path("name").asText().equals("query")) {
+            if (parameter.path("name").asString().equals("query")) {
                 assertThat(parameter.at("/schema/maxLength").asInt()).isEqualTo(AcademicInstitutionSearchMapper.MAX_QUERY_CODE_POINTS);
             }
-            if (parameter.path("name").asText().equals("cursor")) {
+            if (parameter.path("name").asString().equals("cursor")) {
                 assertThat(parameter.at("/schema/maxLength").asInt()).isEqualTo(InstitutionSearchCursorCodec.MAX_ENCODED_LENGTH);
             }
-            if (parameter.path("name").asText().equals("limit")) {
+            if (parameter.path("name").asString().equals("limit")) {
                 assertThat(parameter.at("/schema/default").asInt()).isEqualTo(properties.defaultLimit()).isEqualTo(20);
                 assertThat(parameter.at("/schema/maximum").asInt()).isEqualTo(properties.maxLimit()).isEqualTo(50);
             }
         }
         var body = page(mvc.perform(get(PATH)).andExpect(status().isOk()).andReturn());
         assertThat(body.path("items").size()).isEqualTo(properties.defaultLimit());
-        assertThat(body.at("/snapshot/retrievedAt").asText()).isEqualTo(SyntheticCatalog.RETRIEVED_AT);
-        assertThat(body.at("/snapshot/sourceUrl").asText()).isEqualTo(SyntheticCatalog.SOURCE);
-        assertThat(body.at("/snapshot/sourceAttribution").asText()).isEqualTo(SyntheticCatalog.ATTRIBUTION);
+        assertThat(body.at("/snapshot/retrievedAt").asString()).isEqualTo(SyntheticCatalog.RETRIEVED_AT);
+        assertThat(body.at("/snapshot/sourceUrl").asString()).isEqualTo(SyntheticCatalog.SOURCE);
+        assertThat(body.at("/snapshot/sourceAttribution").asString()).isEqualTo(SyntheticCatalog.ATTRIBUTION);
         assertThat(body.toString()).doesNotContain("sourceRecordId", "sourceSystem", "sourceStatus", "INTERNAL-REF",
                 "INTERNAL-STATUS", "artifactHash", "snapshotId");
         var max = page(mvc.perform(get(PATH).queryParam("limit", "50")).andExpect(status().isOk()).andReturn());
@@ -103,8 +103,8 @@ class AcademicInstitutionRestIntegrationTest {
             var request = get(PATH).queryParam("limit", "1");
             if (cursor != null) request.queryParam("cursor", cursor);
             var body = page(mvc.perform(request).andExpect(status().isOk()).andReturn());
-            actual.add(body.at("/items/0/id").asText());
-            cursor = body.path("nextCursor").isNull() ? null : body.path("nextCursor").asText();
+            actual.add(body.at("/items/0/id").asString());
+            cursor = body.path("nextCursor").isNull() ? null : body.path("nextCursor").asString();
             assertThat(cursor == null).isEqualTo(i == 2);
         }
         assertThat(actual).containsExactlyElementsOf(expected).doesNotHaveDuplicates();
@@ -114,12 +114,12 @@ class AcademicInstitutionRestIntegrationTest {
     void defaultPagesHaveNoGapsAndCanChangePageSizeWithoutChangingTheQuery() throws Exception {
         var first = page(mvc.perform(get(PATH)).andExpect(status().isOk()).andReturn());
         var second = page(mvc.perform(get(PATH).queryParam("limit", "50")
-                .queryParam("cursor", first.path("nextCursor").asText())).andExpect(status().isOk()).andReturn());
+                .queryParam("cursor", first.path("nextCursor").asString())).andExpect(status().isOk()).andReturn());
         assertThat(first.path("items").size()).isEqualTo(20);
         assertThat(second.path("items").size()).isEqualTo(35);
         assertThat(second.path("nextCursor").isNull()).isTrue();
         List<String> ids = new ArrayList<>();
-        for (var body : List.of(first, second)) for (JsonNode item : body.path("items")) ids.add(item.path("id").asText());
+        for (var body : List.of(first, second)) for (JsonNode item : body.path("items")) ids.add(item.path("id").asString());
         assertThat(ids).hasSize(55).doesNotHaveDuplicates();
     }
 
@@ -127,8 +127,8 @@ class AcademicInstitutionRestIntegrationTest {
     void normalizesUnicodeQueriesPreservesOfficialNamesAndRejectsCursorForAnotherQuery() throws Exception {
         var first = page(mvc.perform(get(PATH).queryParam("query", "\u00a0 SINTÉTICA  ").queryParam("limit", "1"))
                 .andExpect(status().isOk()).andReturn());
-        assertThat(first.at("/items/0/officialName").asText()).isEqualTo("Universidad Sintética 00");
-        String cursor = first.path("nextCursor").asText();
+        assertThat(first.at("/items/0/officialName").asString()).isEqualTo("Universidad Sintética 00");
+        String cursor = first.path("nextCursor").asString();
         page(mvc.perform(get(PATH).queryParam("query", "sinte\u0301tica").queryParam("cursor", cursor))
                 .andExpect(status().isOk()).andReturn());
         problem(mvc.perform(get(PATH).queryParam("query", "otra").queryParam("cursor", cursor)).andReturn(),
@@ -182,10 +182,10 @@ class AcademicInstitutionRestIntegrationTest {
     void replacingSnapshotReturnsConflictAndAFirstPageRestartsSuccessfully() throws Exception {
         var first = page(mvc.perform(get(PATH)).andExpect(status().isOk()).andReturn());
         SyntheticCatalog.publish(publisher, "Universidad Nueva");
-        problem(mvc.perform(get(PATH).queryParam("cursor", first.path("nextCursor").asText())).andReturn(),
+        problem(mvc.perform(get(PATH).queryParam("cursor", first.path("nextCursor").asString())).andReturn(),
                 409, "catalog_snapshot_changed", null);
         var restarted = page(mvc.perform(get(PATH)).andExpect(status().isOk()).andReturn());
-        assertThat(restarted.at("/items/0/officialName").asText()).isEqualTo("Universidad Nueva");
+        assertThat(restarted.at("/items/0/officialName").asString()).isEqualTo("Universidad Nueva");
     }
 
     @Test
@@ -221,7 +221,7 @@ class AcademicInstitutionRestIntegrationTest {
         var result = mvc.perform(get(PATH).header("X-Correlation-ID", "e6-source-public"))
                 .andExpect(status().isOk()).andReturn();
         var body = page(result);
-        assertThat(body.at("/snapshot/sourceUrl").asText()).isEqualTo(sourceUrl);
+        assertThat(body.at("/snapshot/sourceUrl").asString()).isEqualTo(sourceUrl);
         assertThat(result.getResponse().getHeader("X-Correlation-ID")).isEqualTo("e6-source-public");
         assertThat(MDC.get("correlationId")).isNull();
     }
@@ -284,10 +284,10 @@ class AcademicInstitutionRestIntegrationTest {
         assertThat(result.getResponse().getStatus()).isEqualTo(status);
         AcademicInstitutionOpenApiContract.assertResponse(result);
         var body = json.readTree(result.getResponse().getContentAsString());
-        assertThat(body.path("code").asText()).isEqualTo(code);
+        assertThat(body.path("code").asString()).isEqualTo(code);
         if (field != null) {
-            assertThat(body.at("/violations/0/field").asText()).isEqualTo(field);
-            assertThat(body.at("/violations/0/code").asText()).isEqualTo("validation_error");
+            assertThat(body.at("/violations/0/field").asString()).isEqualTo(field);
+            assertThat(body.at("/violations/0/code").asString()).isEqualTo("validation_error");
         } else {
             assertThat(body.path("violations").isEmpty()).isTrue();
         }

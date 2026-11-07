@@ -278,14 +278,14 @@ class HttpRateLimitIntegrationTest {
                     .header("Forwarded", "for=SENSITIVE-SPOOF-LIMITED").GET().build(), HttpResponse.BodyHandlers.ofString());
             assertThat(limited.statusCode()).isEqualTo(429);
             assertThat(limited.headers().firstValue("Retry-After")).contains("11");
-            assertThat(json.readTree(limited.body()).path("correlationId").asText())
+            assertThat(json.readTree(limited.body()).path("correlationId").asString())
                     .isEqualTo(limited.headers().firstValue("X-Correlation-ID").orElseThrow());
 
             doThrow(new RateLimitFailure(RateLimitFailure.ErrorClass.STORAGE)).when(admission).admit(eq(OPERATION), any());
             var unavailable = http.send(HttpRequest.newBuilder(URI.create(base + PATH)).GET().build(), HttpResponse.BodyHandlers.ofString());
             assertThat(unavailable.statusCode()).isEqualTo(503);
             assertThat(unavailable.headers().firstValue("Retry-After")).contains("1");
-            assertThat(json.readTree(unavailable.body()).path("correlationId").asText())
+            assertThat(json.readTree(unavailable.body()).path("correlationId").asString())
                     .isEqualTo(unavailable.headers().firstValue("X-Correlation-ID").orElseThrow());
             assertControllerCalls(2);
             assertThat(http.send(HttpRequest.newBuilder(URI.create(base + "/healthz")).GET().build(),
@@ -326,13 +326,13 @@ class HttpRateLimitIntegrationTest {
         assertThat(actualCorrelation).matches("[A-Za-z0-9][A-Za-z0-9._-]{0,63}");
         if (correlation != null) assertThat(actualCorrelation).isEqualTo(correlation);
         var body = json.readTree(response.getContentAsString());
-        assertThat(body.path("type").asText()).isEqualTo("urn:propractix:problem:" + code);
-        assertThat(body.path("title").asText()).isEqualTo(code);
-        assertThat(body.path("detail").asText()).isEqualTo(code);
+        assertThat(body.path("type").asString()).isEqualTo("urn:propractix:problem:" + code);
+        assertThat(body.path("title").asString()).isEqualTo(code);
+        assertThat(body.path("detail").asString()).isEqualTo(code);
         assertThat(body.path("status").asInt()).isEqualTo(status);
-        assertThat(body.path("code").asText()).isEqualTo(code);
-        assertThat(body.path("instance").asText()).isEqualTo(PATH);
-        assertThat(body.path("correlationId").asText()).isEqualTo(actualCorrelation);
+        assertThat(body.path("code").asString()).isEqualTo(code);
+        assertThat(body.path("instance").asString()).isEqualTo(PATH);
+        assertThat(body.path("correlationId").asString()).isEqualTo(actualCorrelation);
         assertThat(body.path("violations").isEmpty()).isTrue();
         assertThat(response.getContentAsString()).doesNotContain("192.0.2.9", "10.0.0.1", "fingerprint", "jdbc", "stackTrace");
     }

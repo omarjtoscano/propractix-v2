@@ -45,16 +45,16 @@ public final class InstitutionSearchCursorCodec {
             for (String field : FIELDS) {
                 if (!field.equals("version") && !payload.path(field).isString()) throw new IllegalArgumentException();
             }
-            String name = payload.path("lastSearchNameNormalized").asText();
+            String name = payload.path("lastSearchNameNormalized").asString();
             // Bound transport size without applying display-name rules to the normalized order key.
             if (name.isEmpty() || name.length() > MAX_ENCODED_LENGTH
                     || name.codePoints().anyMatch(codePoint -> Character.isISOControl(codePoint)
                             || Character.getType(codePoint) == Character.SURROGATE)) throw new IllegalArgumentException();
             new NormalizedInstitutionSearchTerm(name);
             return new InstitutionSearchCursor(payload.path("version").asInt(),
-                    CatalogImportId.from(payload.path("snapshotId").asText()),
-                    payload.path("queryFingerprint").asText(), name,
-                    AcademicInstitutionId.from(payload.path("lastInstitutionId").asText()));
+                    CatalogImportId.from(payload.path("snapshotId").asString()),
+                    payload.path("queryFingerprint").asString(), name,
+                    AcademicInstitutionId.from(payload.path("lastInstitutionId").asString()));
         } catch (RuntimeException failure) {
             // Do not retain the input, Jackson exception, or decoded cursor in the public failure.
             throw new InvalidSearchParameter("cursor");
