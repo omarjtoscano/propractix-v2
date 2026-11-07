@@ -78,6 +78,23 @@ class ArchitectureRulesTest {
             .allowEmptyShould(true);
 
     @ArchTest
+    static final ArchRule onboarding_application_is_framework_and_io_free = noClasses()
+            .that().resideInAnyPackage("com.propractix.organization.application..",
+                    "com.propractix.identity.application..", "com.propractix.compliance.application..")
+            .should().dependOnClassesThat().resideInAnyPackage(
+                    "org.springframework..", "jakarta.persistence..", "com.fasterxml.jackson..",
+                    "tools.jackson..", "jakarta.servlet..", "java.net..", "java.io..", "java.sql..",
+                    "com.ibm.icu..", "com.propractix.platform..", "software.amazon.awssdk..");
+
+    @ArchTest
+    static final ArchRule submit_never_calls_identity_or_creates_a_company = noClasses()
+            .that().haveFullyQualifiedName(
+                    "com.propractix.organization.application.service.SubmitCompanyOnboardingService")
+            .should().dependOnClassesThat().resideInAnyPackage("com.propractix.identity..")
+            .orShould().dependOnClassesThat().haveFullyQualifiedName(
+                    "com.propractix.organization.application.port.out.CompanyRepository");
+
+    @ArchTest
     static final ArchRule rate_limit_application_is_framework_free = noClasses()
             .that().resideInAPackage("com.propractix.platform.ratelimit.application..")
             .should().dependOnClassesThat().resideInAnyPackage(
