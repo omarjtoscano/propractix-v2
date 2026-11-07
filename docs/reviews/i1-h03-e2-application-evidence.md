@@ -1,11 +1,11 @@
 # Evidencia local — I1-H03 E2: puertos y casos de uso con dobles
 
 - Fecha: 2026-11-07.
-- Estado: H03 y E2 `IN_PROGRESS`; **sin aceptación E2**. E1 sigue `ACCEPTED`.
-- Autorización: Product Owner en este chat, exclusivamente E2 conforme al [plan H03 aprobado](../plans/i1-h03-execution-plan.md#e2--puertos-y-casos-de-uso-con-dobles).
+- Estado: E2 **`ACCEPTED`** por aprobación expresa del PO el 2026-11-07 sobre `7bd2fed1d06e9a45a041beeb59bb710018247a06`. H03 sigue `IN_PROGRESS`; E1 sigue `ACCEPTED`; E3 y posteriores `NOT_AUTHORIZED / NOT_STARTED`.
+- Autorización histórica de implementación: Product Owner en este chat, exclusivamente E2 conforme al [plan H03 aprobado](../plans/i1-h03-execution-plan.md#e2--puertos-y-casos-de-uso-con-dobles).
 - Integraciones confirmadas por el PO: E1 mediante `e5c8461c124b284762b782f7a51c590e78b5fb6d` (PR #23); limpieza Jackson mediante `7854d2f4bbb2d5d8fc1c21d3408431505c00b510` (PR #24). La evidencia histórica E1 y sus aprobaciones se conservan [sin modificar](i1-h03-e1-domain-evidence.md).
 - Rama: `feature/i1-h03-e2-company-onboarding-application`, creada desde el incremento actualizado, base `7854d2f4bbb2d5d8fc1c21d3408431505c00b510`. Workspace limpio al inicio; los imports H02 del PO ya están integrados en esta base.
-- SHA de entrega: el commit que contiene este informe, identificable con `git log -1 --format=%H -- docs/reviews/i1-h03-e2-application-evidence.md`; se comunica también en la Draft PR y en la entrega al PO.
+- SHA funcional aceptado: `7bd2fed1d06e9a45a041beeb59bb710018247a06`. La actualización documental de aceptación se entrega en un commit posterior de la misma rama/PR #25; no altera el SHA funcional aprobado ni acredita checks nuevos.
 
 ## Implementación y orden de efectos
 
@@ -76,7 +76,7 @@ Logs locales: `/tmp/h03-e2-focused.log`, `/tmp/h03-e2-server-test.log` (intento 
 
 ## Corrección de hallazgos de PR #25 — 2026-11-07
 
-Autorizada expresamente por el PO en este chat dentro de la misma Draft PR y rama, sin ampliar E2 ni aceptar la entrega. Se corrigen ambos hallazgos:
+Corrección histórica autorizada expresamente por el PO en este chat dentro de la misma Draft PR y rama, sin ampliar E2 ni aceptar entonces la entrega. Los dos hallazgos quedaron corregidos en el SHA funcional ahora aceptado:
 
 - El switch del caso de uso distingue confirmación de commit, confirmación de rollback e incertidumbre. `UNKNOWN` devuelve exclusivamente `CommitUncertain`; no se transforma en éxito ni en indisponibilidad reintentable. Su ID es diagnóstico del intento y no prueba que exista un registro durable. El doble reproduce tanto escrituras conservadas como pérdida total; en ambos casos se comprueba el resultado incierto y una sola ejecución del boundary. Se añade regresión separada del rollback confirmado.
 - `ResolveApplicablePrivacyNotice.Notice` exige `ContentHash`, un SHA-256 canónico, y la evidencia conserva esa huella dentro de la resolución autoritativa. El doble de compliance devuelve una huella diferente para la misma referencia; la prueba verifica que la evidencia contiene exactamente esa huella e instancia del servidor, sin derivarla del ID/versión ni recibirla en el comando. Se rechazan huellas ausentes o malformadas antes de poder formar una resolución válida.
@@ -91,7 +91,21 @@ Autorizada expresamente por el PO en este chat dentro de la misma Draft PR y ram
 | Compilación Java 21 sin classpath / `jdeps` | 34 archivos de dominio/aplicación/contratos; solo `java.base`. |
 | Enlaces locales / diff | 3 destinos del informe comprobados; `git diff --check` correcto. |
 
-Logs locales nuevos: `/tmp/h03-e2-fixes-focused.log`, `/tmp/h03-e2-fixes-server-test.log`, `/tmp/h03-e2-fixes-server-verify.log`. CI, Trivy y Build OCI del nuevo SHA los verificará e informará el PO, sin espera ni supervisión del agente.
+Logs de las ejecuciones locales anteriores de corrección: `/tmp/h03-e2-fixes-focused.log`, `/tmp/h03-e2-fixes-server-test.log`, `/tmp/h03-e2-fixes-server-verify.log`. CI, Trivy y Build OCI del SHA funcional fueron confirmados en verde por el PO en la aceptación siguiente; los checks del nuevo SHA documental los verificará e informará el PO, sin espera ni supervisión del agente.
+
+## Aceptación expresa del PO — 2026-11-07
+
+E2 `ACCEPTED` por aprobación expresa del Product Owner en este chat sobre `7bd2fed1d06e9a45a041beeb59bb710018247a06`. La aceptación se limita a E2 con dobles; H03 sigue `IN_PROGRESS`, E1 sigue `ACCEPTED` y E3/posteriores siguen `NOT_AUTHORIZED / NOT_STARTED`. PR #25 permanece Draft y sin merge.
+
+| Evidencia / decisión | Procedencia y alcance |
+|---|---|
+| Pruebas locales reportadas | Ejecuciones anteriores de `server:test` y `server:verify`: 466 pruebas cada una, 0 fallos, 0 errores, 1 benchmark omitido; 51 casos E2, ArchUnit y empaquetado correctos según el informe anterior. No se repiten suites en esta actualización ni se atribuyen esos resultados al nuevo SHA documental. |
+| Revisión técnica | Revisión asistida por Codex en este chat (2026-11-07), incluida revisión del diff y corrección de los dos hallazgos sobre commit incierto y huella autoritativa del aviso. Es distinta de la decisión de aceptación del PO y de la comprobación de checks remotos. |
+| CI, Trivy y Build OCI | Verdes sobre `7bd2fed1d06e9a45a041beeb59bb710018247a06` según confirmación expresa del PO el 2026-11-07. No es una verificación realizada por el agente. |
+| Aceptación de producto | Decisión expresa del Product Owner sobre ese SHA funcional. Las pruebas/revisión técnica no constituyen por sí mismas esta aprobación. |
+| Nuevo SHA documental | Commit/push exclusivamente documentales y cuerpo de la misma Draft PR #25. Checks pendientes de verificación y comunicación por el PO, sin espera ni supervisión del agente. |
+
+Validación de este cambio documental: coherencia de estados/procedencia, 69 destinos de enlaces locales comprobados en los cuatro archivos y `git diff --check` correcto. Alcance revisado: exclusivamente AGENTS.md, ambos planes y este informe; sin código, nuevas suites funcionales ni cambios de resultados históricos.
 
 ## Límites conservados
 
@@ -99,4 +113,4 @@ Solo datos sintéticos en memoria. Los dobles de aviso son metadatos construidos
 
 El agregado/perfil que recibe el repositorio es **entrada transitoria** del adapter; el contrato exige proteger PII al persistir y usar la representación fiscal protegida. Las pruebas E2 no acreditan cifrado real, separación de claves, unicidad fiscal concurrente ni predicados SQL: E3 deberá demostrarlo con PostgreSQL. No hay implementación del boundary transaccional, outbox/inbox/relay, backoff ejecutable, reconciliación durable, deduplicación de provisioning ni idempotencia durable. Tampoco se acredita todavía igualdad temporal de respuestas ante coincidencias: el adapter público y su coordinación asíncrona se validarán en E8. `CommitUncertain` expresa la incertidumbre del intento, sin constancia durable ni permiso de reintento; la reconciliación e idempotencia durables no se implementan ni se acreditan en E2.
 
-E3 y posteriores `NOT_AUTHORIZED / NOT_STARTED`. Sin SQL/JPA, migraciones, normalizador ICU4J, DNS real, HTTP/OpenAPI, frontend, provisioning, credenciales, envío de correo, AWS, merge ni aceptación E2. B0/P0/E0 y entrada S0 propia de H03 siguen pendientes; S0 continúa cerrado solo para H02 y `CL0_CLOUD_STAGING` sigue `PENDING`. CI, Trivy y Build OCI de esta entrega los verificará e informará el PO, sin espera ni supervisión del agente.
+E3 y posteriores `NOT_AUTHORIZED / NOT_STARTED`. Sin SQL/JPA, migraciones, normalizador ICU4J, DNS real, HTTP/OpenAPI, frontend, provisioning, credenciales, envío de correo, AWS ni merge; E2 aceptada exclusivamente sobre el SHA funcional indicado. B0/P0/E0 y entrada S0 propia de H03 siguen pendientes; S0 continúa cerrado solo para H02 y `CL0_CLOUD_STAGING` sigue `PENDING`. CI, Trivy y Build OCI del SHA funcional `7bd2fed1d06e9a45a041beeb59bb710018247a06` están verdes según confirmación del PO; los checks del nuevo SHA documental quedan a cargo del PO, sin espera ni supervisión del agente.
