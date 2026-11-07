@@ -14,9 +14,13 @@ e integrado por PR #21 / `b398694bf1a68b65c674efa579b9c468a207c464`; sus restric
 históricas de Draft/sin merge quedan sustituidas. El PO aprueba las [decisiones de entrada local E1](i1-h03-execution-plan.md#31-decisiones-de-entrada-de-e1--decisiones-locales-aprobadas)
 sobre `b097d0aced1764e88149fa618e598d8891c6b6cf`: contrato de correo/IDNA, política tipada, `P7D` para pruebas E1,
 condiciones sintéticas y validación local S0 sin habilitar H03 ni alterar cuotas H02.
-Solo registrar aprobación, actualizar [ADR-001, revisión 5](../adr/ADR-001-monolito-modular.md#normalización-técnica-de-correo-e-idna),
-referencias y cuerpo de la misma Draft PR #22, validar enlaces/diff, commit/push.
-Sin dependencia en `pom.xml`, código ni implementación; H03/E1 `NOT_STARTED / NOT_AUTHORIZED`.
+La autorización documental histórica permitía registrar aprobación, actualizar [ADR-001, revisión 5](../adr/ADR-001-monolito-modular.md#normalización-técnica-de-correo-e-idna),
+referencias y cuerpo de la misma Draft PR #22, validar enlaces/diff y commit/push.
+El PO confirma su integración mediante `2e797ebfd5c22481ec0a21f4c0ca8d9933fffbbd` y autoriza
+exclusivamente E1 local: dominio Java puro y pruebas sintéticas, documentación, commit/push y Draft PR
+al incremento desde `feature/i1-h03-e1-company-domain`. H03/E1 `IN_PROGRESS`, sin aceptación;
+E2 y posteriores `NOT_AUTHORIZED / NOT_STARTED`. Sin dependencia en `pom.xml` ni normalizador técnico;
+la conformidad Unicode/ICU se ejecutará en la entrega autorizada del adapter, no en fixtures E1.
 B0/P0/E0/entrada S0 de H03 siguen pendientes; concreción ADR-003/007 pendiente antes de E5,
 CL0 `PENDING`. Sin políticas publicadas, cambios funcionales H02, merge ni AWS.
 Checks a cargo del PO sin espera/supervisión del agente. Se conserva la revisión 7 del plan;
@@ -457,7 +461,7 @@ continuación. Véase la [evidencia E9](../reviews/i1-h02-first-snapshot-evidenc
 
 ### I1-H03 — Registrar empresa y primer administrador
 
-**Estado de ejecución:** `NOT_STARTED / NOT_AUTHORIZED`. El [plan de ejecución](i1-h03-execution-plan.md) está `APPROVED` sobre `27b404c56b0d918e69c20b0319c6cc29daa92b89`, integrado mediante PR #21 / `b398694bf1a68b65c674efa579b9c468a207c464`. El PO aprueba las [decisiones de entrada local E1](i1-h03-execution-plan.md#31-decisiones-de-entrada-de-e1--decisiones-locales-aprobadas) sobre `b097d0aced1764e88149fa618e598d8891c6b6cf`, pero solo autoriza registrar su aprobación y actualizar ADR-001/referencias/cuerpo de la misma PR #22. No autoriza implementación ni dependencia en `pom.xml`; el contrato aprobado que sigue se conserva intacto. B0/P0/E0/entrada S0 de H03 siguen pendientes, concreción ADR-003/007 pendiente antes de E5; no se cierra ningún gate.
+**Estado de ejecución:** H03 y E1 `IN_PROGRESS`, sin aceptación. El [plan de ejecución](i1-h03-execution-plan.md) está `APPROVED` sobre `27b404c56b0d918e69c20b0319c6cc29daa92b89`, integrado por PR #21 / `b398694bf1a68b65c674efa579b9c468a207c464`. Las decisiones locales E1 aprobadas sobre `b097d0aced1764e88149fa618e598d8891c6b6cf` están integradas por PR #22 / `2e797ebfd5c22481ec0a21f4c0ca8d9933fffbbd`, confirmado por el PO el 2026-11-02. El PO autoriza exclusivamente dominio y pruebas E1 locales con datos sintéticos en `feature/i1-h03-e1-company-domain`, documentación, commit/push y Draft PR, sin merge. [Evidencia E1](../reviews/i1-h03-e1-domain-evidence.md). Sin dependencia ICU/normalizador ni E2 y posteriores; el contrato completo que sigue se conserva como alcance futuro. B0/P0/E0/entrada S0 de H03 pendientes, concreción ADR-003/007 pendiente antes de E5; ningún gate cerrado por E1, CL0 `PENDING`, sin AWS.
 
 **Actor y valor:** representante empresarial; inicia adopción sin intervención universitaria.
 

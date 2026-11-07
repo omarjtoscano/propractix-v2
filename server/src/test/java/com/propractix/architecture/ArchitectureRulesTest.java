@@ -1,5 +1,6 @@
 package com.propractix.architecture;
 
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -38,6 +39,19 @@ class ArchitectureRulesTest {
 
     @ArchTest
     static final ArchRule domain_is_java_only = domainIsJavaOnly();
+
+    @ArchTest
+    static final ArchRule organization_domain_depends_only_on_java_and_its_own_domain = classes()
+            .that().resideInAPackage("com.propractix.organization.domain..")
+            .should().onlyDependOnClassesThat().resideInAnyPackage(
+                    "java..", "com.propractix.organization.domain..");
+
+    @ArchTest
+    static final ArchRule organization_domain_has_no_technical_normalizer_or_io = noClasses()
+            .that().resideInAPackage("com.propractix.organization.domain..")
+            .should().dependOnClassesThat().resideInAnyPackage(
+                    "java.net..", "java.io..", "java.nio.file..", "com.ibm.icu..",
+                    "com.propractix.platform..", "..application..", "..adapter..", "..configuration..");
 
     @ArchTest
     static final ArchRule application_does_not_depend_on_adapters_or_persistence = noClasses()
