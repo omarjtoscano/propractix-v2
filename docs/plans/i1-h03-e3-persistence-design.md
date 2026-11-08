@@ -1,8 +1,9 @@
 # I1-H03 E3 — Propuesta de persistencia, privacidad y protección fiscal
 
 - Fecha: 2026-11-08.
-- Estado del diseño: `PROPOSED / PENDING_REVIEW`; no aprobado ni materializado.
-- Autorización del PO: preparar exclusivamente este diseño documental, commit, push y Draft PR hacia `increment/01-company-identity-catalog`, sin merge.
+- Estado del diseño local: **`APPROVED`**, por aprobación expresa del Product Owner el 2026-11-08 sobre `67bc1eb182eaf294173356b825d3ad567777acdd`; sin materialización ni autorización de implementación E3.
+- Autorización histórica del PO: preparar exclusivamente este diseño documental, commit, push y Draft PR hacia `increment/01-company-identity-catalog`, sin merge.
+- Autorización vigente del PO: registrar la aprobación en este diseño, plan H03, AGENTS.md y cuerpo de la misma Draft PR #26; validar enlaces/diff, commit y push en la misma rama, sin merge. [Registro de aprobación y alcance](#10-aprobación-expresa-del-po--2026-11-08).
 - Rama: `docs/i1-h03-e3-persistence-design`, desde el incremento actualizado en `9409b77da81a715a4256c195f2c02bc0e04a4b9f`.
 - E2 integrada mediante ese commit ([PR #25](https://github.com/omarjtoscano/propractix-v2/pull/25)), confirmada expresamente por el PO el 2026-11-08. La aceptación funcional permanece sobre `7bd2fed1d06e9a45a041beeb59bb710018247a06`; no se sustituye su evidencia.
 - H03 `IN_PROGRESS`; E1/E2 `ACCEPTED`; implementación E3 y posteriores `NOT_AUTHORIZED / NOT_STARTED`. Preparar una propuesta no inicia la entrega E3.
@@ -11,7 +12,7 @@
 
 Fuentes leídas en orden: [especificación técnica](../ProPractix-V2-MVP-Espana-Especificacion-Arquitectura-y-Tecnica-para-Codex.md), [blueprint](../ProPractix-V2-Blueprint-Dominio-y-Mapas-Legales-Espana.md), [ADR-003](../adr/ADR-003-multitenancy-tenant-context.md), [ADR-006](../adr/ADR-006-dominio-jpa-propiedad-tablas.md), [ADR-012](../adr/ADR-012-desarrollo-local-y-adapters-aws.md), y [plan H03 aprobado](i1-h03-execution-plan.md#e3--persistencia-de-organización-privacidad-y-protección-fiscal). Se aplican también [ADR-004](../adr/ADR-004-identificadores-tiempo-concurrencia.md), [ADR-005](../adr/ADR-005-eventos-outbox.md) y [ADR-008](../adr/ADR-008-openapi-errores-idempotencia.md). Se contrasta con los [contratos y evidencia E2](../reviews/i1-h03-e2-application-evidence.md).
 
-Se proponen las siguientes decisiones para aprobación conjunta del PO y los responsables de Arquitectura/Datos, Seguridad y Privacidad según su materia:
+Las decisiones D3-01 a D3-07 que siguen quedan `APPROVED` por aprobación expresa del PO para el alcance local sintético sobre `67bc1eb182eaf294173356b825d3ad567777acdd`. Se conserva su contenido aprobado; no se atribuyen firmas o aprobaciones adicionales de otros responsables ni se cierran gates:
 
 | Decisión | Propuesta concreta |
 |---|---|
@@ -23,7 +24,7 @@ Se proponen las siguientes decisiones para aprobación conjunta del PO y los res
 | D3-06 — Retención | Expiración lógica `P7D`, purga verificable e idempotente, teardown tras cada ejecución y límite absoluto local de `P7D` para todo el dataset y sus copias. |
 | D3-07 — Evidencia futura | PostgreSQL 16 vacío y upgrade H02, rollback, aislamiento, relectura, concurrencia, corrupción criptográfica y rotación completa según sección 8. |
 
-Este documento propone nombres físicos y operaciones; no contiene migraciones ni añade dependencias. La implementación requerirá aprobación de este diseño, de claves/fixture local y autorización separada. B0/P0/E0 y la entrada S0 de H03 permanecen pendientes; S0 cerrado solo para H02 y CL0 `PENDING`. La concreción ADR-003/007 continúa pendiente antes de E5.
+Este documento propone nombres físicos y operaciones; no contiene migraciones ni añade dependencias. El diseño local, las claves sintéticas y los textos/hash del aviso quedan aprobados con el alcance del registro de la sección 10. La implementación y la materialización de la fixture requieren autorización separada, no concedida por esta aprobación. B0/P0/E0 y la entrada S0 de H03 permanecen pendientes; S0 cerrado solo para H02 y CL0 `PENDING`. La concreción ADR-003/007 continúa pendiente antes de E5.
 
 ## 2. Tablas, restricciones e índices
 
@@ -226,9 +227,9 @@ La base no puede demostrar por sí sola que una huella es el HMAC correcto: se n
 
 ## 6. Aviso local propuesto y SHA-256 reproducible
 
-Referencia candidata: `local-synthetic-company-onboarding`, versión `2026-11-02.1`; finalidad `COMPANY_ONBOARDING`, jurisdicción explícita de prueba `SYNTHETIC-ONBOARDING-JURISDICTION`, scope `LOCAL_TEST`, status `TEST_ONLY`. No deriva de país/locale ni habilita una jurisdicción jurídica. La vigencia de cada ensayo se suministra con reloj fijo en su harness, intervalo finito `[validFrom, validUntil)`; no se hace un aviso perpetuo ni se inventa aprobación legal.
+Referencia aprobada para el alcance local sintético: `local-synthetic-company-onboarding`, versión `2026-11-02.1`; finalidad `COMPANY_ONBOARDING`, jurisdicción explícita de prueba `SYNTHETIC-ONBOARDING-JURISDICTION`, scope `LOCAL_TEST`, status `TEST_ONLY`. No deriva de país/locale ni habilita una jurisdicción jurídica. La vigencia de cada ensayo se suministra con reloj fijo en su harness, intervalo finito `[validFrom, validUntil)`; no se hace un aviso perpetuo ni se inventa aprobación legal.
 
-Los textos siguientes son candidatos a revisión. No se crea YAML/JSON de política, recurso cliente, loader, seed SQL ni fixture ejecutable. Staging conserva [su fixture separada](../policies/staging-synthetic-privacy-fixture-v1.yaml) intacta. Materializar estos textos/hash en E3/E7A requiere aprobación expresa posterior; su presencia aquí no cierra P0 ni convierte `TEST_ONLY` en `APPROVED`.
+Los textos ES/EN siguientes y su huella exacta quedan aprobados expresamente por el PO sobre el SHA indicado en la sección 10, exclusivamente para `LOCAL_TEST / TEST_ONLY`. No se crea YAML/JSON de política, recurso cliente, loader, seed SQL ni fixture ejecutable. Staging conserva [su fixture separada](../policies/staging-synthetic-privacy-fixture-v1.yaml) intacta. Materializar estos textos/hash en E3/E7A requiere autorización expresa posterior; la aprobación documental no cierra P0 ni convierte el estado del aviso `TEST_ONLY` en `APPROVED` operativo.
 
 ### 6.1 Texto ES propuesto
 
@@ -313,7 +314,7 @@ Resultado reproducido en esta revisión: **`3008` bytes**, SHA-256 indicado arri
 
 Los dobles E2 suministraban `a`/`b` repetidas 64 veces como hashes sintéticos para demostrar que se guarda **la huella devuelta por compliance**, incluso con la misma referencia. Se conservan el código, pruebas y resultados originales; no se reemplazan por este hash ni se presenta ese histórico como si hubiera usado estos textos.
 
-La futura prueba E3 debe cargar, solo tras aprobación, la pareja exacta referencia/contenido en compliance, verificar sus bytes/hash al leer y persistir en organization el `Notice` devuelto por el puerto. El comando continúa enviando solo la referencia no confiable; no se acepta un hash calculado o enviado por el cliente. Un cambio posterior del aviso no modifica la evidencia ya grabada. Un aviso inválido o inexistente produce cero PII, cero huellas y cero evidencia persistida.
+La futura prueba E3 debe cargar, únicamente tras autorización de implementación/materialización, la pareja exacta referencia/contenido ya aprobada en compliance, verificar sus bytes/hash al leer y persistir en organization el `Notice` devuelto por el puerto. El comando continúa enviando solo la referencia no confiable; no se acepta un hash calculado o enviado por el cliente. Un cambio posterior del aviso no modifica la evidencia ya grabada. Un aviso inválido o inexistente produce cero PII, cero huellas y cero evidencia persistida.
 
 ## 7. Retención, expiración y borrado sintético
 
@@ -355,7 +356,7 @@ E3 propone demostrar operaciones explícitas de expiración/limpieza con harness
 
 Para P3-09/10/12 usar barreras entre transacciones reales, no ejecuciones secuenciales llamadas concurrentes. Comprobar filas finales y constraints después de commit/rollback y tras reinicio; diferenciar error recuperable conocido de fallo de programación. El aislamiento A/B fiscal tiene una excepción documentada: el lookup global booleano de anti-duplicado, jamás un repositorio global de empresas.
 
-Antes de autorizar implementación: decidir D3-01 a D3-07, aprobar textos/hash y estrategia de claves sintéticas, confirmar campos/retención y barrera de rotación; aprobar expresamente las ampliaciones internas de restauración/actualización/purga. Ninguna casilla de esta matriz se marca superada hasta aportar comandos, SHA y resultados de una entrega funcional autorizada. La autorización E3 futura no concede E4/E5 ni cierra gates.
+El PO aprueba D3-01 a D3-07, incluidos los campos/retención locales, la estrategia de claves sintéticas y rotación, las ampliaciones internas descritas y los textos/hash, sobre el SHA registrado en la sección 10. Sigue pendiente la autorización expresa para implementar E3 y materializar la fixture. Ninguna casilla de esta matriz se marca superada hasta aportar comandos, SHA y resultados de una entrega funcional autorizada. La autorización E3 futura no concede E4/E5 ni cierra gates.
 
 ## 9. Validación de esta entrega documental
 
@@ -363,4 +364,22 @@ Validación documental realizada el 2026-11-08: **93 destinos/anclas locales en 
 
 Concreción posterior solicitada por el PO en la misma Draft PR #26: únicamente procedencia del cálculo fiscal (epoch/conjunto transportados hasta el bloqueo), separación transitorio/fila y recorrido onboarding→empresa, ampliación mínima de contratos internos y pruebas futuras P3-11a/P3-13a. Los textos ES/EN, sus bytes y SHA-256 se conservan; el diff de esta concreción se valida por separado. No se ejecutan las pruebas funcionales propuestas ni se inicia E3. Los checks remotos siguen a cargo del PO.
 
-Entrega limitada a documentación y Draft PR hacia el incremento, con SHA comunicado fuera del propio commit. E1/E2 siguen `ACCEPTED`, H03 `IN_PROGRESS`, E3 `NOT_AUTHORIZED / NOT_STARTED`; esta propuesta sigue `PENDING_REVIEW`. Sin código, migraciones, fixture ejecutable, publicación de políticas, cierre de gates, AWS ni merge.
+Entrega limitada a documentación y Draft PR hacia el incremento, con SHA comunicado fuera del propio commit. E1/E2 siguen `ACCEPTED`, H03 `IN_PROGRESS`, E3 `NOT_AUTHORIZED / NOT_STARTED`; el diseño local está `APPROVED` por el PO, sin autorización de implementación. Sin código, migraciones, fixture ejecutable, publicación de políticas, cierre de gates, AWS ni merge.
+
+## 10. Aprobación expresa del PO — 2026-11-08
+
+El Product Owner aprueba expresamente el diseño local de I1-H03 E3 sobre **`67bc1eb182eaf294173356b825d3ad567777acdd`** en este chat. Esta decisión sustituye el estado histórico `PROPOSED / PENDING_REVIEW` de la propuesta; se conservan el contenido técnico, los textos y la evidencia de las revisiones anteriores.
+
+| Elemento aprobado | Alcance y procedencia |
+|---|---|
+| D3-01 a D3-07 | Esquema, repositorios, relectura y contratos internos, límites transaccionales, claves sintéticas, cifrado/rotación, retención y pruebas futuras del diseño local aprobado. Incluye el snapshot de cálculo ligado a epoch/conjunto y el recorrido fiscal origen→destino concretados en el SHA aprobado. |
+| Aviso | `local-synthetic-company-onboarding`, versión `2026-11-02.1`, finalidad `COMPANY_ONBOARDING`, scope `LOCAL_TEST`, estado `TEST_ONLY`; textos ES/EN exactos de sección 6, exclusivamente sintéticos. |
+| Huella exacta aprobada | SHA-256 **`968411cdab71a3de77b0195ab00e64612a59f7a7e053cc3fa98a1014c9c81824`**, sobre los **3008 bytes** canónicos definidos en sección 6.3. No se modifican los bytes cubiertos, el algoritmo ni su referencia. |
+| Evidencia histórica | Las validaciones documentales anteriores y la evidencia autoritativa E2 se conservan. La aprobación del PO no acredita ejecución de las pruebas futuras ni aprobación jurídica para tratar datos reales. |
+| Autorización de esta actualización | Solo registrar aprobación en diseño, plan H03, AGENTS.md y cuerpo de la misma Draft PR #26, validar enlaces/diff, commit y push en `docs/i1-h03-e3-persistence-design`. |
+
+H03 sigue `IN_PROGRESS`, E1/E2 `ACCEPTED`, implementación E3 y posteriores `NOT_AUTHORIZED / NOT_STARTED`. La aprobación del **diseño** no es aceptación funcional de E3 ni autorización para iniciarla, materializar la fixture o publicar una política. B0/P0/E0 y entrada S0 de H03 pendientes; S0 cerrado solo para H02, CL0 `PENDING`, concreción ADR-003/007 pendiente antes de E5. Sin código, migraciones, nuevas suites funcionales, cierre de gates, AWS ni merge; PR #26 permanece Draft.
+
+Los checks CI, Trivy y Build OCI del nuevo SHA documental los verificará e informará el PO, sin espera ni supervisión del agente. No se afirma en esta actualización un resultado remoto sobre el SHA aprobado o el nuevo SHA. La validación local se limita a enlaces/anclas, conservación del contenido aprobado y de los bytes/hash del aviso, revisión del diff y `git diff --check`.
+
+Validación del registro de aprobación: **57 destinos/anclas locales en los tres documentos modificados, cero errores**; decisiones D3-01 a D3-07, secciones técnicas, retención y matriz de pruebas comparadas sin cambios con el SHA aprobado. Textos ES/EN y algoritmo de reproducción idénticos; SHA-256 y longitud de 3008 bytes comprobados de nuevo. `git diff --check` correcto; sin nuevas suites funcionales.
