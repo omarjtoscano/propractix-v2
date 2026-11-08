@@ -7,6 +7,12 @@
 - Rama: `feature/i1-h03-e2-company-onboarding-application`, creada desde el incremento actualizado, base `7854d2f4bbb2d5d8fc1c21d3408431505c00b510`. Workspace limpio al inicio; los imports H02 del PO ya están integrados en esta base.
 - SHA funcional aceptado: `7bd2fed1d06e9a45a041beeb59bb710018247a06`. La actualización documental de aceptación se entrega en un commit posterior de la misma rama/PR #25; no altera el SHA funcional aprobado ni acredita checks nuevos.
 
+## Integración confirmada y continuidad documental — 2026-11-08
+
+El Product Owner confirma expresamente la integración de E2 mediante `9409b77da81a715a4256c195f2c02bc0e04a4b9f` ([PR #25](https://github.com/omarjtoscano/propractix-v2/pull/25)). Esta integración sustituye la situación histórica de PR Draft/sin merge descrita en la aceptación del 2026-11-07. No cambia el SHA funcional aceptado, las pruebas/resultados originales ni la evidencia autoritativa del aviso. No se atribuyen checks del SHA integrado o de la propuesta nueva al agente.
+
+E1/E2 siguen `ACCEPTED`, H03 `IN_PROGRESS`, implementación E3 y posteriores `NOT_AUTHORIZED / NOT_STARTED`. El PO autoriza solo preparar la [propuesta de diseño E3](../plans/i1-h03-e3-persistence-design.md), pendiente de revisión, con commit/push y nueva Draft PR hacia el incremento. Los textos/hash locales propuestos no sustituyen los hashes sintéticos suministrados por los dobles E2 ni se instalan como fixture. Sin código, migraciones, nuevas suites funcionales, publicación de políticas, cierre de gates, AWS ni merge. CI, Trivy y Build OCI del nuevo SHA quedan a cargo del PO, sin espera ni supervisión del agente. Los apartados que siguen conservan la evidencia y restricciones históricas de E2 en su fecha.
+
 ## Implementación y orden de efectos
 
 `SubmitCompanyOnboarding` recibe un comando tipado con perfil E1, nombre/correo canónico del administrador, referencia no confiable al aviso y correlación. No recibe tenant, rol, cuenta ni contraseña. Solo un commit confirmado devuelve `Received` con un ID opaco de operación, distinto del ID de onboarding. Un rollback confirmado devuelve `TemporarilyUnavailable`; un commit incierto devuelve `CommitUncertain`, cuyo ID identifica el intento y no acredita recepción durable ni habilita reintento sin reconciliación. Los rechazos y la indisponibilidad son resultados tipados; no hay contrato HTTP ni textos de presentación.
